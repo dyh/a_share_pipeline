@@ -2,6 +2,76 @@
 - A Share Pipeline with Deep RL
 - 强化深度学习A股pipeline
 
+
+# 运行 DEMO 程序
+
+
+## 运行环境
+
+- python 3.6+，pip 20+
+- pytorch
+- pip install -r requirements.txt
+
+
+## 如何运行
+
+1. 下载代码
+
+    ```
+    $ git clone https://github.com/dyh/a_share_pipeline.git
+    ```
+   
+2. 进入目录
+
+    ```
+    $ cd a_share_pipeline
+    ```
+
+3. 创建 python 虚拟环境
+
+    ```
+    $ python3 -m venv venv
+    ```
+
+4. 激活虚拟环境
+
+    ```
+    $ source venv/bin/activate
+    ```
+   
+5. 升级pip
+
+    ```
+    $ python -m pip install --upgrade pip
+    ```
+
+6. 安装pytorch
+
+    > 根据你的操作系统，安装工具和CUDA版本，在 https://pytorch.org/get-started/locally/ 找到对应的安装命令。我的环境是 ubuntu 18.04.5、pip 21.0.1、CUDA 11.0，安装命令如下：
+
+    ```
+    $ pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+    ```
+   
+7. 安装其他软件包
+
+    ```
+    $ pip install -r requirements.txt
+    ```
+
+    > 如果上述安装出错，可以考虑安装如下：
+
+    ```
+    $ sudo apt-get update && sudo apt-get install cmake libopenmpi-dev python3-dev zlib1g-dev libgl1-mesa-glx
+    ```
+   
+8. 运行程序
+
+    ```
+    $ python main.py
+    ```
+
+
 # 一、程序开发信息对称
 
 ### 开发环境准备
