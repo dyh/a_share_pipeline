@@ -47,7 +47,7 @@
 
 6. 安装pytorch
 
-    > 根据你的操作系统，安装工具和CUDA版本，在 https://pytorch.org/get-started/locally/ 找到对应的安装命令。我的环境是 ubuntu 18.04.5、pip 21.0.1、CUDA 11.0，安装命令如下：
+    > 根据你的操作系统，运行环境工具和CUDA版本，在 https://pytorch.org/get-started/locally/ 找到对应的安装命令，复制粘贴运行。我的环境是 ubuntu 18.04.5、pip 21.0.1、CUDA 11.0，安装命令如下：
 
     ```
     $ pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
@@ -65,9 +65,26 @@
     $ sudo apt-get update && sudo apt-get install cmake libopenmpi-dev python3-dev zlib1g-dev libgl1-mesa-glx
     ```
    
-8. 运行程序
+8. 更新submodule
+   
+    ```
+    $ cd FinRL_Library_master/ 
+    $ git submodule update --init --recursive
+    $ git pull
+    ```
+   
+    > 如果git pull 提示没在任何分支上，可以检出分支：
 
     ```
+    $ git checkout master
+    ```
+   
+9. 运行程序
+
+    > 回到项目根目录，运行程序
+
+    ```
+    $ cd .. 
     $ python main.py
     ```
 
