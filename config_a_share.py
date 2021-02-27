@@ -64,8 +64,8 @@ SAC_PARAMS = {
 
 ########################################################
 ############## Stock Ticker Setup starts ##############
-# SINGLE_TICKER = ["AAPL"]
-SINGLE_TICKER = ["TSLA"]
+SINGLE_TICKER = ["AAPL"]
+# SINGLE_TICKER = ["TSLA"]
 
 # self defined
 SRI_KEHATI_TICKER = [
