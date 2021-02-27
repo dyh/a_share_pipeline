@@ -107,3 +107,4 @@ wrapt
 yarl
 yfinance
 zipp
+baostock

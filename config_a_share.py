@@ -23,7 +23,7 @@ import os
 
 # now = datetime.datetime.now()
 # TRAINED_MODEL_DIR = f"trained_models/{now}"
-DATA_SAVE_DIR = f"datasets"
+DATA_SAVE_DIR = f"datasets_temp"
 TRAINED_MODEL_DIR = f"trained_models"
 TENSORBOARD_LOG_DIR = f"tensorboard_log"
 RESULTS_DIR = f"results"
@@ -34,7 +34,7 @@ RESULTS_DIR = f"results"
 START_DATE = "2000-01-01"
 END_DATE = "2021-02-25"
 
-START_TRADE_DATE = "2020-01-25"
+START_TRADE_DATE = "2021-01-01"
 
 ## dataset default columns
 DEFAULT_DATA_COLUMNS = ["date", "tic", "close"]

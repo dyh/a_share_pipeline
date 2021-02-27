@@ -17,6 +17,10 @@ from FinRL_Library_master.finrl.trade.backtest import backtest_stats
 
 if __name__ == "__main__":
 
+    # 是否需要下载数据
+    is_need_download_data = False
+    test_csv_file_path = "./" + config.DATA_SAVE_DIR + '/' + 'tsla.csv'
+
     if not os.path.exists("./" + config.DATA_SAVE_DIR):
         os.makedirs("./" + config.DATA_SAVE_DIR)
     if not os.path.exists("./" + config.TRAINED_MODEL_DIR):
@@ -26,16 +30,12 @@ if __name__ == "__main__":
     if not os.path.exists("./" + config.RESULTS_DIR):
         os.makedirs("./" + config.RESULTS_DIR)
 
-    # 是否需要下载数据
-    is_need_download_data = False
-    csv_file_path = "./" + config.DATA_SAVE_DIR + '/' + 'tsla.csv'
-
     """
     训练agent
     """
 
     if is_need_download_data:
-        print("==============Start Fetching Data===========")
+        print("==============下载数据===========")
         df = YahooDownloader(
             start_date=config.START_DATE,
             end_date=config.END_DATE,
@@ -43,14 +43,18 @@ if __name__ == "__main__":
             ticker_list=config.SINGLE_TICKER,
         ).fetch_data()
 
-        csv_file_path = "./" + config.DATA_SAVE_DIR + '/' + 'tsla.csv'
-        df.to_csv(csv_file_path)
+        test_csv_file_path = "./" + config.DATA_SAVE_DIR + '/' + 'tsla.csv'
+        df.to_csv(test_csv_file_path)
 
     else:
+        print("==============使用本地数据===========")
+
         # df = pd.read_csv(csv_file_path)
-        df = pd.read_csv(csv_file_path).iloc[:, 1:]
+        df = pd.read_csv(test_csv_file_path).iloc[:, 1:]
         df = df.fillna(0)
         pass
+
+        # 开盘价为T日数据，其余皆为T-1日数据，避免引入未来数据
 
     print("==============Start Feature Engineering===========")
     fe = FeatureEngineer(
@@ -96,7 +100,7 @@ if __name__ == "__main__":
     information_cols = ['daily_variance', 'change', 'log_volume', 'close', 'day',
                         'macd', 'rsi_30', 'cci_30', 'dx_30']
 
-    e_train_gym = StockTradingEnvCashpenaltyAShare(df=train, initial_amount=10000, hmax=1000,
+    e_train_gym = StockTradingEnvCashpenaltyAShare(df=train, initial_amount=100000, hmax=1000,
                                                    turbulence_threshold=None,
                                                    currency='$',
                                                    buy_cost_pct=3e-3,
@@ -107,7 +111,7 @@ if __name__ == "__main__":
                                                    print_verbosity=500,
                                                    random_start=True)
 
-    e_trade_gym = StockTradingEnvCashpenaltyAShare(df=trade, initial_amount=10000, hmax=1000,
+    e_trade_gym = StockTradingEnvCashpenaltyAShare(df=trade, initial_amount=100000, hmax=1000,
                                                    turbulence_threshold=None,
                                                    currency='$',
                                                    buy_cost_pct=3e-3,
@@ -128,27 +132,43 @@ if __name__ == "__main__":
     print("==============Model Training===========")
     now = datetime.datetime.now().strftime("%Y%m%d-%Hh%M")
 
-    model_a2c = agent.get_model("a2c")
-    tb_log_name = "a2c"
-    total_timesteps = 80000
+    # -----------------PPO-----------------
+    # total_timesteps = 100000
+    # tb_log_name = "ppo"
+    #
+    # PPO_PARAMS = {
+    #     "n_steps": 2048,
+    #     "ent_coef": 0.01,
+    #     "learning_rate": 0.00025,
+    #     "batch_size": 128,
+    # }
+    #
+    # model_object = agent.get_model(tb_log_name, model_kwargs=PPO_PARAMS)
+    # -------------------------------------
 
-    trained_a2c = agent.train_model(
-        model=model_a2c, tb_log_name=tb_log_name, total_timesteps=total_timesteps
-    )
+    # -----------------a2c-----------------
+    total_timesteps = 80000
+    tb_log_name = "a2c"
+    model_object = agent.get_model(tb_log_name)
+    # -------------------------------------
+
+    # -----------------sac-----------------
+    # total_timesteps = 80000
+    # tb_log_name = "sac"
+    # model_object = agent.get_model(tb_log_name)
+    # -------------------------------------
+
+    trained_model = agent.train_model(model=model_object, tb_log_name=tb_log_name, total_timesteps=total_timesteps)
 
     # 保存weights
     weights_file_path = f"{config.TRAINED_MODEL_DIR}/{tb_log_name.upper()}_{total_timesteps // 1000}k_{now}"
-    trained_a2c.save(weights_file_path)
+    trained_model.save(weights_file_path)
     print('weights file saved as:', weights_file_path)
 
     print("==============Start Trading===========")
-    df_account_value, df_actions = DRLAgent.DRL_prediction(
-        model=trained_a2c, environment=e_trade_gym
-    )
+    df_account_value, df_actions = DRLAgent.DRL_prediction(model=trained_model, environment=e_trade_gym)
 
-    df_account_value.to_csv(
-        "./" + config.RESULTS_DIR + "/df_account_value_" + now + ".csv"
-    )
+    df_account_value.to_csv("./" + config.RESULTS_DIR + "/df_account_value_" + now + ".csv")
     df_actions.to_csv("./" + config.RESULTS_DIR + "/df_actions_" + now + ".csv")
 
     print('done!')

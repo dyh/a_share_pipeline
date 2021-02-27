@@ -191,11 +191,11 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
         logger.record("environment/total_trades", self.sum_trades)
         logger.record(
             "environment/avg_daily_trades",
-            self.sum_trades / (self.current_step),
+            self.sum_trades / self.current_step,
         )
         logger.record(
             "environment/avg_daily_trades_per_asset",
-            self.sum_trades / (self.current_step) / len(self.assets),
+            self.sum_trades / self.current_step / len(self.assets),
         )
         logger.record("environment/completed_steps", self.current_step)
         logger.record(
