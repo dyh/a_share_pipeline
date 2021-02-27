@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/results/
+/tensorboard_log/
+/trained_models/
+/datasets/tsla.csv

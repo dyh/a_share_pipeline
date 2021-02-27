@@ -32,9 +32,9 @@ RESULTS_DIR = f"results"
 
 ## time_fmt = '%Y-%m-%d'
 START_DATE = "2000-01-01"
-END_DATE = "2021-02-01"
+END_DATE = "2021-02-25"
 
-START_TRADE_DATE = "2020-10-01"
+START_TRADE_DATE = "2020-01-25"
 
 ## dataset default columns
 DEFAULT_DATA_COLUMNS = ["date", "tic", "close"]
