@@ -127,7 +127,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/results/
-/tensorboard_log/
-/trained_models/
+results/
+tensorboard_log/
+trained_models/
+datasets_temp/
 /datasets_temp/

@@ -48,23 +48,23 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
     metadata = {"render.modes": ["human"]}
 
     def __init__(
-        self,
-        df,
-        buy_cost_pct=3e-3,
-        sell_cost_pct=3e-3,
-        date_col_name="date",
-        hmax=10,
-        discrete_actions=False,
-        shares_increment=1,
-        turbulence_threshold=None,
-        print_verbosity=10,
-        initial_amount=1e6,
-        daily_information_cols=["open", "close", "high", "low", "volume"],
-        cache_indicator_data=True,
-        cash_penalty_proportion=0.1,
-        random_start=True,
-        patient=False,
-        currency="$",
+            self,
+            df,
+            buy_cost_pct=3e-3,
+            sell_cost_pct=3e-3,
+            date_col_name="date",
+            hmax=10,
+            discrete_actions=False,
+            shares_increment=1,
+            turbulence_threshold=None,
+            print_verbosity=10,
+            initial_amount=1e6,
+            daily_information_cols=["open", "close", "high", "low", "volume"],
+            cache_indicator_data=True,
+            cash_penalty_proportion=0.1,
+            random_start=True,
+            patient=False,
+            currency="$",
     ):
         self.df = df
         self.stock_col = "tic"
@@ -84,7 +84,7 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
         self.turbulence_threshold = turbulence_threshold
         self.daily_information_cols = daily_information_cols
         self.state_space = (
-            1 + len(self.assets) + len(self.assets) * len(self.daily_information_cols)
+                1 + len(self.assets) + len(self.assets) * len(self.daily_information_cols)
         )
         self.action_space = spaces.Box(low=-1, high=1, shape=(len(self.assets),))
         self.observation_space = spaces.Box(
@@ -121,7 +121,7 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
     @property
     def holdings(self):
         # Quantity of shares held at current timestep
-        return self.state_memory[-1][1 : len(self.assets) + 1]
+        return self.state_memory[-1][1: len(self.assets) + 1]
 
     @property
     def closings(self):
@@ -217,8 +217,8 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
         if terminal_reward is None:
             terminal_reward = self.account_information["reward"][-1]
         cash_pct = (
-            self.account_information["cash"][-1]
-            / self.account_information["total_assets"][-1]
+                self.account_information["cash"][-1]
+                / self.account_information["total_assets"][-1]
         )
         gl_pct = self.account_information["total_assets"][-1] / self.initial_amount
         rec = [
@@ -227,9 +227,9 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
             reason,
             f"{self.currency}{'{:0,.0f}'.format(float(self.account_information['cash'][-1]))}",
             f"{self.currency}{'{:0,.0f}'.format(float(self.account_information['total_assets'][-1]))}",
-            f"{terminal_reward*100:0.5f}%",
-            f"{(gl_pct - 1)*100:0.5f}%",
-            f"{cash_pct*100:0.2f}%",
+            f"{terminal_reward * 100:0.5f}%",
+            f"{(gl_pct - 1) * 100:0.5f}%",
+            f"{cash_pct * 100:0.2f}%",
         ]
         self.episode_history.append(rec)
         print(self.template.format(*rec))
@@ -381,7 +381,7 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
                 )[0]
             # Update State
             state = (
-                [coh] + list(holdings_updated) + self.get_date_vector(self.date_index)
+                    [coh] + list(holdings_updated) + self.get_date_vector(self.date_index)
             )
             self.state_memory.append(state)
             return state, reward, False, {}
@@ -407,8 +407,8 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
             return None
         else:
             self.account_information["date"] = self.dates[
-                -len(self.account_information["cash"]) :
-            ]
+                                               -len(self.account_information["cash"]):
+                                               ]
             return pd.DataFrame(self.account_information)
 
     def save_action_memory(self):
@@ -417,7 +417,7 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
         else:
             return pd.DataFrame(
                 {
-                    "date": self.dates[-len(self.account_information["cash"]) :],
+                    "date": self.dates[-len(self.account_information["cash"]):],
                     "actions": self.actions_memory,
                     "transactions": self.transaction_memory,
                 }

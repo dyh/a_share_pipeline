@@ -61,8 +61,8 @@ class Downloader(object):
 
 if __name__ == '__main__':
     # 300513
-    # stock_code = 'sh.600036'
-    stock_code = 'sz.300513'
+    stock_code = 'sh.600036'
+    # stock_code = 'sz.300513'
 
     test_csv_file_path = "./" + config.DATA_SAVE_DIR + '/' + stock_code + '.csv'
 
