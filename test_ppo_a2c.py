@@ -20,7 +20,9 @@ if __name__ == "__main__":
     # 是否需要下载数据
     is_need_download_data = False
 
-    stock_code = 'sh.600036'
+    # stock_code = 'sh.600036'
+    stock_code = 'sz.300513'
+
     test_csv_file_path = "./" + config.DATA_SAVE_DIR + '/' + stock_code + '.csv'
 
     if not os.path.exists("./" + config.DATA_SAVE_DIR):
@@ -49,6 +51,28 @@ if __name__ == "__main__":
 
     print("==============使用本地数据===========")
     df = pd.read_csv(test_csv_file_path)
+
+    # 删除停牌日期的行，即 tradestatus=0 的数据
+    df = df[df['tradestatus'] == 1]
+
+    # 删除 tradestatus 列、adjustflag 列
+    df.drop(['tradestatus', 'adjustflag'], axis=1, inplace=True)
+
+    # 删除未来数据，把df分为2个表，date+open是A表，其余的是B表
+    df_left = df.drop(df.columns[2:], axis=1)
+
+    df_right = df.drop(['date', 'open'], axis=1)
+
+    # 删除A表第一行
+    df_left.drop(df_left.index[0], inplace=True)
+    df_left.reset_index(drop=True, inplace=True)
+
+    # 删除B表最后一行
+    df_right.drop(df_right.index[-1:], inplace=True)
+    df_right.reset_index(drop=True, inplace=True)
+
+    # 将A表和B表重新拼接，即 剔除了未来数据
+    df = pd.concat([df_left, df_right], axis=1)
 
     print("==============Start Feature Engineering===========")
     fe = FeatureEngineer(
@@ -103,11 +127,11 @@ if __name__ == "__main__":
     # information_cols = ['daily_variance', 'change', 'log_volume', 'close', 'day', 'macd', 'rsi_30', 'cci_30', 'dx_30']
 
     information_cols = ['daily_variance', 'change', 'log_volume', 'close', 'macd', 'rsi_30', 'cci_30', 'dx_30',
-                        'amount', 'turn', 'tradestatus', 'pctChg', 'peTTM', 'pbMRQ', 'psTTM', 'pcfNcfTTM']
+                        'amount', 'turn', 'pctChg', 'peTTM', 'pbMRQ', 'psTTM', 'pcfNcfTTM']
 
     e_train_gym = StockTradingEnvCashpenaltyAShare(df=train, initial_amount=100000, hmax=1000,
                                                    turbulence_threshold=None,
-                                                   currency='$',
+                                                   currency='CNY',
                                                    buy_cost_pct=3e-3,
                                                    sell_cost_pct=3e-3,
                                                    cash_penalty_proportion=0.2,
@@ -118,7 +142,7 @@ if __name__ == "__main__":
 
     e_trade_gym = StockTradingEnvCashpenaltyAShare(df=trade, initial_amount=100000, hmax=1000,
                                                    turbulence_threshold=None,
-                                                   currency='$',
+                                                   currency='CNY',
                                                    buy_cost_pct=3e-3,
                                                    sell_cost_pct=3e-3,
                                                    cash_penalty_proportion=0.2,

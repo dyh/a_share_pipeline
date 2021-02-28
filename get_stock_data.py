@@ -50,9 +50,6 @@ class Downloader(object):
         # 统计nan值
         # print(df.isnull().sum())
 
-        # 删除停牌日期的行，即 tradestatus=0 的数据
-        df = df[df['tradestatus'] == '1']
-
         df.to_csv(f'{self.output_dir}/{code}.csv', index=False)
 
         # stock_df = self.get_codes_by_date(self.date_end)
@@ -63,7 +60,9 @@ class Downloader(object):
 
 
 if __name__ == '__main__':
-    stock_code = 'sh.600036'
+    # 300513
+    # stock_code = 'sh.600036'
+    stock_code = 'sz.300513'
 
     test_csv_file_path = "./" + config.DATA_SAVE_DIR + '/' + stock_code + '.csv'
 
