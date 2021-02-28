@@ -130,7 +130,4 @@ dmypy.json
 /results/
 /tensorboard_log/
 /trained_models/
-/datasets_temp/tsla.csv
-
-# git cmd
-push_dyh.sh
+/datasets_temp/

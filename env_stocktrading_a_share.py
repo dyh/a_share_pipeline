@@ -83,20 +83,20 @@ class StockTradingEnvAShare(gym.Env):
                 # perform sell action based on the sign of the action
                 if self.state[index + self.stock_dim + 1] > 0:
                     # Sell only if current asset is > 0
-                    sell_num_shares = min(abs(action), self.state[index + self.stock_dim + 1])
-                    sell_amount = self.state[index + 1] * sell_num_shares * (1 - self.sell_cost_pct)
+                    sell_num_shares1 = min(abs(action), self.state[index + self.stock_dim + 1])
+                    sell_amount = self.state[index + 1] * sell_num_shares1 * (1 - self.sell_cost_pct)
                     # update balance
                     self.state[0] += sell_amount
 
-                    self.state[index + self.stock_dim + 1] -= sell_num_shares
-                    self.cost += self.state[index + 1] * sell_num_shares * self.sell_cost_pct
+                    self.state[index + self.stock_dim + 1] -= sell_num_shares1
+                    self.cost += self.state[index + 1] * sell_num_shares1 * self.sell_cost_pct
                     self.trades += 1
                 else:
-                    sell_num_shares = 0
+                    sell_num_shares1 = 0
             else:
-                sell_num_shares = 0
+                sell_num_shares1 = 0
 
-            return sell_num_shares
+            return sell_num_shares1
 
         # perform sell action based on the sign of the action
         if self.turbulence_threshold is not None:
@@ -106,8 +106,8 @@ class StockTradingEnvAShare(gym.Env):
                     # if turbulence goes over threshold, just clear out all positions
                     if self.state[index + self.stock_dim + 1] > 0:
                         # Sell only if current asset is > 0
-                        sell_num_shares = self.state[index + self.stock_dim + 1]
-                        sell_amount = self.state[index + 1] * sell_num_shares * (1 - self.sell_cost_pct)
+                        sell_num_shares2 = self.state[index + self.stock_dim + 1]
+                        sell_amount = self.state[index + 1] * sell_num_shares2 * (1 - self.sell_cost_pct)
                         # update balance
                         self.state[0] += sell_amount
                         self.state[index + self.stock_dim + 1] = 0
@@ -115,15 +115,15 @@ class StockTradingEnvAShare(gym.Env):
                                      self.sell_cost_pct
                         self.trades += 1
                     else:
-                        sell_num_shares = 0
+                        sell_num_shares2 = 0
                 else:
-                    sell_num_shares = 0
+                    sell_num_shares2 = 0
             else:
-                sell_num_shares = _do_sell_normal()
+                sell_num_shares2 = _do_sell_normal()
         else:
-            sell_num_shares = _do_sell_normal()
+            sell_num_shares2 = _do_sell_normal()
 
-        return sell_num_shares
+        return sell_num_shares2
 
     def _buy_stock(self, index, action):
 
