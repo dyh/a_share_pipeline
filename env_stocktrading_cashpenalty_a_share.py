@@ -127,6 +127,10 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
     def closings(self):
         return np.array(self.get_date_vector(self.date_index, cols=["close"]))
 
+    # @property
+    # def tradestatuses(self):
+    #     return np.array(self.get_date_vector(self.date_index, cols=["tradestatus"]))
+
     def reset(self):
         self.seed()
         self.sum_trades = 0
@@ -265,6 +269,7 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
         This function includes logic for discretizing
         It also includes turbulence logic.
         """
+
         # record actions of the model
         self.actions_memory.append(actions)
 
@@ -273,6 +278,9 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
 
         # Do nothing for shares with zero value
         actions = np.where(self.closings > 0, actions, 0)
+
+        # A股停牌，tradestatus = 0
+        # actions = np.where(self.tradestatuses > 0, actions, 0)
 
         # discretize optionally
         if self.discrete_actions:
@@ -361,6 +369,7 @@ class StockTradingEnvCashpenaltyAShare(gym.Env):
                 transactions
             )  # capture what the model's could do
             # verify we didn't do anything impossible here
+
             assert (spend + costs) <= coh
             # update our holdings
             coh = coh - spend - costs

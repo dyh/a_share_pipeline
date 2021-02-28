@@ -38,12 +38,20 @@ class Downloader(object):
                                           start_date=self.date_start,
                                           end_date=self.date_end).get_data()
 
+        # 更改列名
         df = df.rename(columns={'code': 'tic'})
 
+        # 替换空格和回车为nan
         # df.replace(to_replace=' ', value=np.nan, inplace=True)
         df.replace(to_replace=r'^\s*$', value=np.nan, regex=True, inplace=True)
+
+        # 填充nan为0
         df.fillna(0, inplace=True)
+        # 统计nan值
         # print(df.isnull().sum())
+
+        # 删除停牌日期的行，即 tradestatus=0 的数据
+        df = df[df['tradestatus'] == '1']
 
         df.to_csv(f'{self.output_dir}/{code}.csv', index=False)
 

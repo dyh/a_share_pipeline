@@ -38,28 +38,17 @@ if __name__ == "__main__":
 
     if is_need_download_data:
         print("==============下载数据===========")
-        # df = YahooDownloader(
-        #     start_date=config.START_DATE,
-        #     end_date=config.END_DATE,
-        #     # ticker_list=config.DOW_30_TICKER,
-        #     ticker_list=config.SINGLE_TICKER,
-        # ).fetch_data()
-        #
-        # test_csv_file_path = "./" + config.DATA_SAVE_DIR + '/' + 'aapl.csv'
-        # df.to_csv(test_csv_file_path, index=False)
-
     else:
-        print("==============使用本地数据===========")
-
-        df = pd.read_csv(test_csv_file_path)
-
         # df = pd.read_csv(test_csv_file_path).iloc[:, 1:]
         # df.replace(to_replace=r'^\s*$', value=np.nan, regex=True, inplace=True)
         # df.fillna(0, inplace=True)
-
         pass
+    pass
 
-        # 开盘价为T日数据，其余皆为T-1日数据，避免引入未来数据
+    # 开盘价为T日数据，其余皆为T-1日数据，避免引入未来数据
+
+    print("==============使用本地数据===========")
+    df = pd.read_csv(test_csv_file_path)
 
     print("==============Start Feature Engineering===========")
     fe = FeatureEngineer(
@@ -76,7 +65,7 @@ if __name__ == "__main__":
     processed['daily_variance'] = (processed.high - processed.low) / processed.close
     processed.head()
 
-    processed.to_csv(f'{config.DATA_SAVE_DIR}/{stock_code}_test1.csv', index=False)
+    processed.to_csv(f'{config.DATA_SAVE_DIR}/{stock_code}_temp.csv', index=False)
 
     # Training & Trading data split
     train = data_split(processed, config.START_DATE, config.START_TRADE_DATE)
