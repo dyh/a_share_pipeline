@@ -12,7 +12,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common import logger
 
 
-class StockTradingEnvAShare(gym.Env):
+class StockTradingAShareEnv(gym.Env):
     """A stock trading environment for OpenAI gym"""
     metadata = {'render.modes': ['human']}
 
@@ -75,6 +75,8 @@ class StockTradingEnvAShare(gym.Env):
         self.date_memory = [self._get_date()]
         # self.reset()
         self._seed()
+        self.today_actions_memory = []
+        self.today_date_memory = []
 
     def _sell_stock(self, index, action):
         def _do_sell_normal():
@@ -83,20 +85,20 @@ class StockTradingEnvAShare(gym.Env):
                 # perform sell action based on the sign of the action
                 if self.state[index + self.stock_dim + 1] > 0:
                     # Sell only if current asset is > 0
-                    sell_num_shares1 = min(abs(action), self.state[index + self.stock_dim + 1])
-                    sell_amount = self.state[index + 1] * sell_num_shares1 * (1 - self.sell_cost_pct)
+                    sell_num_shares = min(abs(action), self.state[index + self.stock_dim + 1])
+                    sell_amount = self.state[index + 1] * sell_num_shares * (1 - self.sell_cost_pct)
                     # update balance
                     self.state[0] += sell_amount
 
-                    self.state[index + self.stock_dim + 1] -= sell_num_shares1
-                    self.cost += self.state[index + 1] * sell_num_shares1 * self.sell_cost_pct
+                    self.state[index + self.stock_dim + 1] -= sell_num_shares
+                    self.cost += self.state[index + 1] * sell_num_shares * self.sell_cost_pct
                     self.trades += 1
                 else:
-                    sell_num_shares1 = 0
+                    sell_num_shares = 0
             else:
-                sell_num_shares1 = 0
+                sell_num_shares = 0
 
-            return sell_num_shares1
+            return sell_num_shares
 
         # perform sell action based on the sign of the action
         if self.turbulence_threshold is not None:
@@ -106,8 +108,8 @@ class StockTradingEnvAShare(gym.Env):
                     # if turbulence goes over threshold, just clear out all positions
                     if self.state[index + self.stock_dim + 1] > 0:
                         # Sell only if current asset is > 0
-                        sell_num_shares2 = self.state[index + self.stock_dim + 1]
-                        sell_amount = self.state[index + 1] * sell_num_shares2 * (1 - self.sell_cost_pct)
+                        sell_num_shares = self.state[index + self.stock_dim + 1]
+                        sell_amount = self.state[index + 1] * sell_num_shares * (1 - self.sell_cost_pct)
                         # update balance
                         self.state[0] += sell_amount
                         self.state[index + self.stock_dim + 1] = 0
@@ -115,15 +117,15 @@ class StockTradingEnvAShare(gym.Env):
                                      self.sell_cost_pct
                         self.trades += 1
                     else:
-                        sell_num_shares2 = 0
+                        sell_num_shares = 0
                 else:
-                    sell_num_shares2 = 0
+                    sell_num_shares = 0
             else:
-                sell_num_shares2 = _do_sell_normal()
+                sell_num_shares = _do_sell_normal()
         else:
-            sell_num_shares2 = _do_sell_normal()
+            sell_num_shares = _do_sell_normal()
 
-        return sell_num_shares2
+        return sell_num_shares
 
     def _buy_stock(self, index, action):
 
@@ -167,6 +169,41 @@ class StockTradingEnvAShare(gym.Env):
     def step(self, actions):
         self.terminal = self.day >= len(self.df.index.unique()) - 1
         if self.terminal:
+            # ---------------------------------------
+            actions = actions * self.hmax  # actions initially is scaled between 0 to 1
+            actions = (actions.astype(int))  # convert into integer because we can't by fraction of shares
+            if self.turbulence_threshold is not None:
+                if self.turbulence >= self.turbulence_threshold:
+                    actions = np.array([-self.hmax] * self.stock_dim)
+            begin_total_asset = self.state[0] + \
+                                sum(np.array(self.state[1:(self.stock_dim + 1)]) * np.array(
+                                    self.state[(self.stock_dim + 1):(self.stock_dim * 2 + 1)]))
+            # print("begin_total_asset:{}".format(begin_total_asset))
+
+            argsort_actions = np.argsort(actions)
+
+            sell_index = argsort_actions[:np.where(actions < 0)[0].shape[0]]
+            buy_index = argsort_actions[::-1][:np.where(actions > 0)[0].shape[0]]
+
+            for index in sell_index:
+                # print(f"Num shares before: {self.state[index+self.stock_dim+1]}")
+                # print(f'take sell action before : {actions[index]}')
+                actions[index] = self._sell_stock(index, actions[index]) * (-1)
+                # print(f'take sell action after : {actions[index]}')
+                # print(f"Num shares after: {self.state[index+self.stock_dim+1]}")
+
+            for index in buy_index:
+                # print('take buy action: {}'.format(actions[index]))
+                actions[index] = self._buy_stock(index, actions[index])
+
+            # 拷贝到today actions
+            self.today_actions_memory = list(self.actions_memory)
+            # 记录today actions
+            self.today_actions_memory.append(actions)
+
+            self.today_date_memory = list(self.date_memory)
+            # ---------------------------------------
+
             # print(f"Episode: {self.episode}")
             if self.make_plots:
                 self._make_plot()
@@ -197,8 +234,8 @@ class StockTradingEnvAShare(gym.Env):
                 print("=================================")
 
             if (self.model_name != '') and (self.mode != ''):
-                df_actions = self.save_action_memory()
-                df_actions.to_csv('results/actions_{}_{}_{}.csv'.format(self.mode, self.model_name, self.iteration))
+                # df_actions = self.save_action_memory()
+                # df_actions.to_csv('results/actions_{}_{}_{}.csv'.format(self.mode, self.model_name, self.iteration))
                 df_total_value.to_csv(
                     'results/account_value_{}_{}_{}.csv'.format(self.mode, self.model_name, self.iteration),
                     index=False)
@@ -252,9 +289,7 @@ class StockTradingEnvAShare(gym.Env):
             self.day += 1
             self.data = self.df.loc[self.day, :]
             if self.turbulence_threshold is not None:
-                # self.turbulence = self.data['turbulence'].values[0]
-                self.turbulence = self.data['turbulence']
-
+                self.turbulence = self.data['turbulence'].values[0]
             self.state = self._update_state()
 
             end_total_asset = self.state[0] + \
@@ -366,11 +401,12 @@ class StockTradingEnvAShare(gym.Env):
             # date and close price length must match actions length
             date_list = self.date_memory[:-1]
             df_date = pd.DataFrame(date_list)
-            df_date.rename(columns={0: 'date'}, inplace=True)
+            df_date.columns = ['date']
+
             action_list = self.actions_memory
             df_actions = pd.DataFrame(action_list)
-            df_actions.rename(columns=lambda x: self.data.tic.values[x], inplace=True)
-            df_actions.set_index = df_date
+            df_actions.columns = self.data.tic.values
+            df_actions.index = df_date.date
             # df_actions = pd.DataFrame({'date':date_list,'actions':action_list})
         else:
             date_list = self.date_memory[:-1]
@@ -386,3 +422,9 @@ class StockTradingEnvAShare(gym.Env):
         e = DummyVecEnv([lambda: self])
         obs = e.reset()
         return e, obs
+
+    def get_today_actions(self):
+        date_list = self.today_date_memory
+        action_list = self.today_actions_memory
+        df_actions = pd.DataFrame({'date': date_list, 'actions': action_list})
+        return df_actions

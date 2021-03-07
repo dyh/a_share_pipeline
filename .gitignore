@@ -132,3 +132,4 @@ tensorboard_log/
 trained_models/
 datasets_temp/
 /datasets_temp/
+/results/

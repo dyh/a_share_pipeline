@@ -1,7 +1,7 @@
 import baostock as bs
 import pandas as pd
 import os
-import config_a_share as config
+import config as config
 import numpy as np
 
 
@@ -10,7 +10,7 @@ def mkdir(directory):
         os.makedirs(directory)
 
 
-class Downloader(object):
+class StockData(object):
     def __init__(self, output_dir, date_start, date_end):
         self._bs = bs
         bs.login()
@@ -19,9 +19,11 @@ class Downloader(object):
         self.date_end = date_end
         self.output_dir = output_dir
         # ,date,open,high,low,close,volume,tic,day
-        self.fields = "date,open,high,low,close,volume,code,amount," \
-                      "adjustflag,turn,tradestatus,pctChg,peTTM," \
-                      "pbMRQ,psTTM,pcfNcfTTM,isST"
+        # self.fields = "date,open,high,low,close,volume,code,amount," \
+        #               "adjustflag,turn,tradestatus,pctChg,peTTM," \
+        #               "pbMRQ,psTTM,pcfNcfTTM,isST"
+
+        self.fields = "date,open,high,low,close,volume,code,amount,turn,tradestatus,pctChg,peTTM, pbMRQ,psTTM,pcfNcfTTM"
 
     def exit(self):
         bs.logout()
@@ -33,10 +35,17 @@ class Downloader(object):
         print(stock_df)
         return stock_df
 
-    def run(self, code):
+    def download(self, code):
         df = bs.query_history_k_data_plus(code, self.fields,
                                           start_date=self.date_start,
                                           end_date=self.date_end).get_data()
+
+        # 删除停牌日期的行，即 tradestatus=0 的数据，只保留 tradestatus=1 的数据
+        df = df[df['tradestatus'] == '1']
+
+        # 删除 tradestatus 列、adjustflag 列、isST 列
+        df.drop(['tradestatus'], axis=1, inplace=True)
+        # df.drop(['tradestatus', 'adjustflag', 'isST'], axis=1, inplace=True)
 
         # 更改列名
         df = df.rename(columns={'code': 'tic'})
@@ -45,29 +54,19 @@ class Downloader(object):
         # df.replace(to_replace=' ', value=np.nan, inplace=True)
         df.replace(to_replace=r'^\s*$', value=np.nan, regex=True, inplace=True)
 
-        # 填充nan为0
+        # 將nan填充为0
         df.fillna(0, inplace=True)
         # 统计nan值
-        # print(df.isnull().sum())
+        print(df.isnull().sum())
 
-        df.to_csv(f'{self.output_dir}/{code}.csv', index=False)
+        csv_file_path = f'{self.output_dir}/{code}.csv'
+        df.to_csv(csv_file_path, index=False)
 
+        # 下载所有股票数据
         # stock_df = self.get_codes_by_date(self.date_end)
         # for index, row in stock_df.iterrows():
         #     print(f'processing {row["code"]} {row["code_name"]}')
 
         self.exit()
 
-
-if __name__ == '__main__':
-    # 300513
-    stock_code = 'sh.600036'
-    # stock_code = 'sz.300513'
-
-    test_csv_file_path = "./" + config.DATA_SAVE_DIR + '/' + stock_code + '.csv'
-
-    # 获取股票的日K线数据
-    downloader = Downloader("./" + config.DATA_SAVE_DIR, date_start=config.START_DATE, date_end=config.END_DATE)
-    downloader.run(stock_code)
-
-    print('done!')
+        return csv_file_path
