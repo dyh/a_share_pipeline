@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 import pandas as pd
 from gym.utils import seeding
@@ -35,7 +37,9 @@ class StockTradingAShareEnv(gym.Env):
                  previous_state=[],
                  model_name='',
                  mode='',
-                 iteration=''):
+                 iteration='',
+                 random_start=True
+                 ):
         self.day = day
         self.df = df
         self.stock_dim = stock_dim
@@ -77,6 +81,8 @@ class StockTradingAShareEnv(gym.Env):
         self._seed()
         self.today_actions_memory = []
         self.today_date_memory = []
+
+        self.random_start = random_start
 
     def _sell_stock(self, index, action):
         def _do_sell_normal():
@@ -297,7 +303,17 @@ class StockTradingAShareEnv(gym.Env):
                                   self.state[(self.stock_dim + 1):(self.stock_dim * 2 + 1)]))
             self.asset_memory.append(end_total_asset)
             self.date_memory.append(self._get_date())
+
             self.reward = end_total_asset - begin_total_asset
+
+            # 加大惩罚
+            # self.reward = end_total_asset - 100000
+            # if end_total_asset - begin_total_asset <= 0:
+            #     self.reward = end_total_asset - begin_total_asset
+            #     self.reward = self.reward * 5
+            # else:
+            #     pass
+
             self.rewards_memory.append(self.reward)
             self.reward = self.reward * self.reward_scaling
 
@@ -314,8 +330,16 @@ class StockTradingAShareEnv(gym.Env):
                                    sum(np.array(self.state[1:(self.stock_dim + 1)]) * np.array(
                                        self.previous_state[(self.stock_dim + 1):(self.stock_dim * 2 + 1)]))
             self.asset_memory = [previous_total_asset]
+        pass
 
-        self.day = 0
+        if self.random_start:
+            total_date_count = int(len(self.df["date"].sort_values().unique()) * 0.5)
+            self.day = random.choice(range(total_date_count))
+        else:
+            self.day = 0
+        pass
+
+        # self.day = 0
         self.data = self.df.loc[self.day, :]
         self.turbulence = 0
         self.cost = 0

@@ -24,7 +24,7 @@ RESULTS_DIR = f"results"
 TECHNICAL_INDICATORS_LIST = ["macd", "boll_ub", "boll_lb", "rsi_30", "cci_30", "dx_30", "close_30_sma", "close_60_sma"]
 
 ## Model Parameters
-# A2C_PARAMS = {"n_steps": 5, "ent_coef": 0.005, "learning_rate": 0.0007}
+# A2C_PARAMS = {"n_steps": 5, "ent_coef": 0.005, "learning_rate": 0.0002}
 A2C_PARAMS = {"n_steps": 5, "ent_coef": 0.01, "learning_rate": 0.0007}
 
 PPO_PARAMS = {
@@ -33,13 +33,16 @@ PPO_PARAMS = {
     "learning_rate": 0.00025,
     "batch_size": 64,
 }
-DDPG_PARAMS = {"batch_size": 128, "buffer_size": 50000, "learning_rate": 0.001}
-TD3_PARAMS = {"batch_size": 100, "buffer_size": 1000000, "learning_rate": 0.001}
+DDPG_PARAMS = {"batch_size": 128, "buffer_size": 50000, "learning_rate": 0.0002}
+TD3_PARAMS = {"batch_size": 100, "buffer_size": 1000000, "learning_rate": 0.0002}
+
+# DDPG_PARAMS = {"batch_size": 128, "buffer_size": 50000, "learning_rate": 0.001}
+# TD3_PARAMS = {"batch_size": 100, "buffer_size": 1000000, "learning_rate": 0.001}
+
 SAC_PARAMS = {
     "batch_size": 64,
     "buffer_size": 100000,
     "learning_rate": 0.0001,
     "learning_starts": 100,
-    "batch_size": 64,
     "ent_coef": "auto_0.1",
 }
