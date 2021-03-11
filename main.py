@@ -15,6 +15,14 @@ from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngine
 
 from env import StockTradingAShareEnv as StockTradingEnv
 
+
+def shutdonw(secs=60):
+    print('#' * 20, 'system will shutdown in', str(secs), 'secs...', '#' * 20)
+    # time.sleep(secs)
+    os.system('shutdown now')
+    pass
+
+
 if __name__ == "__main__":
 
     # 创建目录
@@ -33,21 +41,21 @@ if __name__ == "__main__":
     # 训练开始日期
     start_date = "2002-05-01"
     # 停止训练日期 / 开始预测日期
-    start_trade_date = "2020-11-16"
+    start_trade_date = "2020-12-01"
     # 停止预测日期
-    end_date = '2021-03-04'
+    end_date = '2021-03-08'
 
     # 今天日期，交易日
-    today_date = '2021-03-05'
+    today_date = '2021-03-09'
 
     # 今日开盘价
-    today_open_price = 51.90
+    today_open_price = 50.02
 
     # 现金金额
     initial_amount = 100000
 
     # 单支股票最大交易量
-    hmax = 1000
+    hmax = 100
 
     # 训练次数
     total_timesteps = 80000
@@ -58,7 +66,7 @@ if __name__ == "__main__":
     stock_data = StockData("./" + config.DATA_SAVE_DIR, date_start=start_date, date_end=end_date)
     # 获得数据文件路径
     csv_file_path = stock_data.download(stock_code)
-
+    # csv_file_path = './datasets_temp/sh.600036.csv'
     print("==============处理未来数据==============")
 
     # open今日开盘价为T日数据，其余皆为T-1日数据，避免引入未来数据
@@ -117,17 +125,36 @@ if __name__ == "__main__":
 
     print("==============开始训练模型==============")
 
-    # weights文件名
-    weights_file_path = f"{config.TRAINED_MODEL_DIR}/{time_point}.zip"
-    # weights_file_path = f"{config.TRAINED_MODEL_DIR}/20210307_181715.zip"
+    # 选择模型
+
+    # -----------------PPO-----------------
+    # model_name = "ppo"
+    # model_kwargs = config.PPO_PARAMS
+    # -------------------------------------
+
+    # -----------------a2c-----------------
+    model_name = "a2c"
+    model_kwargs = config.A2C_PARAMS
+    # -------------------------------------
+
+    # -----------------sac-----------------
+    # model_name = "sac"
+    # model_kwargs = config.SAC_PARAMS
+    # -------------------------------------
+
+    # -----------------ddpg-----------------
+    # model_name = "ddpg"
+    # model_kwargs = config.DDPG_PARAMS
+    # -------------------------------------
+
+    # -----------------td3-----------------
+    # model_name = "td3"
+    # model_kwargs = config.TD3_PARAMS
+    # -------------------------------------
 
     # calculate state action space
     stock_dimension = len(df_train.tic.unique())
-    state_space = (
-            1
-            + 2 * stock_dimension
-            + len(config.TECHNICAL_INDICATORS_LIST) * stock_dimension
-    )
+    state_space = (1 + 2 * stock_dimension + len(config.TECHNICAL_INDICATORS_LIST) * stock_dimension)
 
     env_kwargs = {
         "hmax": hmax,
@@ -139,33 +166,26 @@ if __name__ == "__main__":
         "tech_indicator_list": config.TECHNICAL_INDICATORS_LIST,
         "action_space": stock_dimension,
         "reward_scaling": 1e-4,
-        "model_name": 'a2c',
+        "model_name": model_name,
         "mode": 'normal_env',
-        "iteration": time_point
+        "iteration": str(total_timesteps // 1000) + 'k'
     }
 
-    e_train_gym = StockTradingEnv(df=df_train, **env_kwargs)
+    e_train_gym = StockTradingEnv(df=df_train, random_start=True, **env_kwargs)
     env_train, _ = e_train_gym.get_sb_env()
     agent_train = DRLAgent(env=env_train)
 
-    # 获取模型定义
-    # -----------------PPO-----------------
-    # tb_log_name = "ppo"
-    # model_object = agent.get_model(tb_log_name, model_kwargs=config.PPO_PARAMS)
-    # -------------------------------------
+    model_object = agent_train.get_model(model_name=model_name, model_kwargs=model_kwargs)
 
-    # -----------------a2c-----------------
-    model_name = "a2c"
-    model_object = agent_train.get_model(model_name=model_name, model_kwargs=config.A2C_PARAMS)
-    # -------------------------------------
+    # 统一的文件名
+    uniform_file_name = f"{time_point}_{model_name}_{str(total_timesteps // 1000) + 'k'}"
 
-    # -----------------sac-----------------
-    # tb_log_name = "sac"
-    # model_object = agent.get_model(tb_log_name, model_kwargs=config.SAC_PARAMS)
-    # -------------------------------------
+    # weights文件名
+    weights_file_path = f"{config.TRAINED_MODEL_DIR}/{uniform_file_name}.zip"
+    # weights_file_path = f"{config.TRAINED_MODEL_DIR}/20210307_181715.zip"
 
     # 加载训练好的weights文件，可接续上次的结果继续训练。
-    # weights_file_path = f"{config.TRAINED_MODEL_DIR}/a2c.zip"
+    # weights_file_path = f"{config.TRAINED_MODEL_DIR}/{model_name}.zip"
     # model_object.load(weights_file_path)
 
     # 训练模型
@@ -187,26 +207,30 @@ if __name__ == "__main__":
     # e_trade_gym = StockTradingEnv(df=df_trade, turbulence_threshold=250, **env_kwargs)
 
     # 不使用 湍流阈值
-    e_trade_gym = StockTradingEnv(df=df_predict, **env_kwargs)
+    e_trade_gym = StockTradingEnv(df=df_predict, random_start=False, **env_kwargs)
     env_trade, obs_trade = e_trade_gym.get_sb_env()
     agent_predict = DRLAgent(env=env_trade)
 
-    model_predict = agent_predict.get_model(model_name, model_kwargs=config.A2C_PARAMS)
+    model_predict = agent_predict.get_model(model_name, model_kwargs=model_kwargs)
 
     # 加载训练好的weights文件
     model_predict.load(weights_file_path)
 
     df_account_value, df_actions = DRLAgent.DRL_today_prediction(model=model_predict, environment=e_trade_gym)
 
-    account_csv_file_path = "./" + config.RESULTS_DIR + "/df_account_value_" + time_point + ".csv"
+    account_csv_file_path = f"{config.RESULTS_DIR}/df_account_value_{uniform_file_name}.csv"
     df_account_value.to_csv(account_csv_file_path)
 
-    actions_csv_file_path = "./" + config.RESULTS_DIR + "/df_actions_" + time_point + ".csv"
+    actions_csv_file_path = f"{config.RESULTS_DIR}/df_actions_{uniform_file_name}.csv"
     df_actions.to_csv(actions_csv_file_path)
 
     print("account 结果保存在:", account_csv_file_path)
     print("actions 结果保存在:", actions_csv_file_path)
 
     print("==============预测完成==============")
+
+    # 关机
+    # time.sleep(60)
+    # os.system('shutdown now')
 
     pass
