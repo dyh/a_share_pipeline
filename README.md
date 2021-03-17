@@ -1,6 +1,6 @@
 # A Share Pipeline
-- A Share Pipeline with Deep RL
-- 强化深度学习A股pipeline
+
+- 人工智能A股pipeline
 
 
 # 运行 DEMO 程序
