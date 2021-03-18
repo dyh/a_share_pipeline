@@ -21,8 +21,12 @@ import torch
 
 if __name__ == "__main__":
 
-    # sd = StockData(output_dir='./pipeline_informer/temp_dataset/', date_start="2002-05-01", date_end='2021-03-08')
-    # sd.get_informer_data(stock_code='sh.600036', fields=sd.fields_60m, frequency='15', adjustflag='1')
+    stock_code = 'sh.600036'
+    date_start = '2002-05-01'
+    date_end = '2021-03-18'
+
+    sd = StockData(output_dir='./pipeline_informer/temp_dataset', date_start=date_start, date_end=date_end)
+    sd.get_informer_data(stock_code=stock_code, fields=sd.fields_minutes, frequency='15', adjustflag='3')
 
     # 时间点
     time_point = time.strftime("%Y%m%d_%H%M%S", time.localtime())
@@ -235,8 +239,8 @@ if __name__ == "__main__":
     plt.plot(trues[0, :, -1], label='GroundTruth')
     plt.plot(preds[0, :, -1], label='Prediction')
     plt.legend()
-    plt.savefig(f'./pipeline_informer/results/plt_close_price_{time_point}.png')
-    plt.show()
+    plt.savefig(f'./pipeline_informer/results/plt_close_price_{time_point}_{stock_code}_{date_start}_{date_end}.png')
+    # plt.show()
 
     # # draw HUFL prediction
     # plt.figure()

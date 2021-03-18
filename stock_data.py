@@ -31,7 +31,7 @@ class StockData(object):
         #               "pbMRQ,psTTM,pcfNcfTTM,isST"
 
         self.fields_day = "date,open,high,low,close,volume,code,amount,turn,tradestatus,pctChg,peTTM, pbMRQ,psTTM,pcfNcfTTM"
-        self.fields_60m = "time,open,high,low,volume,amount,code,close"
+        self.fields_minutes = "time,open,high,low,volume,amount,code,close"
 
 
     def exit(self):
@@ -44,7 +44,7 @@ class StockData(object):
         print(stock_df)
         return stock_df
 
-    def download(self, code, fields, frequency='d', adjustflag='1'):
+    def download(self, code, fields, frequency='d', adjustflag='3'):
         """
 
         :param fields:
@@ -129,9 +129,9 @@ class StockData(object):
         # 將nan填充为0
         df_fe.fillna(0, inplace=True)
 
-        # 更改列名
-        if 'time' in df_fe.columns:
-            df_fe = df_fe.rename(columns={'time': 'date'})
+        df_fe['time'] = df_fe['time'].astype('str').str[:-3]
+        df_fe["time"] = pd.to_datetime(df_fe.time)
+        df_fe = df_fe.rename(columns={'time': 'date'})
 
         # 将 close 移动到最后一列，改名为OT
         col_close = df_fe.close
@@ -141,6 +141,10 @@ class StockData(object):
         if 'tic' in df_fe.columns:
             df_fe = df_fe.drop('tic', axis=1)
 
+        # 增加未来工作日数据------------
+        # d = datetime.date(2012,2,7)
+        # next = d + datetime.timedelta(days= 7-d.weekday() if d.weekday()>3 else 1)
+        # -----------------
         # df_fe = df_fe.round(15)
 
         # df_fe.to_csv(f'{self.output_dir}/{stock_code}_processed_df.csv', index=False)
