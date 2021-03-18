@@ -22,7 +22,7 @@ import torch
 if __name__ == "__main__":
 
     # sd = StockData(output_dir='./pipeline_informer/temp_dataset/', date_start="2002-05-01", date_end='2021-03-08')
-    # sd.get_informer_data(stock_code='sh.600036', fields=sd.fields_60m, frequency='60', adjustflag='1')
+    # sd.get_informer_data(stock_code='sh.600036', fields=sd.fields_60m, frequency='15', adjustflag='1')
 
     # 时间点
     time_point = time.strftime("%Y%m%d_%H%M%S", time.localtime())

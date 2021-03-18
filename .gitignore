@@ -133,3 +133,5 @@ trained_models/
 datasets_temp/
 /datasets_temp/
 /results/
+/pipeline_informer/checkpoints/
+/pipeline_informer/temp_dataset/

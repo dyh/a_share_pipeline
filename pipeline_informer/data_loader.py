@@ -49,8 +49,8 @@ class Dataset_ETT_hour(Dataset):
 
         # df_raw = pd.DataFrame(df_raw, dtype='double')
 
-        num_train = int(len(df_raw) * 0.98)
-        num_test = int(len(df_raw) * 0.01)
+        num_train = int(len(df_raw) * 0.97)
+        num_test = int(len(df_raw) * 0.02)
         num_vali = len(df_raw) - num_train - num_test
 
         border1s = [0, num_train - self.seq_len, len(df_raw) - num_test - self.seq_len]
