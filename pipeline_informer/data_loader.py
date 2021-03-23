@@ -50,8 +50,8 @@ class Dataset_ETT_hour(Dataset):
         # border1s = [0, 12*30*24 - self.seq_len, 12*30*24+4*30*24 - self.seq_len]
         # border2s = [12*30*24, 12*30*24+4*30*24, 12*30*24+8*30*24]
 
-        num_train = int(len(df_raw) * 0.90)
-        num_vali = int(len(df_raw) * 0.10)
+        num_train = int(len(df_raw) * 0.8)
+        num_vali = int(len(df_raw) * 0.2)
         num_test = len(df_raw) - num_train - num_vali
 
         border1s = [0, num_train - self.seq_len, len(df_raw) - num_test - self.seq_len]
@@ -147,8 +147,8 @@ class Dataset_ETT_minute(Dataset):
         # border1s = [0, 12 * 30 * 24 * 4 - self.seq_len, 12 * 30 * 24 * 4 + 4 * 30 * 24 * 4 - self.seq_len]
         # border2s = [12 * 30 * 24 * 4, 12 * 30 * 24 * 4 + 4 * 30 * 24 * 4, 12 * 30 * 24 * 4 + 8 * 30 * 24 * 4]
 
-        num_train = int(len(df_raw) * 0.90)
-        num_vali = int(len(df_raw) * 0.10)
+        num_train = int(len(df_raw) * 0.8)
+        num_vali = int(len(df_raw) * 0.2)
         num_test = len(df_raw) - num_train - num_vali
 
         border1s = [0, num_train - self.seq_len, len(df_raw) - num_test - self.seq_len]

@@ -57,7 +57,8 @@ def train(freq='h', features='S', patience=5, use_technical_indicator=False,
 
     args.seq_len = 96  # input sequence length of Informer encoder
     args.label_len = 48  # start token length of Informer decoder
-    args.pred_len = 240  # prediction sequence length
+
+    args.pred_len = 960  # prediction sequence length
     # Informer decoder input: concat[start token series(label_len), zero padding series(pred_len)]
 
     args.enc_in = 7  # encoder input size
@@ -83,7 +84,7 @@ def train(freq='h', features='S', patience=5, use_technical_indicator=False,
 
     args.num_workers = 0
     args.itr = 1
-    args.train_epochs = 10
+    args.train_epochs = 20
     args.patience = patience
     args.des = 'exp'
 
@@ -271,14 +272,13 @@ def train(freq='h', features='S', patience=5, use_technical_indicator=False,
     plt.legend()
 
     plt.savefig(f'./pipeline_informer/results/final_{setting}.png')
+    # plt.show()
 
     df_trues = pd.DataFrame(trues_inverse_transform[0, :, :])
     df_trues.to_csv(f'./pipeline_informer/results/final_trues_{setting}_{time_point}.csv')
 
     df_preds = pd.DataFrame(preds_inverse_transform[0, :, :])
     df_preds.to_csv(f'./pipeline_informer/results/final_preds_{setting}_{time_point}.csv')
-
-    # plt.show()
 
     # draw HUFL prediction
     # plt.figure()
@@ -297,15 +297,15 @@ if __name__ == "__main__":
     # freq = [t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly]
 
     # 小时，单独列
-    train(freq='h', features='S', patience=5, use_technical_indicator=False, download_data=True)
+    train(freq='h', features='S', patience=10, use_technical_indicator=False, download_data=False)
 
     # 小时，多列
-    train(freq='h', features='M', patience=5, use_technical_indicator=False, download_data=False)
+    train(freq='h', features='M', patience=10, use_technical_indicator=False, download_data=False)
 
     # 分钟，单独列
-    train(freq='t', features='S', patience=5, use_technical_indicator=False, download_data=False)
+    train(freq='t', features='S', patience=10, use_technical_indicator=False, download_data=False)
 
     # 分钟，多列
-    train(freq='t', features='M', patience=5, use_technical_indicator=False, download_data=False)
+    train(freq='t', features='M', patience=10, use_technical_indicator=False, download_data=False)
 
     pass

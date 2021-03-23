@@ -75,12 +75,12 @@ class Exp_Informer(Exp_Basic):
         timeenc = 0 if args.embed != 'timeF' else 1
 
         if flag == 'test':
-            shuffle_flag = False;
-            drop_last = True;
+            shuffle_flag = False
+            drop_last = True
             batch_size = args.batch_size
         else:
-            shuffle_flag = True;
-            drop_last = True;
+            shuffle_flag = True
+            drop_last = True
             batch_size = args.batch_size
 
         data_set = Data(
