@@ -1,3 +1,4 @@
+import datetime
 import sys
 
 sys.path.append('./FinRL_Library_master')
@@ -7,7 +8,6 @@ import pandas as pd
 import os
 import config as config
 import numpy as np
-
 
 from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
 
@@ -22,17 +22,31 @@ class StockData(object):
         self._bs = bs
         bs.login()
         self.date_start = date_start
-        # self.date_end = datetime.datetime.now().strftime("%Y-%m-%d")
         self.date_end = date_end
         self.output_dir = output_dir
-        # ,date,open,high,low,close,volume,tic,day
-        # self.fields = "date,open,high,low,close,volume,code,amount," \
-        #               "adjustflag,turn,tradestatus,pctChg,peTTM," \
-        #               "pbMRQ,psTTM,pcfNcfTTM,isST"
 
-        self.fields_day = "date,open,high,low,close,volume,code,amount,turn,tradestatus,pctChg,peTTM, pbMRQ,psTTM,pcfNcfTTM"
+        self.fields_day = "date,open,high,low,close,volume,code,amount,turn," \
+                          "tradestatus,pctChg,peTTM, pbMRQ,psTTM,pcfNcfTTM"
+
         self.fields_minutes = "time,open,high,low,volume,amount,code,close"
 
+        # 15分钟K线的时间点
+        self.list_time_point_15minutes = ['09:45:00',
+                                          '10:00:00',
+                                          '10:15:00',
+                                          '10:30:00',
+                                          '10:45:00',
+                                          '11:00:00',
+                                          '11:15:00',
+                                          '11:30:00',
+                                          '13:15:00',
+                                          '13:30:00',
+                                          '13:45:00',
+                                          '14:00:00',
+                                          '14:15:00',
+                                          '14:30:00',
+                                          '14:45:00',
+                                          '15:00:00']
 
     def exit(self):
         bs.logout()
@@ -90,7 +104,7 @@ class StockData(object):
 
         return csv_file_path
 
-    def get_informer_data(self, stock_code, fields, frequency, adjustflag):
+    def get_informer_data(self, stock_code, fields, frequency, adjustflag, use_technical_indicator=False):
         # 股票代码
         stock_code = stock_code
 
@@ -110,19 +124,22 @@ class StockData(object):
 
         df = pd.read_csv(csv_file_path)
 
-        print("==============加入技术指标==============")
+        if use_technical_indicator is True:
+            print("==============加入技术指标==============")
+            fe = FeatureEngineer(
+                use_technical_indicator=True,
+                tech_indicator_list=config.TECHNICAL_INDICATORS_LIST,
+                use_turbulence=False,
+                user_defined_feature=False,
+            )
 
-        fe = FeatureEngineer(
-            use_technical_indicator=True,
-            tech_indicator_list=config.TECHNICAL_INDICATORS_LIST,
-            use_turbulence=False,
-            user_defined_feature=False,
-        )
-
-        df_fe = fe.preprocess_data(df)
-        # df_fe['log_volume'] = np.log(df_fe.volume * df_fe.close)
-        df_fe['change'] = (df_fe.close - df_fe.open) / df_fe.close
-        df_fe['daily_variance'] = (df_fe.high - df_fe.low) / df_fe.close
+            df_fe = fe.preprocess_data(df)
+            # df_fe['log_volume'] = np.log(df_fe.volume * df_fe.close)
+            df_fe['change'] = (df_fe.close - df_fe.open) / df_fe.close
+            df_fe['daily_variance'] = (df_fe.high - df_fe.low) / df_fe.close
+        else:
+            df_fe = df
+        pass
 
         df_fe.replace(to_replace=r'^\s*$', value=np.nan, regex=True, inplace=True)
 
@@ -141,16 +158,8 @@ class StockData(object):
         if 'tic' in df_fe.columns:
             df_fe = df_fe.drop('tic', axis=1)
 
-        # 增加未来工作日数据------------
-        # d = datetime.date(2012,2,7)
-        # next = d + datetime.timedelta(days= 7-d.weekday() if d.weekday()>3 else 1)
-        # -----------------
-        # df_fe = df_fe.round(15)
-
         # df_fe.to_csv(f'{self.output_dir}/{stock_code}_processed_df.csv', index=False)
         df_fe.to_csv(f'{self.output_dir}/ETTh1.csv', index=False)
-
-        # ETTh1
 
         print("==============数据准备完成==============")
         pass
