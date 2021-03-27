@@ -1,39 +1,37 @@
 import sys
 
 if 'FinRL_Library_master' not in sys.path:
-    sys.path.append('./FinRL_Library_master')
+    sys.path.append('../../FinRL_Library_master')
 
 if 'Informer2020_main' not in sys.path:
-    sys.path.append('./Informer2020_main')
+    sys.path.append('../../Informer2020_main')
 
 import os
-import time
 
 import torch
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-from stock_data import StockData
 from torch.utils.data import DataLoader
 
 from Informer2020_main.utils.tools import dotdict
 from Informer2020_main.models.model import Informer
-from pipeline_informer.exp_informer import Exp_Informer
-from pipeline_informer.data_loader import Dataset_ETT_hour
-import pipeline_utils.datetime
+from pipeline.informer.exp_informer import Exp_Informer
+from pipeline.informer.data_loader import Dataset_ETT_hour
+import pipeline.utils.datetime
 
 if __name__ == "__main__":
 
     stock_code = 'sh.600036'
     date_start = '2002-05-01'
-    date_end = '2021-03-18'
+    date_end = '2021-03-19'
 
     # sd = StockData(output_dir='./pipeline_informer/temp_dataset', date_start=date_start, date_end=date_end)
     # sd.get_informer_data(stock_code=stock_code, fields=sd.fields_minutes, frequency='15', adjustflag='3')
 
     # 保存文件的时间点
-    time_point = pipeline_utils.datetime.time_point()
+    time_point = pipeline.utils.datetime.time_point()
 
     args = dotdict()
 
@@ -42,7 +40,7 @@ if __name__ == "__main__":
     args.data = 'ETTh1'  # data
     args.root_path = './pipeline_informer/temp_dataset/'  # root path of data file
     args.data_path = 'ETTh1.csv'  # data file
-    args.features = 'MS'  # forecasting task, options:[M, S, MS(TBD)]; M:multivariate predict multivariate, S:univariate predict univariate, MS:multivariate predict univariate
+    args.features = 'M'  # forecasting task, options:[M, S, MS(TBD)]; M:multivariate predict multivariate, S:univariate predict univariate, MS:multivariate predict univariate
     # args.features = 'S'  # forecasting task, options:[M, S, MS(TBD)]; M:multivariate predict multivariate, S:univariate predict univariate, MS:multivariate predict univariate
     args.target = 'OT'  # target feature in S or MS task
     args.freq = 'h'  # freq for time features encoding
@@ -75,7 +73,7 @@ if __name__ == "__main__":
 
     args.num_workers = 0
     args.itr = 1
-    args.train_epochs = 6
+    args.train_epochs = 20
     args.patience = 3
     args.des = 'exp'
 
@@ -100,52 +98,15 @@ if __name__ == "__main__":
     print(args)
     Exp = Exp_Informer
 
-    setting = ''
-
-    for ii in range(args.itr):
-        # setting record of experiments
-        setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_eb{}_dt{}_{}_{}'.format(args.model,
-                                                                                                   args.data,
-                                                                                                   args.features,
-                                                                                                   args.seq_len,
-                                                                                                   args.label_len,
-                                                                                                   args.pred_len,
-                                                                                                   args.d_model,
-                                                                                                   args.n_heads,
-                                                                                                   args.e_layers,
-                                                                                                   args.d_layers,
-                                                                                                   args.d_ff,
-                                                                                                   args.attn,
-                                                                                                   args.embed,
-                                                                                                   args.distil,
-                                                                                                   args.des, ii)
-
-        # set experiments
-        exp = Exp(args)
-
-        # train
-        print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-        exp.train(setting)
-
-        # test
-        print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-        exp.test(setting)
-
-        torch.cuda.empty_cache()
-    pass
-
-    # --------------------------------------------------
-
-    # --------------------------------------------------
+    setting = 'save_informer_ETTh1_ftM_sl96_ll48_pl24_dm512_nh8_el3_dl2_df512_atprob_ebtimeF_dtTrue_exp_0'
 
     # set model path
-    # setting = 'informer_ETTh1_ftM_sl96_ll48_pl24_dm512_nh8_el3_dl2_df512_atprob_ebtimeF_dtTrue_exp_0'
     weights_path = os.path.join('./pipeline_informer/checkpoints/', setting, 'checkpoint.pth')
 
     # set prediction dataloader (using test dataloader here)
     Data = Dataset_ETT_hour
     timeenc = 0 if args.embed != 'timeF' else 1
-    flag = 'test'
+    flag = 'val'
     shuffle_flag = False
     drop_last = True
     batch_size = 1
@@ -237,16 +198,28 @@ if __name__ == "__main__":
     trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
     print('prediction shape:', preds.shape, trues.shape)  # [num_samples, pred_len, c_out]
 
+    # trues_inverse_transform = trues[0, :, -1]
+    # preds_inverse_transform = preds[0, :, -1]
+
+    trues_inverse_transform = data_set.inverse_transform(trues)
+    preds_inverse_transform = data_set.inverse_transform(preds)
+
     # draw OT prediction
     plt.figure()
-    plt.plot(trues[0, :, -1], label='GroundTruth')
-    plt.plot(preds[0, :, -1], label='Prediction')
+    # plt.ylim(bottom=2.1, top=2.3)
+    # plt.plot(trues[0, :, -1], label='GroundTruth')
+    # plt.plot(preds[0, :, -1], label='Prediction')
+
+    plt.plot(trues_inverse_transform[0, :, -1], label='GroundTruth')
+    plt.plot(preds_inverse_transform[0, :, -1], label='Prediction')
+
     plt.legend()
     plt.savefig(f'./pipeline_informer/results/plt_close_price_{time_point}_{stock_code}_{date_start}_{date_end}.png')
     # plt.show()
 
-    # # draw HUFL prediction
+    # draw HUFL prediction
     # plt.figure()
+    # plt.ylim(bottom=2, top=5)
     # plt.plot(trues[0, :, 0], label='GroundTruth')
     # plt.plot(preds[0, :, 0], label='Prediction')
     # plt.legend()

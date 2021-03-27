@@ -7,16 +7,16 @@ import time
 import pandas as pd
 import numpy as np
 
-import config as config
-from stock_data import StockData
-from pipeline_utils.log import get_logger
+from pipeline.finrl import config as config
+from pipeline.stock_data import StockData
+from pipeline.utils.log import get_logger
 
-sys.path.append('./FinRL_Library_master')
+sys.path.append('../../FinRL_Library_master')
 
-from finrl_models import DRLAgent
+from pipeline.finrl.finrl_models import DRLAgent
 from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
 
-from env import StockTradingAShareEnv as StockTradingEnv
+from pipeline.finrl.env import StockTradingAShareEnv as StockTradingEnv
 
 
 if __name__ == "__main__":

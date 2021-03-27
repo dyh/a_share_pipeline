@@ -1,4 +1,4 @@
-from pipeline_informer.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom
+from pipeline.informer.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom
 from Informer2020_main.exp.exp_basic import Exp_Basic
 from Informer2020_main.models.model import Informer, InformerStack
 
@@ -16,7 +16,7 @@ import pandas as pd
 
 import os
 import time
-import pipeline_utils.datetime
+import pipeline.utils.datetime
 import matplotlib.pyplot as plt
 
 import warnings
@@ -113,7 +113,7 @@ class Exp_Informer(Exp_Basic):
 
     def vali(self, vali_data, vali_loader, criterion, setting):
         # 保存文件的时间点
-        time_point = pipeline_utils.datetime.time_point()
+        time_point = pipeline.utils.datetime.time_point()
 
         self.model.eval()
 

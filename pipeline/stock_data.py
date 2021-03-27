@@ -1,12 +1,11 @@
-import datetime
 import sys
 
-sys.path.append('./FinRL_Library_master')
+sys.path.append('../FinRL_Library_master')
 
 import baostock as bs
 import pandas as pd
 import os
-import config as config
+from pipeline.finrl import config as config
 import numpy as np
 
 from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer

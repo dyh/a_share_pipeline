@@ -5,15 +5,15 @@ import time
 import pandas as pd
 import numpy as np
 
-import config as config
-from stock_data import StockData
+from pipeline.finrl import config as config
+from pipeline.stock_data import StockData
 
-sys.path.append('./FinRL_Library_master')
+sys.path.append('../../FinRL_Library_master')
 
-from finrl_models import DRLAgent
+from pipeline.finrl.finrl_models import DRLAgent
 from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
 
-from env import StockTradingAShareEnv as StockTradingEnv
+from pipeline.finrl.env import StockTradingAShareEnv as StockTradingEnv
 
 
 def shutdonw(secs=60):
