@@ -8,9 +8,31 @@ if 'FinRL_Library_master' not in sys.path:
 
 import torch
 import argparse
-from pipeline.stock_data import StockData
 from pipeline.informer.exp_informer import Exp_Informer
 import pipeline.utils.datetime
+
+
+def modify_args(args):
+    # 更改参数
+    # python -u main_informer.py --model informer --data ETTm1 --features M --seq_len 672
+    # --label_len 288 --pred_len 288 --e_layers 2 --d_layers 1 --attn prob --des 'Exp' --itr 5
+    args.root_path = './temp_dataset/'
+    args.model = 'informer'
+    args.data = 'ETTm1'
+    args.features = 'M'
+    args.seq_len = 672
+    args.label_len = 288
+    args.pred_len = 288
+    args.e_layers = 2
+    args.d_layers = 1
+    args.attn = 'prob'
+    args.des = 'Exp'
+    args.itr = 1
+
+    args.data_path = 'ETTm1.csv'
+    args.target = 'OT'
+    args.enc_in, args.dec_in, args.c_out = 6, 6, 6
+    pass
 
 
 def train():
@@ -18,7 +40,7 @@ def train():
 
     # ------------------------------------------------------------------------------------------------------------
     # 删除了 required=True
-    parser.add_argument('--model', type=str,  default='informer',
+    parser.add_argument('--model', type=str, default='informer',
                         help='model of experiment, options: [informer, informerstack, informerlight(TBD)]')
 
     parser.add_argument('--data', type=str, default='ETTh1', help='data')
@@ -144,55 +166,8 @@ def train():
     pass
 
 
-def modify_args(args):
-    # 更改参数
-    # python -u main_informer.py --model informer --data ETTm1 --features M --seq_len 672
-    # --label_len 288 --pred_len 288 --e_layers 2 --d_layers 1 --attn prob --des 'Exp' --itr 5
-    args.root_path = './temp_dataset/'
-    args.model = 'informer'
-    args.data = 'ETTm1'
-    args.features = 'M'
-    args.seq_len = 672
-    args.label_len = 288
-    args.pred_len = 288
-    args.e_layers = 2
-    args.d_layers = 1
-    args.attn = 'prob'
-    args.des = 'Exp'
-    args.itr = 1
-
-    args.data_path = 'ETTm1.csv'
-    args.target = 'OT'
-    args.enc_in, args.dec_in, args.c_out = 6, 6, 6
-    pass
-
-
 # 在 submodule 更新之后，测试项目是否能正常运行
 if __name__ == '__main__':
-
-    # 下载数据
-    download_data = False
-
-    # 使用技术指标
-    use_technical_indicator = False
-
-    output_dir = './temp_dataset'
-    output_file_name = 'ETTm1.csv'
-
-    # 下载A股数据
-    # 处理数据，成为OT的格式
-    stock_code = 'sh.600036'
-    date_start = '2002-05-01'
-    # date_end = '2021-03-19'
-    date_end = pipeline.utils.datetime.get_today_date()
-
-    if download_data is True:
-        stock = StockData(output_dir=output_dir, date_start=date_start, date_end=date_end)
-        stock.get_informer_data(stock_code=stock_code, fields=stock.fields_minutes,
-                                frequency='30', adjustflag='3', output_file_name=output_file_name,
-                                use_technical_indicator=use_technical_indicator)
-    pass
-
     # 保存文件的时间点
     time_point = pipeline.utils.datetime.time_point()
 

@@ -5,7 +5,7 @@ sys.path.append('../FinRL_Library_master')
 import baostock as bs
 import pandas as pd
 import os
-from pipeline.finrl import config as config
+from FinRL_Library_master.finrl.config import config
 import numpy as np
 
 from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
