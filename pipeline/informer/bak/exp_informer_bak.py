@@ -1,6 +1,4 @@
-
-from pipeline.informer.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_Pred
-
+from pipeline.informer.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom
 from Informer2020_main.exp.exp_basic import Exp_Basic
 from Informer2020_main.models.model import Informer, InformerStack
 
@@ -14,8 +12,12 @@ import torch.nn as nn
 from torch import optim
 from torch.utils.data import DataLoader
 
+import pandas as pd
+
 import os
 import time
+import pipeline.utils.datetime
+import matplotlib.pyplot as plt
 
 import warnings
 
@@ -73,21 +75,13 @@ class Exp_Informer(Exp_Basic):
         timeenc = 0 if args.embed != 'timeF' else 1
 
         if flag == 'test':
-            shuffle_flag = False;
-            drop_last = True;
-            batch_size = args.batch_size;
-            freq = args.freq
-        elif flag == 'pred':
-            shuffle_flag = False;
-            drop_last = False;
-            batch_size = 1;
-            freq = args.detail_freq
-            Data = Dataset_Pred
+            shuffle_flag = False
+            drop_last = True
+            batch_size = args.batch_size
         else:
-            shuffle_flag = True;
-            drop_last = True;
-            batch_size = args.batch_size;
-            freq = args.freq
+            shuffle_flag = True
+            drop_last = True
+            batch_size = args.batch_size
 
         data_set = Data(
             root_path=args.root_path,
@@ -97,7 +91,7 @@ class Exp_Informer(Exp_Basic):
             features=args.features,
             target=args.target,
             timeenc=timeenc,
-            freq=freq
+            freq=args.freq
         )
         print(flag, len(data_set))
         data_loader = DataLoader(
@@ -117,8 +111,15 @@ class Exp_Informer(Exp_Basic):
         criterion = nn.MSELoss()
         return criterion
 
-    def vali(self, vali_data, vali_loader, criterion):
+    def vali(self, vali_data, vali_loader, criterion, setting):
+        # 保存文件的时间点
+        time_point = pipeline.utils.datetime.time_point()
+
         self.model.eval()
+
+        preds = []
+        trues = []
+
         total_loss = []
         for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(vali_loader):
             batch_x = batch_x.float().to(self.device)
@@ -151,14 +152,50 @@ class Exp_Informer(Exp_Basic):
             loss = criterion(pred, true)
 
             total_loss.append(loss)
+            pass
+
+            # 记录
+            preds.append(pred.numpy())
+            trues.append(true.numpy())
+            pass
+        pass
+
         total_loss = np.average(total_loss)
+
+        # -----
+        preds = np.array(preds)
+        trues = np.array(trues)
+
+        print('prediction shape:', preds.shape, trues.shape)  # [num_samples//batch_size, batch_size, pred_len, c_out]
+        preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
+        trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
+        print('prediction shape:', preds.shape, trues.shape)  # [num_samples, pred_len, c_out]
+
+        trues_inverse_transform = vali_data.inverse_transform(trues)
+        preds_inverse_transform = vali_data.inverse_transform(preds)
+
+        # draw OT prediction
+        plt.figure()
+        # plt.ylim(bottom=2, top=5)
+        plt.plot(trues_inverse_transform[0, :, -1], label='GroundTruth')
+        plt.plot(preds_inverse_transform[0, :, -1], label='Prediction')
+        plt.legend()
+        plt.savefig(f'./pipeline_informer/results/vali_{setting}_{time_point}.png')
+        # -----
+
+        df_trues = pd.DataFrame(trues_inverse_transform[0, :, :])
+        df_trues.to_csv(f'./pipeline_informer/results/vali_trues_{setting}_{time_point}.csv')
+
+        df_preds = pd.DataFrame(preds_inverse_transform[0, :, :])
+        df_preds.to_csv(f'./pipeline_informer/results/vali_preds_{setting}_{time_point}.csv')
+
         self.model.train()
         return total_loss
 
     def train(self, setting):
         train_data, train_loader = self._get_data(flag='train')
         vali_data, vali_loader = self._get_data(flag='val')
-        test_data, test_loader = self._get_data(flag='test')
+        # test_data, test_loader = self._get_data(flag='test')
 
         path = os.path.join(self.args.checkpoints, setting)
         if not os.path.exists(path):
@@ -237,11 +274,15 @@ class Exp_Informer(Exp_Basic):
 
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
-            vali_loss = self.vali(vali_data, vali_loader, criterion)
-            test_loss = self.vali(test_data, test_loader, criterion)
+            vali_loss = self.vali(vali_data, vali_loader, criterion, setting)
+            # test_loss = self.vali(test_data, test_loader, criterion)
 
-            print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
-                epoch + 1, train_steps, train_loss, vali_loss, test_loss))
+            # print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
+            #     epoch + 1, train_steps, train_loss, vali_loss, test_loss))
+
+            print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f}".format(
+                epoch + 1, train_steps, train_loss, vali_loss))
+
             early_stopping(vali_loss, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
@@ -310,57 +351,5 @@ class Exp_Informer(Exp_Basic):
         np.save(folder_path + 'metrics.npy', np.array([mae, mse, rmse, mape, mspe]))
         np.save(folder_path + 'pred.npy', preds)
         np.save(folder_path + 'true.npy', trues)
-
-        return
-
-    def predict(self, setting, load=False):
-        pred_data, pred_loader = self._get_data(flag='pred')
-
-        if load:
-            path = os.path.join(self.args.checkpoints, setting)
-            best_model_path = path + '/' + 'checkpoint.pth'
-            self.model.load_state_dict(torch.load(best_model_path))
-
-        self.model.eval()
-
-        preds = []
-
-        for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(pred_loader):
-            batch_x = batch_x.float().to(self.device)
-            batch_y = batch_y.float()
-            batch_x_mark = batch_x_mark.float().to(self.device)
-            batch_y_mark = batch_y_mark.float().to(self.device)
-
-            # decoder input
-            dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
-            dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
-            # encoder - decoder
-            if self.args.use_amp:
-                with torch.cuda.amp.autocast():
-                    if self.args.output_attention:
-                        outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
-                    else:
-                        outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
-            else:
-                if self.args.output_attention:
-                    outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
-                else:
-                    outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
-            f_dim = -1 if self.args.features == 'MS' else 0
-            batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
-
-            pred = outputs.detach().cpu().numpy()  # .squeeze()
-
-            preds.append(pred)
-
-        preds = np.array(preds)
-        preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
-
-        # result save
-        folder_path = './results/' + setting + '/'
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-
-        np.save(folder_path + 'real_prediction.npy', preds)
 
         return

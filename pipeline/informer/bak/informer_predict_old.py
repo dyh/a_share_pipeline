@@ -1,10 +1,10 @@
 import sys
 
 if 'FinRL_Library_master' not in sys.path:
-    sys.path.append('../../FinRL_Library_master')
+    sys.path.append('../../../FinRL_Library_master')
 
 if 'Informer2020_main' not in sys.path:
-    sys.path.append('../../Informer2020_main')
+    sys.path.append('../../../Informer2020_main')
 
 import os
 

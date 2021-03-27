@@ -1,102 +1,46 @@
 import sys
 
 if 'FinRL_Library_master' not in sys.path:
-    sys.path.append('../../FinRL_Library_master')
+    sys.path.append('../../../FinRL_Library_master')
 
 if 'Informer2020_main' not in sys.path:
-    sys.path.append('../../Informer2020_main')
+    sys.path.append('../../../Informer2020_main')
 
 import os
 
 import torch
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-
+import pandas as pd
 from pipeline.stock_data import StockData
 from torch.utils.data import DataLoader
 
 from Informer2020_main.utils.tools import dotdict
 from Informer2020_main.models.model import Informer
-from pipeline.informer.data_loader import Dataset_SHARE_hour_test, Dataset_SHARE_minute
+from pipeline.informer.exp_informer import Exp_Informer
+from pipeline.informer.data_loader import Dataset_ETT_hour, Dataset_ETT_minute
 import pipeline.utils.datetime
 
 
-def predict(freq='h', features='S', patience=7, use_technical_indicator=False,
-            download_data=False, add_predict_data=False):
-    # 保存文件的时间点
-    time_point = pipeline.utils.datetime.time_point()
+# freq = [t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly]
 
-    # 设置要预测的天数
-    predict_days = 60
+def train(freq='h', features='S', patience=5, use_technical_indicator=False,
+          download_data=False):
 
     stock_code = 'sh.600036'
-    # date_start = '2002-05-01'
+    date_start = '2002-05-01'
+    # date_end = '2021-03-19'
     date_end = pipeline.utils.datetime.get_today_date()
-    # date_end = '2021-03-26'
-
-    # 下载2天的数据
-    datetime_date_end = pipeline.utils.datetime.get_datetime_from_date_str(date_end)
-
-    date_start = datetime_date_end
-    for i in range(60):
-        date_start = pipeline.utils.datetime.get_next_work_day(date_start, next_flag=-1)
-        pass
-
-    date_start = str(date_start).split(' ')[0]
-
-    sd = StockData(output_dir='./pipeline_informer/temp_dataset', date_start=date_start, date_end=date_end)
 
     if download_data is True:
+        sd = StockData(output_dir='./pipeline_informer/temp_dataset', date_start=date_start, date_end=date_end)
         sd.get_informer_data(stock_code=stock_code, fields=sd.fields_minutes,
                              frequency='15', adjustflag='3', use_technical_indicator=use_technical_indicator)
     pass
 
-    csv_file_path = f'{sd.output_dir}/ETTh1.csv'
-
-    df = pd.read_csv(csv_file_path)
-
-    print('df.values 1:', len(df))
-
-    date_1, open_1, high_1, low_1, volume_1, amount_1, ot_1 = df.values[-1]
-
-    # 更新 date_end 日期，避免少预测一天数据
-    date_end = str(date_1).split(' ')[0]
-
-    # 如果增加预测数据
-    if add_predict_data is True:
-
-        # 为了计算将要预测的日期
-        date_predict_temp = None
-
-        # x 个工作日
-        for i in range(predict_days):
-
-            if date_predict_temp is None:
-                date_predict_temp = pipeline.utils.datetime.get_datetime_from_date_str(date_end)
-            pass
-
-            next_date_predict_temp = pipeline.utils.datetime.get_next_work_day(date_predict_temp, next_flag=+1)
-
-            # 每15分钟的K线，一天有16条数据
-            for index in range(len(sd.list_time_point_15minutes)):
-                new_row = pd.DataFrame(
-                    {'date': str(next_date_predict_temp) + ' ' + sd.list_time_point_15minutes[index],
-                     'open': open_1, 'high': high_1, 'low': low_1, 'volume': volume_1,
-                     'amount': amount_1, 'OT': ot_1}, index=[0])
-
-                df = df.append(new_row, ignore_index=True)
-                pass
-            pass
-
-            date_predict_temp = next_date_predict_temp
-        pass
-
-        df.to_csv(f'{sd.output_dir}/ETTh1.csv', index=False)
-    pass
-
-    print('df.values 2:', len(df))
+    # 保存文件的时间点
+    time_point = pipeline.utils.datetime.time_point()
 
     args = dotdict()
 
@@ -112,7 +56,8 @@ def predict(freq='h', features='S', patience=7, use_technical_indicator=False,
 
     args.seq_len = 96  # input sequence length of Informer encoder
     args.label_len = 48  # start token length of Informer decoder
-    args.pred_len = 240  # prediction sequence length
+
+    args.pred_len = 960  # prediction sequence length
     # Informer decoder input: concat[start token series(label_len), zero padding series(pred_len)]
 
     args.enc_in = 7  # encoder input size
@@ -138,7 +83,7 @@ def predict(freq='h', features='S', patience=7, use_technical_indicator=False,
 
     args.num_workers = 0
     args.itr = 1
-    args.train_epochs = 10
+    args.train_epochs = 20
     args.patience = patience
     args.des = 'exp'
 
@@ -164,10 +109,48 @@ def predict(freq='h', features='S', patience=7, use_technical_indicator=False,
     print('Args in experiment:')
     print(args)
 
-    # setting = 'informer_ETTh1_ftM_sl96_ll48_pl24_dm512_nh8_el3_dl2_df512_atprob_ebtimeF_dtTrue_' \
-    #           'exp_0_fqh_pe7_20210322_225528'
+    Exp = Exp_Informer
 
-    setting = "informer_ETTh1_ftM_sl96_ll48_pl24_dm512_nh8_el3_dl2_df512_atprob_ebtimeF_dtTrue_exp_0_fqt_pe7_20210323_012354"
+    setting = ''
+
+    for ii in range(args.itr):
+        # setting record of experiments
+        setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_eb{}_dt{}_{}_{}_fq{}_pe{}_{}'.format(
+            args.model,
+            args.data,
+            args.features,
+            args.seq_len,
+            args.label_len,
+            args.pred_len,
+            args.d_model,
+            args.n_heads,
+            args.e_layers,
+            args.d_layers,
+            args.d_ff,
+            args.attn,
+            args.embed,
+            args.distil,
+            args.des,
+            ii,
+            args.freq,
+            args.patience,
+            time_point)
+
+        # set experiments
+        exp = Exp(args)
+
+        # train
+        print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+        exp.train(setting)
+
+        # test
+        # print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+        # exp.test(setting)
+
+        torch.cuda.empty_cache()
+    pass
+
+    # --------------------------------------------------
 
     # --------------------------------------------------
 
@@ -176,18 +159,20 @@ def predict(freq='h', features='S', patience=7, use_technical_indicator=False,
     weights_path = os.path.join('./pipeline_informer/checkpoints/', setting, 'checkpoint.pth')
 
     # set prediction dataloader (using test dataloader here)
-    # Data = Dataset_SHARE_hour_test
+    # 设置数据集类型，Dataset_ETT_hour 或者 Dataset_ETT_minute
+    # freq = [t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly]
+
+    if freq == 'h':
+        Data = Dataset_ETT_hour
+    else:
+        Data = Dataset_ETT_minute
+    pass
+
     timeenc = 0 if args.embed != 'timeF' else 1
-    flag = 'test'
+    flag = 'val'
     shuffle_flag = False
     drop_last = True
     batch_size = 1
-
-    if freq == 'h':
-        Data = Dataset_SHARE_hour_test
-    else:
-        Data = Dataset_SHARE_minute
-    pass
 
     data_set = Data(
         root_path=args.root_path,
@@ -239,21 +224,21 @@ def predict(freq='h', features='S', patience=7, use_technical_indicator=False,
     # load parameters
     model.load_state_dict(torch.load(weights_path))
 
-    model = model.float().to(device)
+    model = model.double().to(device)
     model.eval()
 
     preds = []
     trues = []
 
     for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(data_loader):
-        batch_x = batch_x.float().to(device)
-        batch_y = batch_y.float()
-        batch_x_mark = batch_x_mark.float().to(device)
-        batch_y_mark = batch_y_mark.float().to(device)
+        batch_x = batch_x.double().to(device)
+        batch_y = batch_y.double()
+        batch_x_mark = batch_x_mark.double().to(device)
+        batch_y_mark = batch_y_mark.double().to(device)
 
         # decoder input = concat[start token series(label_len), zero padding series(pred_len)]
-        dec_inp = torch.zeros_like(batch_y[:, -args.pred_len:, :]).float()
-        dec_inp = torch.cat([batch_y[:, :args.label_len, :], dec_inp], dim=1).float().to(device)
+        dec_inp = torch.zeros_like(batch_y[:, -args.pred_len:, :]).double()
+        dec_inp = torch.cat([batch_y[:, :args.label_len, :], dec_inp], dim=1).double().to(device)
 
         # encoder - decoder
         if args.output_attention:
@@ -268,8 +253,6 @@ def predict(freq='h', features='S', patience=7, use_technical_indicator=False,
         preds.append(pred)
         trues.append(true)
 
-        # print(i)
-
     preds = np.array(preds)
     trues = np.array(trues)
 
@@ -281,27 +264,47 @@ def predict(freq='h', features='S', patience=7, use_technical_indicator=False,
     trues_inverse_transform = data_set.inverse_transform(trues)
     preds_inverse_transform = data_set.inverse_transform(preds)
 
-    df_trues = pd.DataFrame(trues_inverse_transform[0, :, :])
-    df_trues.to_csv(f'./pipeline_informer/results/trues_close_price_{setting}_{time_point}.csv')
-
     # draw OT prediction
     plt.figure()
     plt.plot(trues_inverse_transform[0, :, -1], label='GroundTruth')
     plt.plot(preds_inverse_transform[0, :, -1], label='Prediction')
     plt.legend()
 
-    plt.savefig(f'./pipeline_informer/results/predict_close_price_{setting}_{time_point}.png')
+    plt.savefig(f'./pipeline_informer/results/final_{setting}.png')
     # plt.show()
 
+    df_trues = pd.DataFrame(trues_inverse_transform[0, :, :])
+    df_trues.to_csv(f'./pipeline_informer/results/final_trues_{setting}_{time_point}.csv')
+
+    df_preds = pd.DataFrame(preds_inverse_transform[0, :, :])
+    df_preds.to_csv(f'./pipeline_informer/results/final_preds_{setting}_{time_point}.csv')
+
+    # draw HUFL prediction
+    # plt.figure()
+    # plt.ylim(bottom=2, top=5)
+    # plt.plot(trues[0, :, 0], label='GroundTruth')
+    # plt.plot(preds[0, :, 0], label='Prediction')
+    # plt.legend()
+    # plt.savefig(f'./pipeline_informer/results/plt_open_price_{time_point}.png')
+    #
+    # plt.show()
     pass
 
 
 if __name__ == "__main__":
+
+    # freq = [t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly]
+
+    # 小时，单独列
+    train(freq='h', features='S', patience=10, use_technical_indicator=False, download_data=False)
+
     # 小时，多列
-    predict(freq='t', features='M', patience=7, use_technical_indicator=False,
-            download_data=True, add_predict_data=False)
+    train(freq='h', features='M', patience=10, use_technical_indicator=False, download_data=False)
+
+    # 分钟，单独列
+    train(freq='t', features='S', patience=10, use_technical_indicator=False, download_data=False)
 
     # 分钟，多列
-    # predict(freq='t', features='M', patience=7, use_technical_indicator=False, download_data=False)
+    train(freq='t', features='M', patience=10, use_technical_indicator=False, download_data=False)
 
     pass

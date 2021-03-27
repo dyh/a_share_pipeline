@@ -1,10 +1,10 @@
 import sys
 
 if 'FinRL_Library_master' not in sys.path:
-    sys.path.append('../../FinRL_Library_master')
+    sys.path.append('../../../FinRL_Library_master')
 
 if 'Informer2020_main' not in sys.path:
-    sys.path.append('../../Informer2020_main')
+    sys.path.append('../../../Informer2020_main')
 
 import os
 
@@ -12,32 +12,23 @@ import torch
 
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
-from pipeline.stock_data import StockData
+
 from torch.utils.data import DataLoader
 
 from Informer2020_main.utils.tools import dotdict
 from Informer2020_main.models.model import Informer
 from pipeline.informer.exp_informer import Exp_Informer
-from pipeline.informer.data_loader import Dataset_ETT_hour, Dataset_ETT_minute
+from pipeline.informer.data_loader import Dataset_ETT_hour
 import pipeline.utils.datetime
 
-
-# freq = [t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly]
-
-def train(freq='h', features='S', patience=5, use_technical_indicator=False,
-          download_data=False):
+if __name__ == "__main__":
 
     stock_code = 'sh.600036'
     date_start = '2002-05-01'
-    # date_end = '2021-03-19'
-    date_end = pipeline.utils.datetime.get_today_date()
+    date_end = '2021-03-18'
 
-    if download_data is True:
-        sd = StockData(output_dir='./pipeline_informer/temp_dataset', date_start=date_start, date_end=date_end)
-        sd.get_informer_data(stock_code=stock_code, fields=sd.fields_minutes,
-                             frequency='15', adjustflag='3', use_technical_indicator=use_technical_indicator)
-    pass
+    # sd = StockData(output_dir='./pipeline_informer/temp_dataset', date_start=date_start, date_end=date_end)
+    # sd.get_informer_data(stock_code=stock_code, fields=sd.fields_minutes, frequency='15', adjustflag='3')
 
     # 保存文件的时间点
     time_point = pipeline.utils.datetime.time_point()
@@ -49,15 +40,14 @@ def train(freq='h', features='S', patience=5, use_technical_indicator=False,
     args.data = 'ETTh1'  # data
     args.root_path = './pipeline_informer/temp_dataset/'  # root path of data file
     args.data_path = 'ETTh1.csv'  # data file
-    args.features = features  # forecasting task, options:[M, S, MS(TBD)]; M:multivariate predict multivariate, S:univariate predict univariate, MS:multivariate predict univariate
+    args.features = 'MS'  # forecasting task, options:[M, S, MS(TBD)]; M:multivariate predict multivariate, S:univariate predict univariate, MS:multivariate predict univariate
     # args.features = 'S'  # forecasting task, options:[M, S, MS(TBD)]; M:multivariate predict multivariate, S:univariate predict univariate, MS:multivariate predict univariate
     args.target = 'OT'  # target feature in S or MS task
-    args.freq = freq  # freq for time features encoding
+    args.freq = 'h'  # freq for time features encoding
 
     args.seq_len = 96  # input sequence length of Informer encoder
     args.label_len = 48  # start token length of Informer decoder
-
-    args.pred_len = 960  # prediction sequence length
+    args.pred_len = 24  # prediction sequence length
     # Informer decoder input: concat[start token series(label_len), zero padding series(pred_len)]
 
     args.enc_in = 7  # encoder input size
@@ -83,18 +73,16 @@ def train(freq='h', features='S', patience=5, use_technical_indicator=False,
 
     args.num_workers = 0
     args.itr = 1
-    args.train_epochs = 20
-    args.patience = patience
+    args.train_epochs = 6
+    args.patience = 3
     args.des = 'exp'
 
     args.use_gpu = True if torch.cuda.is_available() else False
     args.gpu = 0
 
-    args.checkpoints = './pipeline_informer/checkpoints'
-
     # Set augments by using data name
     data_parser = {
-        'ETTh1': {'data': 'ETTh1.csv', 'T': 'OT', 'M': [6, 6, 6], 'S': [1, 1, 1], 'MS': [6, 6, 1]},
+        'ETTh1': {'data': 'ETTh1.csv', 'T': 'OT', 'M': [16, 16, 16], 'S': [1, 1, 1], 'MS': [16, 16, 1]},
         'ETTh2': {'data': 'ETTh2.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
         'ETTm1': {'data': 'ETTm1.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
         'ETTm2': {'data': 'ETTm2.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
@@ -108,33 +96,27 @@ def train(freq='h', features='S', patience=5, use_technical_indicator=False,
 
     print('Args in experiment:')
     print(args)
-
     Exp = Exp_Informer
 
     setting = ''
 
     for ii in range(args.itr):
         # setting record of experiments
-        setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_eb{}_dt{}_{}_{}_fq{}_pe{}_{}'.format(
-            args.model,
-            args.data,
-            args.features,
-            args.seq_len,
-            args.label_len,
-            args.pred_len,
-            args.d_model,
-            args.n_heads,
-            args.e_layers,
-            args.d_layers,
-            args.d_ff,
-            args.attn,
-            args.embed,
-            args.distil,
-            args.des,
-            ii,
-            args.freq,
-            args.patience,
-            time_point)
+        setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_eb{}_dt{}_{}_{}'.format(args.model,
+                                                                                                   args.data,
+                                                                                                   args.features,
+                                                                                                   args.seq_len,
+                                                                                                   args.label_len,
+                                                                                                   args.pred_len,
+                                                                                                   args.d_model,
+                                                                                                   args.n_heads,
+                                                                                                   args.e_layers,
+                                                                                                   args.d_layers,
+                                                                                                   args.d_ff,
+                                                                                                   args.attn,
+                                                                                                   args.embed,
+                                                                                                   args.distil,
+                                                                                                   args.des, ii)
 
         # set experiments
         exp = Exp(args)
@@ -144,8 +126,8 @@ def train(freq='h', features='S', patience=5, use_technical_indicator=False,
         exp.train(setting)
 
         # test
-        # print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-        # exp.test(setting)
+        print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+        exp.test(setting)
 
         torch.cuda.empty_cache()
     pass
@@ -159,17 +141,9 @@ def train(freq='h', features='S', patience=5, use_technical_indicator=False,
     weights_path = os.path.join('./pipeline_informer/checkpoints/', setting, 'checkpoint.pth')
 
     # set prediction dataloader (using test dataloader here)
-    # 设置数据集类型，Dataset_ETT_hour 或者 Dataset_ETT_minute
-    # freq = [t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly]
-
-    if freq == 'h':
-        Data = Dataset_ETT_hour
-    else:
-        Data = Dataset_ETT_minute
-    pass
-
+    Data = Dataset_ETT_hour
     timeenc = 0 if args.embed != 'timeF' else 1
-    flag = 'val'
+    flag = 'test'
     shuffle_flag = False
     drop_last = True
     batch_size = 1
@@ -261,50 +235,21 @@ def train(freq='h', features='S', patience=5, use_technical_indicator=False,
     trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
     print('prediction shape:', preds.shape, trues.shape)  # [num_samples, pred_len, c_out]
 
-    trues_inverse_transform = data_set.inverse_transform(trues)
-    preds_inverse_transform = data_set.inverse_transform(preds)
-
     # draw OT prediction
     plt.figure()
-    plt.plot(trues_inverse_transform[0, :, -1], label='GroundTruth')
-    plt.plot(preds_inverse_transform[0, :, -1], label='Prediction')
+    plt.plot(trues[0, :, -1], label='GroundTruth')
+    plt.plot(preds[0, :, -1], label='Prediction')
     plt.legend()
-
-    plt.savefig(f'./pipeline_informer/results/final_{setting}.png')
+    plt.savefig(f'./pipeline_informer/results/plt_close_price_{time_point}_{stock_code}_{date_start}_{date_end}.png')
     # plt.show()
 
-    df_trues = pd.DataFrame(trues_inverse_transform[0, :, :])
-    df_trues.to_csv(f'./pipeline_informer/results/final_trues_{setting}_{time_point}.csv')
-
-    df_preds = pd.DataFrame(preds_inverse_transform[0, :, :])
-    df_preds.to_csv(f'./pipeline_informer/results/final_preds_{setting}_{time_point}.csv')
-
-    # draw HUFL prediction
+    # # draw HUFL prediction
     # plt.figure()
-    # plt.ylim(bottom=2, top=5)
     # plt.plot(trues[0, :, 0], label='GroundTruth')
     # plt.plot(preds[0, :, 0], label='Prediction')
     # plt.legend()
     # plt.savefig(f'./pipeline_informer/results/plt_open_price_{time_point}.png')
     #
     # plt.show()
-    pass
-
-
-if __name__ == "__main__":
-
-    # freq = [t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly]
-
-    # 小时，单独列
-    train(freq='h', features='S', patience=10, use_technical_indicator=False, download_data=False)
-
-    # 小时，多列
-    train(freq='h', features='M', patience=10, use_technical_indicator=False, download_data=False)
-
-    # 分钟，单独列
-    train(freq='t', features='S', patience=10, use_technical_indicator=False, download_data=False)
-
-    # 分钟，多列
-    train(freq='t', features='M', patience=10, use_technical_indicator=False, download_data=False)
 
     pass

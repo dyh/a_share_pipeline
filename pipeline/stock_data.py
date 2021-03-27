@@ -103,7 +103,19 @@ class StockData(object):
 
         return csv_file_path
 
-    def get_informer_data(self, stock_code, fields, frequency, adjustflag, use_technical_indicator=False):
+    def get_informer_data(self, stock_code, fields, frequency, adjustflag, output_file_name='ETTm1.csv',
+                          use_technical_indicator=False):
+        """
+        获取 informer 格式数据
+        :param stock_code: A股代码 sh.600036
+        :param fields: 字段 self.fields_minutes
+        :param frequency: 数据类型，默认为d，日k线；d=日k线、w=周、m=月、5=5分钟、15=15分钟、30=30分钟、60=60分钟k线数据，不区分大小写
+        :param adjustflag: 复权类型，默认不复权：3；1：后复权；2：前复权。已支持分钟线、日线、周线、月线前后复权
+        :param output_file_name: 输出的文件名
+        :param use_technical_indicator: 是否增加技术指标列
+        :return: csv 文件路径
+        """
+
         # 股票代码
         stock_code = stock_code
 
@@ -132,33 +144,34 @@ class StockData(object):
                 user_defined_feature=False,
             )
 
-            df_fe = fe.preprocess_data(df)
+            df = fe.preprocess_data(df)
             # df_fe['log_volume'] = np.log(df_fe.volume * df_fe.close)
-            df_fe['change'] = (df_fe.close - df_fe.open) / df_fe.close
-            df_fe['daily_variance'] = (df_fe.high - df_fe.low) / df_fe.close
+            df['change'] = (df.close - df.open) / df.close
+            df['daily_variance'] = (df.high - df.low) / df.close
         else:
-            df_fe = df
+            df = df
         pass
 
-        df_fe.replace(to_replace=r'^\s*$', value=np.nan, regex=True, inplace=True)
+        df.replace(to_replace=r'^\s*$', value=np.nan, regex=True, inplace=True)
 
         # 將nan填充为0
-        df_fe.fillna(0, inplace=True)
+        df.fillna(0, inplace=True)
 
-        df_fe['time'] = df_fe['time'].astype('str').str[:-3]
-        df_fe["time"] = pd.to_datetime(df_fe.time)
-        df_fe = df_fe.rename(columns={'time': 'date'})
+        df['time'] = df['time'].astype('str').str[:-3]
+        df["time"] = pd.to_datetime(df.time)
+        # 将time列，改名为date
+        df = df.rename(columns={'time': 'date'})
 
         # 将 close 移动到最后一列，改名为OT
-        col_close = df_fe.close
-        df_fe = df_fe.drop('close', axis=1)
-        df_fe['OT'] = col_close
+        col_close = df.close
+        df = df.drop('close', axis=1)
+        df['OT'] = col_close
 
-        if 'tic' in df_fe.columns:
-            df_fe = df_fe.drop('tic', axis=1)
+        if 'tic' in df.columns:
+            df = df.drop('tic', axis=1)
 
         # df_fe.to_csv(f'{self.output_dir}/{stock_code}_processed_df.csv', index=False)
-        df_fe.to_csv(f'{self.output_dir}/ETTh1.csv', index=False)
+        df.to_csv(f'{self.output_dir}/{output_file_name}', index=False)
 
         print("==============数据准备完成==============")
         pass
