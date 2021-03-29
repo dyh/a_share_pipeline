@@ -29,7 +29,7 @@ if __name__ == '__main__':
     if download_data is True:
         stock = StockData(output_dir=output_dir, date_start=date_start, date_end=date_end)
         stock.get_informer_data(stock_code=stock_code, fields=stock.fields_minutes,
-                                frequency='30', adjustflag='3', output_file_name=output_file_name,
+                                frequency='5', adjustflag='3', output_file_name=output_file_name,
                                 use_technical_indicator=use_technical_indicator)
 
     print('done!')

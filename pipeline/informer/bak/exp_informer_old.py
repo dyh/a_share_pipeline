@@ -6,10 +6,9 @@ from Informer2020_main.models.model import Informer, InformerStack
 from Informer2020_main.utils.tools import EarlyStopping, adjust_learning_rate
 from Informer2020_main.utils.metrics import metric
 
-import numpy as np
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
-import pipeline.utils.datetime
 
 import torch
 import torch.nn as nn
@@ -23,6 +22,8 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
+import pipeline.utils.datetime
+
 
 class Exp_Informer(Exp_Basic):
     def __init__(self, args):
@@ -34,7 +35,6 @@ class Exp_Informer(Exp_Basic):
             'informerstack': InformerStack,
         }
         if self.args.model == 'informer' or self.args.model == 'informerstack':
-            e_layers = self.args.e_layers if self.args.model == 'informer' else self.args.s_layers
             model = model_dict[self.args.model](
                 self.args.enc_in,
                 self.args.dec_in,
@@ -45,7 +45,7 @@ class Exp_Informer(Exp_Basic):
                 self.args.factor,
                 self.args.d_model,
                 self.args.n_heads,
-                e_layers,  # self.args.e_layers,
+                self.args.e_layers,
                 self.args.d_layers,
                 self.args.d_ff,
                 self.args.dropout,
@@ -76,20 +76,20 @@ class Exp_Informer(Exp_Basic):
         timeenc = 0 if args.embed != 'timeF' else 1
 
         if flag == 'test':
-            shuffle_flag = False;
-            drop_last = True;
-            batch_size = args.batch_size;
+            shuffle_flag = False
+            drop_last = True
+            batch_size = args.batch_size
             freq = args.freq
         elif flag == 'pred':
-            shuffle_flag = False;
-            drop_last = False;
-            batch_size = 1;
+            shuffle_flag = False
+            drop_last = False
+            batch_size = 1
             freq = args.detail_freq
             Data = Dataset_Pred
         else:
-            shuffle_flag = True;
-            drop_last = True;
-            batch_size = args.batch_size;
+            shuffle_flag = True
+            drop_last = True
+            batch_size = args.batch_size
             freq = args.freq
 
         data_set = Data(
@@ -99,7 +99,6 @@ class Exp_Informer(Exp_Basic):
             size=[args.seq_len, args.label_len, args.pred_len],
             features=args.features,
             target=args.target,
-            inverse=args.inverse,
             timeenc=timeenc,
             freq=freq
         )
@@ -146,8 +145,6 @@ class Exp_Informer(Exp_Basic):
                     outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
                 else:
                     outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
-            if self.args.inverse:
-                outputs = vali_data.inverse_transform(outputs)
             f_dim = -1 if self.args.features == 'MS' else 0
             batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
 
@@ -164,7 +161,9 @@ class Exp_Informer(Exp_Basic):
     def train(self, setting):
         train_data, train_loader = self._get_data(flag='train')
         vali_data, vali_loader = self._get_data(flag='val')
-        test_data, test_loader = self._get_data(flag='test')
+        # ----------------------------
+        # test_data, test_loader = self._get_data(flag='test')
+        # ----------------------------
 
         path = os.path.join(self.args.checkpoints, setting)
         if not os.path.exists(path):
@@ -220,8 +219,6 @@ class Exp_Informer(Exp_Basic):
                     else:
                         outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
 
-                    if self.args.inverse:
-                        outputs = train_data.inverse_transform(outputs)
                     f_dim = -1 if self.args.features == 'MS' else 0
                     batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
                     loss = criterion(outputs, batch_y)
@@ -295,8 +292,6 @@ class Exp_Informer(Exp_Basic):
                     outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
                 else:
                     outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
-            if self.args.inverse:
-                outputs = test_data.inverse_transform(outputs)
             f_dim = -1 if self.args.features == 'MS' else 0
             batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
 
@@ -352,6 +347,7 @@ class Exp_Informer(Exp_Basic):
         self.model.eval()
 
         preds = []
+
         trues = []
 
         for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(pred_loader):
@@ -375,14 +371,16 @@ class Exp_Informer(Exp_Basic):
                     outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
                 else:
                     outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
-            if self.args.inverse:
-                outputs = pred_data.inverse_transform(outputs)
             f_dim = -1 if self.args.features == 'MS' else 0
             batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
 
             pred = outputs.detach().cpu().numpy()  # .squeeze()
-
             preds.append(pred)
+
+            true = batch_y.detach().cpu().numpy()  # .squeeze()
+            trues.append(true)
+            pass
+        pass
 
         preds = np.array(preds)
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
@@ -405,6 +403,7 @@ class Exp_Informer(Exp_Basic):
         plt.plot(trues_inverse_transform[0, :, -1], label='GroundTruth')
         plt.plot(preds_inverse_transform[0, :, -1], label='Prediction')
         plt.legend()
+
         # 保存文件的时间点
         time_point = pipeline.utils.datetime.time_point()
         plt.savefig(f'{folder_path}/predict_{time_point}.png')
