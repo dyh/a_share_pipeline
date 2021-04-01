@@ -76,20 +76,20 @@ class Exp_Informer(Exp_Basic):
         timeenc = 0 if args.embed != 'timeF' else 1
 
         if flag == 'test':
-            shuffle_flag = False;
-            drop_last = True;
-            batch_size = args.batch_size;
+            shuffle_flag = False
+            drop_last = True
+            batch_size = args.batch_size
             freq = args.freq
         elif flag == 'pred':
-            shuffle_flag = False;
-            drop_last = False;
-            batch_size = 1;
+            shuffle_flag = False
+            drop_last = False
+            batch_size = 1
             freq = args.detail_freq
             Data = Dataset_Pred
         else:
-            shuffle_flag = True;
-            drop_last = True;
-            batch_size = args.batch_size;
+            shuffle_flag = True
+            drop_last = True
+            batch_size = args.batch_size
             freq = args.freq
 
         data_set = Data(
@@ -164,7 +164,9 @@ class Exp_Informer(Exp_Basic):
     def train(self, setting):
         train_data, train_loader = self._get_data(flag='train')
         vali_data, vali_loader = self._get_data(flag='val')
-        test_data, test_loader = self._get_data(flag='test')
+        # ----
+        # test_data, test_loader = self._get_data(flag='test')
+        # ----
 
         path = os.path.join(self.args.checkpoints, setting)
         if not os.path.exists(path):
@@ -247,10 +249,10 @@ class Exp_Informer(Exp_Basic):
             train_loss = np.average(train_loss)
             vali_loss = self.vali(vali_data, vali_loader, criterion)
 
-            # ------------------------------------------------------------------------------
+            # ----
             # test_loss = self.vali(test_data, test_loader, criterion)
             test_loss = -1
-            # ------------------------------------------------------------------------------
+            # ----
 
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
@@ -327,6 +329,7 @@ class Exp_Informer(Exp_Basic):
 
         trues_inverse_transform = test_data.inverse_transform(trues)
         preds_inverse_transform = test_data.inverse_transform(preds)
+        # preds_inverse_transform = preds
 
         # draw OT prediction
         plt.figure()
@@ -361,7 +364,7 @@ class Exp_Informer(Exp_Basic):
             batch_y_mark = batch_y_mark.float().to(self.device)
 
             # decoder input
-            dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
+            dec_inp = torch.zeros([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
             dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
             # encoder - decoder
             if self.args.use_amp:
@@ -381,12 +384,16 @@ class Exp_Informer(Exp_Basic):
             batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
 
             pred = outputs.detach().cpu().numpy()  # .squeeze()
-
             preds.append(pred)
+            # ----
+            true = batch_y.detach().cpu().numpy()  # .squeeze()
+            trues.append(true)
+            # ----
 
         preds = np.array(preds)
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
 
+        # ----
         trues = np.array(trues)
         trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
 
@@ -399,6 +406,7 @@ class Exp_Informer(Exp_Basic):
 
         trues_inverse_transform = pred_data.inverse_transform(trues)
         preds_inverse_transform = pred_data.inverse_transform(preds)
+        # preds_inverse_transform = preds
 
         # draw OT prediction
         plt.figure()
@@ -409,11 +417,13 @@ class Exp_Informer(Exp_Basic):
         time_point = pipeline.utils.datetime.time_point()
         plt.savefig(f'{folder_path}/predict_{time_point}.png')
 
-        df = {"GroundTruth": trues_inverse_transform[0, :, -1], "Prediction": preds_inverse_transform[0, :, -1]}
+        # df = {"GroundTruth": trues_inverse_transform[0, :, -1], "Prediction": preds_inverse_transform[0, :, -1]}
+        df = {"Prediction": preds_inverse_transform[0, :, -1]}
         df = pd.DataFrame(df)
 
         # df = pd.DataFrame(list3, columns=['GroundTruth', 'Prediction'])
 
         df.to_csv(f'{folder_path}/predict_{time_point}.csv')
+        # ----
 
         return

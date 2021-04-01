@@ -1,6 +1,5 @@
 import sys
 
-
 if 'pipeline' not in sys.path:
     sys.path.append('../../')
 
@@ -13,74 +12,11 @@ if 'FinRL_Library_master' not in sys.path:
 import torch
 import argparse
 
-import pandas as pd
-
-from pipeline import stock_data
-
 from pipeline.informer.exp_informer import Exp_Informer
-from pipeline.utils.datetime import get_datetime_from_date_str, get_next_work_day, get_today_date
-
-
-def create_blank_csv_file(csv_file_path, predict_days=96, date_begin='2021-03-30', default_val=50):
-    """
-    创建空白csv文件，用于预测
-    :param csv_file_path: csv文件路径
-    :param predict_days: 要预测的天数 96,288,672
-    :param date_begin: 开始的日期 2021-03-30
-    :param default_val: 收盘价默认值 50
-    :return:
-    """
-    # 创建空白 csv
-    # df = pd.DataFrame(columns=['date', 'open', 'high', 'low', 'volume', 'amount', 'OT'])
-    df = pd.read_csv(csv_file_path)
-
-    # 为了计算将要预测的日期
-    date_predict_temp = None
-
-    # 将时间点换算成工作日
-    time_point_count = len(stock_data.list_time_point_5minutes)
-    predict_days = int(predict_days / time_point_count)
-
-    for i in range(predict_days):
-
-        if date_predict_temp is None:
-            date_predict_temp = get_datetime_from_date_str(date_begin)
-            next_date_predict_temp = date_predict_temp
-        else:
-            next_date_predict_temp = get_next_work_day(date_predict_temp, next_flag=+1)
-        pass
-
-        # 获得 0.mmdd 假数据，用于辨识
-        mm = str(next_date_predict_temp).split('-')[1]
-        dd = str(next_date_predict_temp).split('-')[2]
-        float_0_mmdd = default_val + float('0.' + mm + dd)
-
-        # 每5分钟的K线，一天有48条数据
-        for index in range(time_point_count):
-            new_row = pd.DataFrame(
-                {'date': str(next_date_predict_temp) + ' ' + stock_data.list_time_point_5minutes[index],
-                 'open': float_0_mmdd, 'high': float_0_mmdd, 'low': float_0_mmdd, 'volume': float_0_mmdd,
-                 'amount': float_0_mmdd, 'OT': float_0_mmdd}, index=[0])
-
-            df = df.append(new_row, ignore_index=True)
-            pass
-        pass
-
-        date_predict_temp = next_date_predict_temp
-    pass
-
-    df.to_csv(csv_file_path, index=False)
-    pass
-
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='[Informer] Long Sequences Forecasting')
-
-    # ----
-    # 股票代码
-    parser.add_argument('--stock_code', type=str, required=False, default='sh.600036', help='stock code')
-    # ----
 
     # parser.add_argument('--model', type=str, required=True, default='informer',
     #                     help='model of experiment, options: [informer, informerstack, informerlight(TBD)]')
@@ -89,7 +25,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--model', type=str, required=False, default='informer',
                         help='model of experiment, options: [informer, informerstack, informerlight(TBD)]')
-    parser.add_argument('--data', type=str, required=True, default='ETTh1', help='data')
+    parser.add_argument('--data', type=str, required=False, default='ETTh1', help='data')
     parser.add_argument('--root_path', type=str, default='./temp_dataset/', help='root path of the data file')
 
     parser.add_argument('--data_path', type=str, default='ETTh1.csv', help='data file')
@@ -179,18 +115,6 @@ if __name__ == '__main__':
 
     print('Args in experiment:')
     print(args)
-
-    # ----
-    # 预测长度
-    # 根据预测长度，从当前日期，向后做空白数据，用来预测
-    # pred_len
-    csv_file_path1 = args.root_path + args.data_path
-    # 开始日期
-    date_today = get_today_date()
-
-    # create_blank_csv_file(csv_file_path=csv_file_path1, predict_days=args.pred_len,
-    #                       date_begin=date_today, default_val=50)
-    # ----
 
     Exp = Exp_Informer
 
