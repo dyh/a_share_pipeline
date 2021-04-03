@@ -142,8 +142,8 @@ if __name__ == '__main__':
         exp.train(setting)
 
         # print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-        # exp.test(setting)
-        #
+        exp.test(setting)
+
         # if args.do_predict:
         #     print('>>>>>>>predicting : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
         #     exp.predict(setting, True)

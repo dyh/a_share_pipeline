@@ -162,10 +162,21 @@ class Exp_Informer(Exp_Basic):
         return total_loss
 
     def train(self, setting):
+        # 接续训练
+        # if load:
+        path = os.path.join(self.args.checkpoints, setting)
+        best_model_path = path + '/' + 'checkpoint.pth'
+        if os.path.exists(best_model_path):
+            self.model.load_state_dict(torch.load(best_model_path))
+            print('> found pth file:', best_model_path)
+        else:
+            print('> do not find pth file:', best_model_path)
+        pass
+
         train_data, train_loader = self._get_data(flag='train')
         vali_data, vali_loader = self._get_data(flag='val')
         # ----
-        # test_data, test_loader = self._get_data(flag='test')
+        test_data, test_loader = self._get_data(flag='test')
         # ----
 
         path = os.path.join(self.args.checkpoints, setting)
@@ -250,8 +261,8 @@ class Exp_Informer(Exp_Basic):
             vali_loss = self.vali(vali_data, vali_loader, criterion)
 
             # ----
-            # test_loss = self.vali(test_data, test_loader, criterion)
-            test_loss = -1
+            test_loss = self.vali(test_data, test_loader, criterion)
+            # test_loss = -1
             # ----
 
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(

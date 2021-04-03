@@ -134,8 +134,8 @@ class Dataset_ETT_minute(Dataset):
                                           self.data_path))
 
         # ----
-        num_train = int(len(df_raw) * 0.99)
-        num_vali = int(len(df_raw) * 0.01)
+        num_train = int(len(df_raw) * 0.96)
+        num_vali = int(len(df_raw) * 0.02)
         num_test = len(df_raw) - num_train - num_vali
 
         border1s = [0, num_train - self.seq_len, len(df_raw) - num_test - self.seq_len]
