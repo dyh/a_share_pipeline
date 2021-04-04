@@ -6,8 +6,6 @@ import time
 import pandas as pd
 import numpy as np
 
-import argparse
-
 import sys
 
 if 'pipeline' not in sys.path:
@@ -30,20 +28,8 @@ from pipeline.finrl.env_stocktrading import StockTradingEnv
 from pipeline.utils import datetime
 
 if __name__ == "__main__":
-
-    # 多进程id标识
-    multiprocess_id = datetime.time_point().replace('_', '')
-
-    parser = argparse.ArgumentParser(description='finrl')
-    parser.add_argument('--multiprocess_id', type=str, default=multiprocess_id, help='multiprocess id')
-    parser.add_argument('--download_data', type=bool, default=False, help='download data')
-
-    args = parser.parse_args()
-
-    print(args)
-
     # 日志
-    logger = get_logger(log_file_path=f'./{args.multiprocess_id}_TRAIN_SAC.log', log_level=logging.INFO)
+    logger = get_logger(log_file_path='./TRAIN_SAC.log', log_level=logging.INFO)
 
     # 创建目录
     if not os.path.exists("./" + config.DATA_SAVE_DIR):
@@ -78,15 +64,11 @@ if __name__ == "__main__":
     total_timesteps = int(1e5)
 
     print("==============下载A股数据==============")
-    if args.download_data:
-        # 下载A股的日K线数据
-        stock_data = StockData(output_dir="./" + config.DATA_SAVE_DIR, date_start=start_date, date_end=end_date)
-        # 获得数据文件路径
-        csv_file_path = stock_data.download(stock_code, fields=stock_data.fields_day)
-    else:
-        csv_file_path = f"./{config.DATA_SAVE_DIR}/{stock_code}.csv"
-    pass
 
+    # 下载A股的日K线数据
+    stock_data = StockData("./" + config.DATA_SAVE_DIR, date_start=start_date, date_end=end_date)
+    # 获得数据文件路径
+    csv_file_path = stock_data.download(stock_code, fields=stock_data.fields_day)
     # csv_file_path = './datasets_temp/sh.600036.csv'
     print("==============处理未来数据==============")
 
@@ -216,7 +198,7 @@ if __name__ == "__main__":
         # -------------------------------------
 
         # 统一的文件名
-        uniform_file_name = f"mpid_{args.multiprocess_id}_tp_{time_point}_{model_name}_{str(total_timesteps // 1000) + 'k'}"
+        uniform_file_name = f"{time_point}_{model_name}_{str(total_timesteps // 1000) + 'k'}"
 
         print("==============修改 env_kwargs 参数==============")
 
