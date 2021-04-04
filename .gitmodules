@@ -1,3 +1,6 @@
 [submodule "FinRL_Library_master"]
 	path = FinRL_Library_master
 	url = https://github.com/AI4Finance-LLC/FinRL-Library.git
+[submodule "Informer2020_main"]
+	path = Informer2020_main
+	url = https://github.com/zhouhaoyi/Informer2020.git

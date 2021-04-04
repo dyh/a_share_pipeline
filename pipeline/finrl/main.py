@@ -5,15 +5,15 @@ import time
 import pandas as pd
 import numpy as np
 
-import config as config
-from stock_data import StockData
+from pipeline.finrl import config as config
+from pipeline.stock_data import StockData
 
-sys.path.append('./FinRL_Library_master')
+sys.path.append('../../FinRL_Library_master')
 
-from models import DRLAgent
+from pipeline.finrl.finrl_models import DRLAgent
 from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
 
-from env import StockTradingAShareEnv as StockTradingEnv
+from pipeline.finrl.env import StockTradingAShareEnv as StockTradingEnv
 
 
 def shutdonw(secs=60):
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     # 下载A股的日K线数据
     stock_data = StockData("./" + config.DATA_SAVE_DIR, date_start=start_date, date_end=end_date)
     # 获得数据文件路径
-    csv_file_path = stock_data.download(stock_code)
+    csv_file_path = stock_data.download(stock_code, fields=stock_data.fields_day)
     # csv_file_path = './datasets_temp/sh.600036.csv'
     print("==============处理未来数据==============")
 

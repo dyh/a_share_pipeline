@@ -1,23 +1,31 @@
 import logging
 import os
 import random
-import sys
 import time
 
 import pandas as pd
 import numpy as np
 
-import config as config
-from stock_data import StockData
-from pipeline_utils.log import get_logger
+import sys
 
-sys.path.append('./FinRL_Library_master')
+if 'pipeline' not in sys.path:
+    sys.path.append('../../')
 
-from models import DRLAgent
+if 'Informer2020_main' not in sys.path:
+    sys.path.append('../../Informer2020_main')
+
+if 'FinRL_Library_master' not in sys.path:
+    sys.path.append('../../FinRL_Library_master')
+
+from pipeline.finrl import config
+from pipeline.stock_data import StockData
+from pipeline.utils.log import get_logger
+
+from pipeline.finrl.models import DRLAgent
 from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
 
-from env import StockTradingAShareEnv as StockTradingEnv
-
+from pipeline.finrl.env_stocktrading import StockTradingEnv
+from pipeline.utils import datetime
 
 if __name__ == "__main__":
     # 日志
@@ -39,15 +47,15 @@ if __name__ == "__main__":
     # 训练开始日期
     start_date = "2002-05-01"
     # 停止训练日期 / 开始预测日期
-    start_trade_date = "2020-12-01"
+    start_trade_date = "2021-03-09"
     # 停止预测日期
-    end_date = '2021-03-08'
+    end_date = '2021-03-26'
 
     # 今天日期，交易日
-    today_date = '2021-03-09'
+    # today_date = '2021-03-09'
 
     # 今日开盘价
-    today_open_price = 50.02
+    # today_open_price = 50.02
 
     # 现金金额
     initial_amount = 100000
@@ -60,7 +68,7 @@ if __name__ == "__main__":
     # 下载A股的日K线数据
     stock_data = StockData("./" + config.DATA_SAVE_DIR, date_start=start_date, date_end=end_date)
     # 获得数据文件路径
-    csv_file_path = stock_data.download(stock_code)
+    csv_file_path = stock_data.download(stock_code, fields=stock_data.fields_day)
     # csv_file_path = './datasets_temp/sh.600036.csv'
     print("==============处理未来数据==============")
 
@@ -76,16 +84,16 @@ if __name__ == "__main__":
     df_left.drop(df_left.index[0], inplace=True)
     df_left.reset_index(drop=True, inplace=True)
 
-    # # 删除B表最后一行
-    # df_right.drop(df_right.index[-1:], inplace=True)
-    # df_right.reset_index(drop=True, inplace=True)
+    # 删除B表最后一行
+    df_right.drop(df_right.index[-1:], inplace=True)
+    df_right.reset_index(drop=True, inplace=True)
 
     # 将A表和B表重新拼接，剔除了未来数据
     df = pd.concat([df_left, df_right], axis=1)
 
-    # 今天的数据，date、open为空，重新赋值
-    df.loc[df.index[-1:], 'date'] = today_date
-    df.loc[df.index[-1:], 'open'] = today_open_price
+    # # 今天的数据，date、open为空，重新赋值
+    # df.loc[df.index[-1:], 'date'] = today_date
+    # df.loc[df.index[-1:], 'open'] = today_open_price
 
     # 缓存文件，debug用
     # df.to_csv(f'{config.DATA_SAVE_DIR}/{stock_code}_concat_df.csv', index=False)
@@ -111,7 +119,7 @@ if __name__ == "__main__":
     df_train = df_train.sort_values(["date", "tic"], ignore_index=True)
     df_train.index = df_train.date.factorize()[0]
 
-    df_predict = df_fe[(df_fe.date >= start_trade_date) & (df_fe.date <= today_date)]
+    df_predict = df_fe[(df_fe.date >= start_trade_date) & (df_fe.date <= end_date)]
     df_predict = df_predict.sort_values(["date", "tic"], ignore_index=True)
     df_predict.index = df_predict.date.factorize()[0]
 
@@ -123,7 +131,8 @@ if __name__ == "__main__":
         logger.info('*' * 20 + '[ ' + str(i) + ' ]' + '*' * 20)
 
         # 训练/预测 时间点
-        time_point = time.strftime("%Y%m%d_%H%M%S", time.localtime())
+        # time_point = time.strftime("%Y%m%d_%H%M%S", time.localtime())
+        time_point = datetime.time_point()
 
         logger.info(time_point)
 
@@ -188,6 +197,9 @@ if __name__ == "__main__":
         model_kwargs = config.SAC_PARAMS
         # -------------------------------------
 
+        # 统一的文件名
+        uniform_file_name = f"{time_point}_{model_name}_{str(total_timesteps // 1000) + 'k'}"
+
         print("==============修改 env_kwargs 参数==============")
 
         # calculate state action space
@@ -206,7 +218,8 @@ if __name__ == "__main__":
             "reward_scaling": reward_scaling,
             "model_name": model_name,
             "mode": 'normal_env',
-            "iteration": str(total_timesteps // 1000) + 'k'
+            "iteration": str(total_timesteps // 1000) + 'k',
+            'uniform_file_name': uniform_file_name
         }
 
         logger.info('env_kwargs:' + str(env_kwargs))
@@ -216,9 +229,6 @@ if __name__ == "__main__":
         agent_train = DRLAgent(env=env_train)
 
         model_object = agent_train.get_model(model_name=model_name, model_kwargs=model_kwargs)
-
-        # 统一的文件名
-        uniform_file_name = f"{time_point}_{model_name}_{str(total_timesteps // 1000) + 'k'}"
 
         # weights文件名
         weights_file_path = f"{config.TRAINED_MODEL_DIR}/{uniform_file_name}.zip"
@@ -259,7 +269,7 @@ if __name__ == "__main__":
             # 加载训练好的weights文件
             model_predict.load(weights_file_path)
 
-            df_account_value, df_actions = DRLAgent.DRL_today_prediction(model=model_predict, environment=e_trade_gym)
+            df_account_value, df_actions = DRLAgent.DRL_prediction(model=model_predict, environment=e_trade_gym)
 
             # 获取最后的资产总数，记录下来
             last_row = df_account_value.loc[df_account_value.index[-1:], 'account_value']
@@ -268,18 +278,25 @@ if __name__ == "__main__":
             # 记录最后资产数和参数
             logger.info('>' * 10 + ' last_account_value:' + str(last_account_value) + '\n')
 
-            account_csv_file_path = f"{config.RESULTS_DIR}/df_account_value_{uniform_file_name}.csv"
-            df_account_value.to_csv(account_csv_file_path)
+            # 如果最后资产大于初始资金
+            if last_account_value > initial_amount:
+                account_csv_file_path = f"{config.RESULTS_DIR}/{uniform_file_name}_final_df_account_value.csv"
+                df_account_value.to_csv(account_csv_file_path)
 
-            actions_csv_file_path = f"{config.RESULTS_DIR}/df_actions_{uniform_file_name}.csv"
-            df_actions.to_csv(actions_csv_file_path)
+                actions_csv_file_path = f"{config.RESULTS_DIR}/{uniform_file_name}_final_df_actions.csv"
+                df_actions.to_csv(actions_csv_file_path)
 
-            print("account 结果保存在:", account_csv_file_path)
-            print("actions 结果保存在:", actions_csv_file_path)
+                print("account 结果保存在:", account_csv_file_path)
+                print("actions 结果保存在:", actions_csv_file_path)
+                pass
+            else:
+                print('最后资产小于初始资金，不保存结果：', last_account_value)
+                pass
+            pass
 
             print("==============预测完成==============")
 
-            # 如果最后的资金大于3倍初始资金，则结束循环
+            # 如果最后的资金大于2倍初始资金，则结束循环
             if last_account_value >= 2 * initial_amount:
                 break
             else:

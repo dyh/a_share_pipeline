@@ -127,9 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-results/
-tensorboard_log/
-trained_models/
-datasets_temp/
-/datasets_temp/
-/results/
+/pipeline/informer/checkpoints/
+/pipeline/informer/temp_dataset/
+/pipeline/finrl/datasets_temp/
+/pipeline/finrl/results/
+/pipeline/finrl/tensorboard_log/
+/pipeline/finrl/trained_models/
+/pipeline/informer/results/
+*.pth
+*.zip
