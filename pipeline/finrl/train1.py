@@ -156,7 +156,7 @@ if __name__ == "__main__":
     # time_point = datetime.time_point()
     time_point = '1'
 
-    for i in range(9):
+    for i in range(7):
 
         logger.info('*' * 20 + '[ ' + str(i) + ' ]' + '*' * 20)
 
@@ -181,7 +181,7 @@ if __name__ == "__main__":
         # 随机数 0.0001 - 0.0003
         # sac_learning_rate = random.uniform(0.0003, 0.001)
         sac_learning_rate_scale = 0.0001 * i
-        sac_learning_rate = 0.0009 - sac_learning_rate_scale
+        sac_learning_rate = 0.0007 - sac_learning_rate_scale
 
         # 在学习开始之前，模型收集过渡需要多少步骤
         # :param learning_starts: how many steps of the model to collect transitions for before learning starts
