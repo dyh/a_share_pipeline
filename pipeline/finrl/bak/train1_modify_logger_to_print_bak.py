@@ -1,5 +1,7 @@
 import logging
 import os
+import random
+import time
 
 import pandas as pd
 import numpy as np
@@ -154,15 +156,13 @@ if __name__ == "__main__":
     # time_point = datetime.time_point()
     time_point = '1'
 
-    # 反复训练10次
-    for j in range(0, 10):
+    for j in range(10):
 
-        # 每次减少0.0001，减少 n 次
-        for i in range(0, 10):
+        for i in range(6):
 
-            print('*' * 20 + ' [ ' + str(j) + '-' + str(i) + ' ] ' + '*' * 20)
+            logger.info('*' * 20 + ' [ ' + str(j) + '-' + str(i) + ' ] ' + '*' * 20)
 
-            print(time_point)
+            logger.info(time_point)
 
             # 最后资产
             last_account_value = 0
@@ -182,9 +182,8 @@ if __name__ == "__main__":
             # 3e-4
             # 随机数 0.0001 - 0.0003
             # sac_learning_rate = random.uniform(0.0003, 0.001)
-            # 从 0.001 开始，依次下降 0.0001
             sac_learning_rate_scale = 0.0001 * i
-            sac_learning_rate = 0.001 - sac_learning_rate_scale
+            sac_learning_rate = 0.0006 - sac_learning_rate_scale
 
             # 在学习开始之前，模型收集过渡需要多少步骤
             # :param learning_starts: how many steps of the model to collect transitions for before learning starts
@@ -213,7 +212,7 @@ if __name__ == "__main__":
                 "ent_coef": sac_ent_coef,
             }
 
-            print('SAC_PARAMS:' + str(config.SAC_PARAMS))
+            logger.info('SAC_PARAMS:' + str(config.SAC_PARAMS))
 
             # print("==============修改 hmax 单支股票最大股数==============")
             # 单次、单支、允许购买的最大股数，非金额
@@ -259,7 +258,7 @@ if __name__ == "__main__":
                 'uniform_file_name': uniform_file_name
             }
 
-            print('env_kwargs:' + str(env_kwargs))
+            logger.info('env_kwargs:' + str(env_kwargs))
 
             e_train_gym = StockTradingEnv(df=df_train, random_start=True, **env_kwargs)
             env_train, _ = e_train_gym.get_sb_env()
@@ -319,7 +318,7 @@ if __name__ == "__main__":
                 last_account_value = list(last_row)[0]
 
                 # 记录最后资产数和参数
-                print('>' * 10 + ' last_account_value:' + str(last_account_value) + '\n')
+                logger.info('>' * 10 + ' last_account_value:' + str(last_account_value) + '\n')
 
                 # 如果最后资产大于初始资金
                 if last_account_value > initial_amount:
@@ -349,8 +348,7 @@ if __name__ == "__main__":
                 #     pass
                 # pass
             except Exception as ex:
-                print(str(ex))
-                # logger.error(str(ex))
+                logger.error(str(ex))
                 pass
             finally:
                 torch.cuda.empty_cache()
