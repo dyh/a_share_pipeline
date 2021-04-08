@@ -144,13 +144,15 @@ if __name__ == "__main__":
     print("==============数据准备完成==============")
     print("==============开始循环==============")
 
+    time_point = '20210404_171734'
+
     for i in range(1000):
 
         logger.info('*' * 20 + '[ ' + str(i) + ' ]' + '*' * 20)
 
         # 训练/预测 时间点
         # time_point = time.strftime("%Y%m%d_%H%M%S", time.localtime())
-        time_point = datetime.time_point()
+        # time_point = datetime.time_point()
 
         logger.info(time_point)
 
@@ -163,30 +165,33 @@ if __name__ == "__main__":
         # :param batch_size: Minibatch size for each gradient update
         # int = 256
         # 随机选择 64, 128, 256
-        sac_batch_size = random.choice([64, 128, 256])
+        # sac_batch_size = random.choice([64, 128, 256])
+        sac_batch_size = 1024
 
         #     :param learning_rate: learning rate for adam optimizer,
         #         the same learning rate will be used for all networks (Q-Values, Actor and Value function)
         #         it can be a function of the current progress remaining (from 1 to 0)
         # 3e-4
         # 随机数 0.0001 - 0.0003
+        # sac_learning_rate = 0.0006
         sac_learning_rate = random.uniform(0.0001, 0.001)
 
         # 在学习开始之前，模型收集过渡需要多少步骤
         # :param learning_starts: how many steps of the model to collect transitions for before learning starts
         # int = 100
-        sac_learning_starts = random.randint(100, 300)
+        # sac_learning_starts = 676
+        sac_learning_starts = random.randint(200, 1000)
 
         # 熵的正则化系数。（相当于原始SAC论文中的奖励比例的逆量。）控制勘探权衡。将其设置为“自动”以自动学习（以及“auto_0.1”以使用0.1作为初始值）
         # 熵正则化系数。（相当于原始SAC论文中奖励规模的倒数。）控制勘探/开发权衡。将其设置为“auto”以自动学习（使用0.1作为初始值时设置为“auto\u 0.1”）
         #     :param ent_coef: Entropy regularization coefficient. (Equivalent to
         #         inverse of reward scale in the original SAC paper.)  Controlling exploration/exploitation trade-off.
         #         Set it to 'auto' to learn it automatically (and 'auto_0.1' for using 0.1 as initial value)
-        sac_ent_coef = random.choice(["auto_0.1", "auto"])
+        sac_ent_coef = "auto_0.1"
 
         # :param buffer_size: size of the replay buffer
         # int(1e6)
-        sac_buffer_size = random.randint(int(1e5), int(1e6))
+        sac_buffer_size = 87368194
 
         config.SAC_PARAMS = {
             "batch_size": sac_batch_size,
@@ -201,12 +206,12 @@ if __name__ == "__main__":
         # print("==============修改 hmax 单支股票最大股数==============")
         # 单次、单支、允许购买的最大股数，非金额
         # 例如单次购买1000股。1000×50元=5万元
-        hmax = random.randint(1000, 10000)
+        hmax = 2342
 
         print("==============修改 reward_scaling 奖励系数==============")
 
         # 奖励系数，从 1e-4 到 1.0
-        reward_scaling = random.uniform(1e-4, 1.0)
+        reward_scaling = 1.253921403309243
 
         # 选择模型
 
@@ -217,6 +222,7 @@ if __name__ == "__main__":
 
         # 统一的文件名
         uniform_file_name = f"mpid_{args.multiprocess_id}_tp_{time_point}_{model_name}_{str(total_timesteps // 1000) + 'k'}"
+        # mpid_2_tp_20210404_171734_sac_100k.zip
 
         print("==============修改 env_kwargs 参数==============")
 
@@ -227,7 +233,8 @@ if __name__ == "__main__":
         env_kwargs = {
             "hmax": hmax,
             "initial_amount": initial_amount,
-            "buy_cost_pct": 0.003,
+            "buy_cost_pct": 0.0,
+            # "buy_cost_pct": 0.003,
             "sell_cost_pct": 0.003,
             "state_space": state_space,
             "stock_dim": stock_dimension,
@@ -249,11 +256,17 @@ if __name__ == "__main__":
         model_object = agent_train.get_model(model_name=model_name, model_kwargs=model_kwargs)
 
         # weights文件名
-        weights_file_path = f"{config.TRAINED_MODEL_DIR}/{uniform_file_name}.zip"
-        # weights_file_path = f"{config.TRAINED_MODEL_DIR}/20210312_233644_sac_80k.zip"
+        weights_file_path = f"{config.TRAINED_MODEL_DIR}/{uniform_file_name}"
+        # weights_file_path = f"{config.TRAINED_MODEL_DIR}/mpid_2_tp_20210404_171734_sac_100k.zip"
 
         # 加载训练好的weights文件，可接续上次的结果继续训练。
-        # model_object.load(weights_file_path)
+        zip_file_path = weights_file_path + '.zip'
+        if os.path.exists(zip_file_path):
+            model_object.load(weights_file_path)
+            print('> found zip file:', zip_file_path)
+        else:
+            print('> do not find zip file:', zip_file_path)
+        pass
 
         print("==============开始训练模型==============")
 
@@ -314,22 +327,10 @@ if __name__ == "__main__":
 
             print("==============预测完成==============")
 
-            # 如果最后的资金大于2倍初始资金，则结束循环
-            if last_account_value >= 2 * initial_amount:
-                break
-            else:
-                pass
-            pass
         except Exception as ex:
             logger.error(str(ex))
             pass
         finally:
             pass
         pass
-    pass
-
-    # 关机
-    # time.sleep(60)
-    # os.system('shutdown now')
-
     pass

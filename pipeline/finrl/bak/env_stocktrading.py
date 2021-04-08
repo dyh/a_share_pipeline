@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import pickle
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common import logger
+from pipeline.utils import datetime
 
 
 class StockTradingEnv(gym.Env):
@@ -206,24 +207,29 @@ class StockTradingEnv(gym.Env):
                     print(f"Sharpe: {sharpe:0.3f}")
                 print("=================================")
 
-            # if (self.model_name != '') and (self.mode != ''):
-            #     df_actions = self.save_action_memory()
-            #     # ----
-            #     df_actions.to_csv(f'results/{self.uniform_file_name}_actions_{self.mode}_{self.model_name}_{self.iteration}.csv')
-            #     df_total_value.to_csv(f'results/{self.uniform_file_name}_account_value_{self.mode}_{self.model_name}_{self.iteration}.csv', index=False)
-            #     df_rewards.to_csv(f'results/{self.uniform_file_name}_account_rewards_{self.mode}_{self.model_name}_{self.iteration}.csv', index=False)
-            #     plt.plot(self.asset_memory, 'r')
-            #     plt.savefig(f'results/{self.uniform_file_name}_account_value_{self.mode}_{self.model_name}_{self.iteration}.png')
-            #     # ----
-            #
-            #     plt.close()
+            if (self.model_name != '') and (self.mode != ''):
+
+                # 使用不同时间点，保存所有的文件
+                time_point = datetime.time_point().replace('_', '')
+
+                df_actions = self.save_action_memory()
+                # ----
+                df_actions.to_csv(f'results/{self.uniform_file_name}_actions_{self.mode}_{self.model_name}_{self.iteration}_{time_point}.csv')
+                df_total_value.to_csv(f'results/{self.uniform_file_name}_account_value_{self.mode}_{self.model_name}_{self.iteration}_{time_point}.csv', index=False)
+                df_rewards.to_csv(f'results/{self.uniform_file_name}_account_rewards_{self.mode}_{self.model_name}_{self.iteration}_{time_point}.csv', index=False)
+                plt.plot(self.asset_memory, 'r')
+                plt.savefig(f'results/{self.uniform_file_name}_account_value_{self.mode}_{self.model_name}_{self.iteration}_{time_point}.png')
+                # ----
+
+                plt.close()
 
             # Add outputs to logger interface
-            logger.record("environment/portfolio_value", end_total_asset)
-            logger.record("environment/total_reward", tot_reward)
-            logger.record("environment/total_reward_pct", (tot_reward / (end_total_asset - tot_reward)) * 100)
-            logger.record("environment/total_cost", self.cost)
-            logger.record("environment/total_trades", self.trades)
+            logger.info(f"day: {self.day}, episode: {self.episode}")
+            logger.info(f"portfolio_value: {end_total_asset}")
+            logger.info(f"total_reward: {tot_reward}")
+            logger.info(f"total_reward_pct: {(tot_reward / (end_total_asset - tot_reward)) * 100}")
+            logger.info(f"total_cost: {self.cost}")
+            logger.info(f"total_trades: {self.trades}")
 
             return self.state, self.reward, self.terminal, {}
 
