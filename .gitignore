@@ -136,3 +136,5 @@ dmypy.json
 /pipeline/informer/results/
 *.pth
 *.zip
+*.npy
+/pipeline/elegant/AgentPPO/
