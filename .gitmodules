@@ -4,3 +4,6 @@
 [submodule "Informer2020_main"]
 	path = Informer2020_main
 	url = https://github.com/zhouhaoyi/Informer2020.git
+[submodule "ElegantRL_master"]
+	path = ElegantRL_master
+	url = https://github.com/AI4Finance-LLC/ElegantRL.git
