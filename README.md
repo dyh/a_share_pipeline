@@ -4,6 +4,7 @@
 
 
 ### 使用框架：
+- https://github.com/AI4Finance-LLC/ElegantRL
 - https://github.com/zhouhaoyi/Informer2020
 - https://github.com/AI4Finance-LLC/FinRL-Library
 
