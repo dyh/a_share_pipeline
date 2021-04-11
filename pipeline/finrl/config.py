@@ -14,7 +14,7 @@ import os
 # END_DATE = "2021-03-05"
 # START_TRADE_DATE = "2020-11-16"
 
-DATA_SAVE_DIR = f"datasets_temp"
+DATA_SAVE_DIR = f"datasets"
 TRAINED_MODEL_DIR = f"trained_models"
 TENSORBOARD_LOG_DIR = f"tensorboard_log"
 RESULTS_DIR = f"results"

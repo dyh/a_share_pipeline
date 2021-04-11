@@ -138,3 +138,5 @@ dmypy.json
 *.zip
 *.npy
 /pipeline/elegant/AgentPPO/
+/pipeline/elegant/sh.600036.csv
+*.csv

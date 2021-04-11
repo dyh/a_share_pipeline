@@ -239,17 +239,17 @@ class FinanceStockEnv:  # 2021-02-02
     Modify: Github Yonv1943 ElegantRL
     """
 
-    def __init__(self, initial_account=1e6, max_stock=1e2, transaction_fee_percent=1e-3, if_train=True,
-                 train_beg=0, train_len=1024):
-        self.stock_dim = 30
+    def __init__(self, initial_account=1e5, max_stock=1e5, transaction_fee_percent=1e-3, if_train=True,
+                 train_beg=0, train_len=1024, data_path=''):
+        self.stock_dim = 1
         self.initial_account = initial_account
         self.transaction_fee_percent = transaction_fee_percent
         self.max_stock = max_stock
 
-        ary = self.load_training_data_for_multi_stock(data_path='./FinanceStock.npy')
-        assert ary.shape == (1699, 5 * 30)  # ary: (date, item*stock_dim), item: (adjcp, macd, rsi, cci, adx)
+        ary = self.load_training_data_for_multi_stock(data_path=data_path)
+        assert ary.shape == (4522, 5 * self.stock_dim)  # ary: (date, item*stock_dim), item: (adjcp, macd, rsi, cci, adx)
         assert train_beg < train_len
-        assert train_len < ary.shape[0]  # ary.shape[0] == 1699
+        assert train_len < ary.shape[0]  # ary.shape[0] == 4523
         self.ary_train = ary[:train_len]
         self.ary_valid = ary[train_len:]
         self.ary = self.ary_train if if_train else self.ary_valid
@@ -258,6 +258,7 @@ class FinanceStockEnv:  # 2021-02-02
         self.day = 0
         self.initial_account__reset = self.initial_account
         self.account = self.initial_account__reset
+        # 多支股票的一天信息
         self.day_npy = self.ary[self.day]
         self.stocks = np.zeros(self.stock_dim, dtype=np.float32)  # multi-stack
 
@@ -293,12 +294,25 @@ class FinanceStockEnv:  # 2021-02-02
         action = action * self.max_stock
 
         """bug or sell stock"""
+        # 多支股票循环
         for index in range(self.stock_dim):
             stock_action = action[index]
-            adj = self.day_npy[index]
+            # 股票价格
+            # adj = self.day_npy[index]
+            # T日 开盘价
+            # adj = self.day_npy[0]
+
+            # 获取 T+1 的收盘价
+            close = self.ary[self.day][3]
+
+            adj = close
+
             if stock_action > 0:  # buy_stock
+                # 可以购买的数量
                 available_amount = self.account // adj
+                #
                 delta_stock = min(available_amount, stock_action)
+                # 资金减去手续费，减去买股票的钱
                 self.account -= adj * delta_stock * (1 + self.transaction_fee_percent)
                 self.stocks[index] += delta_stock
             elif self.stocks[index] > 0:  # sell_stock
@@ -330,10 +344,10 @@ class FinanceStockEnv:  # 2021-02-02
         return state, reward, done, None
 
     @staticmethod
-    def load_training_data_for_multi_stock(data_path='./FinanceStock.npy'):  # need more independent
+    def load_training_data_for_multi_stock(data_path=''):  # need more independent
         if os.path.exists(data_path):
             data_ary = np.load(data_path).astype(np.float32)
-            assert data_ary.shape[1] == 5 * 30
+            assert data_ary.shape[1] == 5 * 1
             return data_ary
         else:
             raise RuntimeError(

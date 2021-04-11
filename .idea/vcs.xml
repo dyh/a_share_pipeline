@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/ElegantRL_master" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/FinRL_Library_master" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Informer2020_main" vcs="Git" />
   </component>

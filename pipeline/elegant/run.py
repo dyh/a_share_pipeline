@@ -3,8 +3,17 @@ import sys
 if 'pipeline' not in sys.path:
     sys.path.append('../../')
 
+if 'FinRL_Library_master' not in sys.path:
+    sys.path.append('../../FinRL_Library_master')
+
 if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
+
+from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
+from pipeline.finrl import config
+from pipeline.stock_data import StockData
+
+import argparse
 
 import os
 import gym
@@ -12,6 +21,7 @@ import time
 import torch
 import numpy as np
 import numpy.random as rd
+import pandas as pd
 
 from copy import deepcopy
 from ElegantRL_master.elegantrl.agent import ReplayBuffer, ReplayBufferMP
@@ -100,37 +110,6 @@ class Arguments:
         torch.set_default_dtype(torch.float32)
         torch.manual_seed(self.random_seed)
         np.random.seed(self.random_seed)
-
-
-
-def demo3_custom_env_fin_rl():
-    from ElegantRL_master.elegantrl.agent import AgentPPO
-
-    '''choose an DRL algorithm'''
-    args = Arguments(if_on_policy=True)
-    args.agent = AgentPPO()
-    args.agent.if_use_gae = False
-
-    from pipeline.elegant.env import FinanceStockEnv  # a standard env for ElegantRL, not need PreprocessEnv()
-    args.env = FinanceStockEnv(if_train=True, train_beg=0, train_len=1024)
-    args.env_eval = FinanceStockEnv(if_train=False, train_beg=0, train_len=1024)  # eva_len = 1699 - train_len
-    args.reward_scale = 2 ** 0  # RewardRange: 0 < 1.0 < 1.25 <
-    args.break_step = int(5e6)
-    args.net_dim = 2 ** 8
-    args.max_step = args.env.max_step
-    args.max_memo = (args.max_step - 1) * 8
-    args.batch_size = 2 ** 11
-    args.repeat_times = 2 ** 4
-    args.eval_times1 = 2 ** 2
-    args.eval_times2 = 2 ** 4
-    args.if_allow_break = True
-    "TotalStep:  5e4, TargetReward: 1.25, UsedTime:  20s"
-    "TotalStep: 20e4, TargetReward: 1.50, UsedTime:  80s"
-
-    '''train and evaluate'''
-    # train_and_evaluate(args)
-    args.rollout_num = 8
-    train_and_evaluate_mp(args)
 
 
 '''single process training'''
@@ -640,5 +619,212 @@ def explore_before_training(env, buffer, target_step, reward_scale, gamma) -> in
     return steps
 
 
+def get_npy(stock_code='sh.600036'):
+    parser = argparse.ArgumentParser(description='elegant')
+    # parser.add_argument('--multiprocess_id', type=str, default=multiprocess_id, help='multiprocess id')
+    parser.add_argument('--download_data', type=bool, default=True, help='download data')
+    args = parser.parse_args()
+
+    stock_dim = 1
+
+    # 创建目录
+    if not os.path.exists("./" + config.DATA_SAVE_DIR):
+        os.makedirs("./" + config.DATA_SAVE_DIR)
+    # if not os.path.exists("./" + config.TRAINED_MODEL_DIR):
+    #     os.makedirs("./" + config.TRAINED_MODEL_DIR)
+    # if not os.path.exists("./" + config.TENSORBOARD_LOG_DIR):
+    #     os.makedirs("./" + config.TENSORBOARD_LOG_DIR)
+    # if not os.path.exists("./" + config.RESULTS_DIR):
+    #     os.makedirs("./" + config.RESULTS_DIR)
+    # if not os.path.exists("./" + config.LOGGER_DIR):
+    #     os.makedirs("./" + config.LOGGER_DIR)
+
+    # 股票代码
+    # stock_code = 'sh.600036'
+
+    # 训练开始日期
+    start_date = "2002-05-01"
+    # 停止训练日期 / 开始预测日期
+    start_trade_date = "2021-03-08"
+    # 停止预测日期
+    end_date = '2021-04-07'
+
+    print("==============下载A股数据==============")
+    if args.download_data:
+        # 下载A股的日K线数据
+        stock_data = StockData(output_dir="./" + config.DATA_SAVE_DIR, date_start=start_date, date_end=end_date)
+        # 获得数据文件路径
+        csv_file_path = stock_data.download(stock_code, fields=stock_data.fields_day)
+    else:
+        csv_file_path = f"./{config.DATA_SAVE_DIR}/{stock_code}.csv"
+    pass
+
+    # csv_file_path = './datasets_temp/sh.600036.csv'
+    print("==============处理未来数据==============")
+
+    # open今日开盘价为T日数据，其余皆为T-1日数据，避免引入未来数据
+    df = pd.read_csv(csv_file_path)
+
+    # 删除未来数据，把df分为2个表，日期date+开盘open是A表，其余的是B表
+    df_left = df.drop(df.columns[2:], axis=1)
+
+    df_right = df.drop(['date', 'open'], axis=1)
+
+    # 删除A表第一行
+    df_left.drop(df_left.index[0], inplace=True)
+    df_left.reset_index(drop=True, inplace=True)
+
+    # 删除B表最后一行
+    df_right.drop(df_right.index[-1:], inplace=True)
+    df_right.reset_index(drop=True, inplace=True)
+
+    # 将A表和B表重新拼接，剔除了未来数据
+    df = pd.concat([df_left, df_right], axis=1)
+
+    # # 今天的数据，date、open为空，重新赋值
+    # df.loc[df.index[-1:], 'date'] = today_date
+    # df.loc[df.index[-1:], 'open'] = today_open_price
+
+    # 缓存文件，debug用
+    # df.to_csv(f'{config.DATA_SAVE_DIR}/{stock_code}_concat_df.csv', index=False)
+
+    print("==============加入技术指标==============")
+    fe = FeatureEngineer(
+        use_technical_indicator=True,
+        tech_indicator_list=config.TECHNICAL_INDICATORS_LIST,
+        use_turbulence=False,
+        user_defined_feature=False,
+    )
+
+    df_fe = fe.preprocess_data(df)
+    df_fe['log_volume'] = np.log(df_fe.volume * df_fe.close)
+    df_fe['change'] = (df_fe.close - df_fe.open) / df_fe.close
+    df_fe['daily_variance'] = (df_fe.high - df_fe.low) / df_fe.close
+
+    # df_fe.to_csv(f'{config.DATA_SAVE_DIR}/{stock_code}_processed_df.csv', index=False)
+
+    print("==============拆分 训练/预测 数据集==============")
+    # Training & Trading data split
+    # df_train = df_fe[(df_fe.date >= start_date) & (df_fe.date < start_trade_date)]
+    # df_train = df_train.sort_values(["date", "tic"], ignore_index=True)
+    # df_train.index = df_train.date.factorize()[0]
+    #
+    # df_predict = df_fe[(df_fe.date >= start_trade_date) & (df_fe.date <= end_date)]
+    # df_predict = df_predict.sort_values(["date", "tic"], ignore_index=True)
+    # df_predict.index = df_predict.date.factorize()[0]
+
+    print("==============数据准备完成==============")
+
+    # data = pd.read_csv('./AAPL_processed.csv', index_col=0)
+
+    # from preprocessing.preprocessors import pd, data_split, preprocess_data, add_turbulence
+    #
+    # # the following is same as part of run_model()
+    # preprocessed_path = "done_data.csv"
+    # if if_load and os.path.exists(preprocessed_path):
+    #     data = pd.read_csv(preprocessed_path, index_col=0)
+    # else:
+    #     data = preprocess_data()
+    #     data = add_turbulence(data)
+    #     data.to_csv(preprocessed_path)
+
+    # df = df_fe
+
+    # print('df_fe.shape:', df_fe.shape)
+
+    df_fe.to_csv(f'{config.DATA_SAVE_DIR}/{stock_code}_processed.csv', index=False)
+
+    train__df = df_fe
+
+    print('train__df.shape:', train__df.shape)
+
+    # print(train__df) # df: DataFrame of Pandas
+
+    train_ary = train__df.to_numpy().reshape((-1, stock_dim, 25))
+
+    '''state_dim = 1 + 6 * stock_dim, stock_dim=30
+    n   item    index
+    1   ACCOUNT -
+    30  adjcp   2
+    30  stock   -
+    30  macd    7
+    30  rsi     8
+    30  cci     9
+    30  adx     10
+    '''
+    data_ary = np.empty((train_ary.shape[0], 5, stock_dim), dtype=np.float32)
+    # data_ary[:, 0] = train_ary[:, :, 4]  # adjcp
+    # data_ary[:, 1] = train_ary[:, :, 8]  # macd
+    # data_ary[:, 2] = train_ary[:, :, 11]  # rsi
+    # data_ary[:, 3] = train_ary[:, :, 12]  # cci
+    # data_ary[:, 4] = train_ary[:, :, 13]  # adx
+
+    data_ary[:, 0] = train_ary[:, :, 1]  # T open
+    data_ary[:, 1] = train_ary[:, :, 2]  # T-1 high
+    data_ary[:, 2] = train_ary[:, :, 3]  # T-1 low
+    data_ary[:, 3] = train_ary[:, :, 4]  # T-1 close
+    data_ary[:, 4] = train_ary[:, :, 14]  # T-1 macs
+
+    # 变形
+    data_ary = data_ary.reshape((-1, 5 * stock_dim))
+
+    # os.makedirs(data_path[:data_path.rfind('/')])
+    data_path = f"./{config.DATA_SAVE_DIR}/{stock_code}.npy"
+    np.save(data_path, data_ary.astype(np.float16))  # save as float16 (0.5 MB), float32 (1.0 MB)
+
+    print('data_ary.shape:', data_ary.shape)
+
+    print('| FinanceStockEnv(): save in:', data_path)
+    # return data_ary
+    pass
+
+
+def demo3_custom_env_fin_rl(stock_code='sh.600036'):
+    from ElegantRL_master.elegantrl.agent import AgentPPO
+
+    '''choose an DRL algorithm'''
+    args = Arguments(if_on_policy=True)
+    args.agent = AgentPPO()
+    args.agent.if_use_gae = False
+
+    from pipeline.elegant.env import FinanceStockEnv  # a standard env for ElegantRL, not need PreprocessEnv()
+    # 在这里传入数据
+    # 先接入train和vali，再想如何test
+    # 先用 .npy 格式文件接入1支
+
+    # # 训练开始日期
+    # start_date = "2002-05-01"
+    # # 停止训练日期 / 开始预测日期
+    # start_trade_date = "2021-03-08"
+    # # 停止预测日期
+    # end_date = '2021-04-07'
+
+    data_path = f"./{config.DATA_SAVE_DIR}/{stock_code}.npy"
+
+    args.env = FinanceStockEnv(if_train=True, train_beg=0, train_len=4500, data_path=data_path)
+    args.env_eval = FinanceStockEnv(if_train=False, train_beg=0, train_len=4500, data_path=data_path)  # eva_len = 1699 - train_len
+    args.reward_scale = 2 ** 0  # RewardRange: 0 < 1.0 < 1.25 <
+    args.break_step = int(5e6)
+    args.net_dim = 2 ** 8
+    args.max_step = args.env.max_step
+    args.max_memo = (args.max_step - 1) * 8
+    args.batch_size = 2 ** 11
+    args.repeat_times = 2 ** 4
+    args.eval_times1 = 2 ** 2
+    args.eval_times2 = 2 ** 4
+    args.if_allow_break = True
+    "TotalStep:  5e4, TargetReward: 1.25, UsedTime:  20s"
+    "TotalStep: 20e4, TargetReward: 1.50, UsedTime:  80s"
+
+    '''train and evaluate'''
+    train_and_evaluate(args)
+    # args.rollout_num = 8
+    # train_and_evaluate_mp(args)
+
+
 if __name__ == '__main__':
-    demo3_custom_env_fin_rl()
+    torch.cuda.empty_cache()
+
+    get_npy(stock_code='sh.600036')
+
+    demo3_custom_env_fin_rl(stock_code='sh.600036')
