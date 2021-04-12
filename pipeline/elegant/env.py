@@ -1,4 +1,6 @@
 import os
+import random
+
 import numpy as np
 import numpy.random as rd
 import gym
@@ -241,13 +243,15 @@ class FinanceStockEnv:  # 2021-02-02
 
     def __init__(self, initial_account=1e5, max_stock=1e5, transaction_fee_percent=1e-3, if_train=True,
                  train_beg=0, train_len=1024, data_path=''):
+        self.if_train = if_train
         self.stock_dim = 1
         self.initial_account = initial_account
         self.transaction_fee_percent = transaction_fee_percent
         self.max_stock = max_stock
 
         ary = self.load_training_data_for_multi_stock(data_path=data_path)
-        assert ary.shape == (4522, 5 * self.stock_dim)  # ary: (date, item*stock_dim), item: (adjcp, macd, rsi, cci, adx)
+        # assert ary.shape == (4522, 5 * self.stock_dim)
+        # ary: (date, item*stock_dim), item: (adjcp, macd, rsi, cci, adx)
         assert train_beg < train_len
         assert train_len < ary.shape[0]  # ary.shape[0] == 4523
         self.ary_train = ary[:train_len]
@@ -275,11 +279,20 @@ class FinanceStockEnv:  # 2021-02-02
         self.max_step = self.ary.shape[0]
 
     def reset(self) -> np.ndarray:
-        self.initial_account__reset = self.initial_account * rd.uniform(0.9, 1.1)  # reset()
-        self.account = self.initial_account__reset
+
+        self.initial_account = self.initial_account * rd.uniform(0.9, 1.1)  # reset()
+        self.initial_account__reset = self.initial_account
+        self.account = self.initial_account
+
         self.stocks = np.zeros(self.stock_dim, dtype=np.float32)
         self.total_asset = self.account + (self.day_npy[:self.stock_dim] * self.stocks).sum()
         # total_asset = account + (adjcp * stocks).sum()
+
+        if self.if_train:
+            starting_point = random.randint(0, (int(len(self.ary) * 0.1)))
+        else:
+            starting_point = 0
+        pass
 
         self.day = 0
         self.day_npy = self.ary[self.day]

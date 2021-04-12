@@ -140,3 +140,4 @@ dmypy.json
 /pipeline/elegant/AgentPPO/
 /pipeline/elegant/sh.600036.csv
 *.csv
+/pipeline/elegant/datasets/
