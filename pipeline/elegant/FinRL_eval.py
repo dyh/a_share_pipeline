@@ -5,7 +5,7 @@ from pipeline.finrl import config
 from pipeline.stock_data import StockData
 
 
-class StockTradingEnv:
+class StockTradingEnvEval:
     def __init__(self, beg_i=0, end_i=3220, initial_amount=1e6, initial_stocks=None,
                  max_stock=1e2, buy_cost_pct=1e-3, sell_cost_pct=1e-3, gamma=0.99,
                  ticker_list=None, tech_id_list=None, beg_date=None, end_date=None, ):
@@ -41,17 +41,22 @@ class StockTradingEnv:
         self.state_dim = len(self.reset())
         self.action_dim = stock_dim
         self.if_discrete = False
-        self.target_return = 1234.0
+        self.target_return = 20000.0
         self.max_step = len(self.close_ary)
 
+        self.text_cache = ''
+
     def reset(self):
+        self.text_cache = ''
+
+        self.day = 0
+        self.rewards = list()
 
         stock_dim = self.close_ary.shape[1]
         self.initial_stocks = np.zeros(stock_dim, dtype=np.float32)
 
-        self.day = 0
-        self.rewards = list()
         self.amount = self.initial_amount
+
         self.stocks = self.initial_stocks
 
         self.total_asset = (self.close_ary[self.day] * self.stocks).sum() + self.amount
@@ -62,7 +67,11 @@ class StockTradingEnv:
         return state
 
     def step(self, action):
+
         self.day += 1
+
+        # print('#' * 20, self.day, '#' * 20)
+
         done = self.day == self.max_day - 1
 
         action = action * self.max_stock  # actions initially is scaled between 0 to 1
@@ -80,14 +89,31 @@ class StockTradingEnv:
         for index in range(self.action_dim):
             stock_action = action[index]
             adj_close_price = self.close_ary[self.day, index]  # `adjcp` denotes adjusted close price?
+
+            delta_stock = 0
+
+            buy_or_sell = 0
+
             if stock_action > 0:  # buy_stock
+                buy_or_sell = 1
+
                 delta_stock = min(self.amount // adj_close_price, stock_action)
                 self.amount -= adj_close_price * delta_stock * self.buy_cost_rate
                 self.stocks[index] += delta_stock
             elif self.stocks[index] > 0:  # sell_stock
+                buy_or_sell = -1
+
                 delta_stock = min(-stock_action, self.stocks[index])
                 self.amount += adj_close_price * delta_stock * self.sell_cost_rate
                 self.stocks[index] -= delta_stock
+
+            self.text_cache += f'{self.day} 交易数量 {delta_stock * buy_or_sell} , 持股数量 {self.stocks[index]} \r\n'
+
+            # print(self.day, '交易数量 delta_stock', delta_stock)
+
+            # print('持股数量', self.stocks[index])
+            # print('现金', self.amount)
+            pass
 
         state = np.array((self.amount, *self.stocks,
                           *self.close_ary[self.day],
@@ -97,12 +123,24 @@ class StockTradingEnv:
         reward = (total_asset - self.total_asset) * 2 ** -6
 
         self.rewards.append(reward)
+
         self.total_asset = total_asset
+
+        # print('资产差额', total_asset - self.total_asset)
+        # print('总资产', self.total_asset)
+        # print('#' * 40)
+
         if done:
             reward += 1 / (1 - self.gamma) * np.mean(self.rewards)
             self.episode_return = total_asset / self.initial_amount
             # print(f'done! self.total_asset - self.initial_amount = {self.total_asset - self.initial_amount}')
             # print(f'done! self.episode_return, {self.episode_return}')
+
+            if self.total_asset > self.initial_amount:
+                print(self.text_cache)
+                print('总资产', self.total_asset)
+
+                pass
 
         return state, reward, done, dict()
 
