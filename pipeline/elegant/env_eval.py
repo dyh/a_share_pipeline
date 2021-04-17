@@ -5,7 +5,7 @@ from pipeline.finrl import config
 from pipeline.stock_data import StockData
 
 
-class StockTradingEnv:
+class StockTradingEnvEval:
     def __init__(self, beg_i=0, end_i=3220, initial_amount=1e6, initial_stocks=None,
                  max_stock=1e2, buy_cost_pct=1e-3, sell_cost_pct=1e-3, gamma=0.99,
                  ticker_list=None, tech_id_list=None, beg_date=None, end_date=None, ):
@@ -24,6 +24,9 @@ class StockTradingEnv:
         self.initial_amount = initial_amount
         self.initial_stocks = np.zeros(stock_dim, dtype=np.float32) if initial_stocks is None else initial_stocks
 
+        # 默认持有1000股
+        # self.initial_stocks[0] = 1000.0
+
         self.max_day = len(self.close_ary)
         self.gamma = gamma
 
@@ -41,17 +44,24 @@ class StockTradingEnv:
         self.state_dim = len(self.reset())
         self.action_dim = stock_dim
         self.if_discrete = False
-        self.target_return = 1234.0
+        self.target_return = 1.2
         self.max_step = len(self.close_ary)
 
-    def reset(self):
+        self.text_cache = ''
 
-        stock_dim = self.close_ary.shape[1]
-        self.initial_stocks = np.zeros(stock_dim, dtype=np.float32)
+    def reset(self):
+        self.text_cache = ''
 
         self.day = 0
         self.rewards = list()
+
+        stock_dim = self.close_ary.shape[1]
+        self.initial_stocks = np.zeros(stock_dim, dtype=np.float32)
+        # 默认持有1000股
+        # self.initial_stocks[0] = 1000.0
+
         self.amount = self.initial_amount
+
         self.stocks = self.initial_stocks
 
         self.total_asset = (self.close_ary[self.day] * self.stocks).sum() + self.amount
@@ -62,7 +72,9 @@ class StockTradingEnv:
         return state
 
     def step(self, action):
+
         self.day += 1
+
         done = self.day == self.max_day - 1
 
         action = action * self.max_stock  # actions initially is scaled between 0 to 1
@@ -80,14 +92,29 @@ class StockTradingEnv:
         for index in range(self.action_dim):
             stock_action = action[index]
             adj_close_price = self.close_ary[self.day, index]  # `adjcp` denotes adjusted close price?
+
+            delta_stock = 0
+            buy_or_sell = 0
+
             if stock_action > 0:  # buy_stock
+                buy_or_sell = 1
+
                 delta_stock = min(self.amount // adj_close_price, stock_action)
                 self.amount -= adj_close_price * delta_stock * self.buy_cost_rate
                 self.stocks[index] += delta_stock
             elif self.stocks[index] > 0:  # sell_stock
+                buy_or_sell = -1
+
                 delta_stock = min(-stock_action, self.stocks[index])
                 self.amount += adj_close_price * delta_stock * self.sell_cost_rate
                 self.stocks[index] -= delta_stock
+
+            self.text_cache += f'{self.day} 交易数量 {delta_stock * buy_or_sell} , 持股数量 {self.stocks[index]} \r\n'
+
+            # print(self.day, '交易数量 delta_stock', delta_stock)
+            # print('持股数量', self.stocks[index])
+            # print('现金', self.amount)
+            pass
 
         state = np.array((self.amount, *self.stocks,
                           *self.close_ary[self.day],
@@ -97,12 +124,24 @@ class StockTradingEnv:
         reward = (total_asset - self.total_asset) * 2 ** -6
 
         self.rewards.append(reward)
+
         self.total_asset = total_asset
+
+        # print('资产差额', total_asset - self.total_asset)
+        # print('总资产', self.total_asset)
+        # print('#' * 40)
+
         if done:
             reward += 1 / (1 - self.gamma) * np.mean(self.rewards)
             self.episode_return = total_asset / self.initial_amount
             # print(f'done! self.total_asset - self.initial_amount = {self.total_asset - self.initial_amount}')
             # print(f'done! self.episode_return, {self.episode_return}')
+
+            # if self.total_asset > self.initial_amount:
+            if self.total_asset > 100000:
+                print(self.text_cache)
+                print('总资产', self.total_asset)
+                pass
 
         return state, reward, done, dict()
 
@@ -186,10 +225,10 @@ class StockTradingEnv:
         #     return close_ary, tech_ary
 
         '''download and generate *.npz when FileNotFound'''
-        print(f"| get_close_ary_tech_ary(), load: {raw_data_path}")
-        df = self.raw_data_download(raw_data_path, beg_date, end_date, ticker_list[0])
-        print(f"| get_close_ary_tech_ary(), load: {ary_data_path}")
-        df = self.raw_data_preprocess(prp_data_path, df, beg_date, end_date, tech_id_list, )
+        # print(f"| get_close_ary_tech_ary(), load: {raw_data_path}")
+        # df = self.raw_data_download(raw_data_path, beg_date, end_date, ticker_list[0])
+        print(f"| raw_data_preprocess(), load: {prp_data_path}")
+        df = self.raw_data_preprocess(prp_data_path, beg_date, end_date, tech_id_list, )
         # import pandas as pd
         # df = pd.read_pickle(prp_data_path)  # DataFrame of Pandas
 
@@ -242,24 +281,24 @@ class StockTradingEnv:
         return raw_df
 
     @staticmethod
-    def raw_data_preprocess(prp_data_path, df, beg_date, end_date, tech_id_list, ):
-        if os.path.exists(prp_data_path):
-            import pandas as pd
-            # df = pd.read_pickle(prp_data_path)  # DataFrame of Pandas
-            df = pd.read_csv(prp_data_path)  # DataFrame of Pandas
-        else:
-            # from finrl.preprocessing.preprocessors import FeatureEngineer
-            from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
-            fe = FeatureEngineer(use_technical_indicator=True, tech_indicator_list=tech_id_list,
-                                 use_turbulence=False, user_defined_feature=False, )
-            df = fe.preprocess_data(df)  # preprocess raw_df
-
-            df = df[(df.date >= beg_date) & (df.date < end_date)]
-            df = df.sort_values(["date", "tic"], ignore_index=True)
-            df.index = df.date.factorize()[0]
-
-            # df.to_pickle(prp_data_path)
-            df.to_csv(prp_data_path)
+    def raw_data_preprocess(prp_data_path, beg_date, end_date, tech_id_list, ):
+        # if os.path.exists(prp_data_path):
+        import pandas as pd
+        # df = pd.read_pickle(prp_data_path)  # DataFrame of Pandas
+        df = pd.read_csv(prp_data_path)  # DataFrame of Pandas
+        # else:
+        #     # from finrl.preprocessing.preprocessors import FeatureEngineer
+        #     from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
+        #     fe = FeatureEngineer(use_technical_indicator=True, tech_indicator_list=tech_id_list,
+        #                          use_turbulence=False, user_defined_feature=False, )
+        #     df = fe.preprocess_data(df)  # preprocess raw_df
+        #
+        #     df = df[(df.date >= beg_date) & (df.date < end_date)]
+        #     df = df.sort_values(["date", "tic"], ignore_index=True)
+        #     df.index = df.date.factorize()[0]
+        #
+        #     # df.to_pickle(prp_data_path)
+        #     df.to_csv(prp_data_path)
 
         print('| df.columns.values:', df.columns.values)
         # assert all(df.columns.values == [

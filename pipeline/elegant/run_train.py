@@ -10,8 +10,8 @@ if 'FinRL_Library_master' not in sys.path:
 if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
 
-from pipeline.elegant.FinRL import StockTradingEnv
-from pipeline.elegant.FinRL_eval import StockTradingEnvEval
+from pipeline.elegant.env_train import StockTradingEnvTrain
+from pipeline.elegant.env_eval import StockTradingEnvEval
 
 from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
 from pipeline.stock_data import StockData
@@ -715,15 +715,14 @@ def demo3_custom_env_fin_rl(stock_code='sh.600036'):
     args.agent.if_use_gae = False
 
     # 在这里传入数据
-    # 先接入train和vali，再想如何test
     # 先用 .npy 格式文件接入1支
 
     # 训练开始日期
     start_date = "2002-05-01"
     # 停止训练日期 / 开始预测日期
-    # start_trade_date = "2021-03-08"
+    start_eval_date = "2021-01-13"
     # 停止预测日期
-    end_date = '2021-04-14'
+    env_eval_date = '2021-04-14'
 
     # data_path = f"./{config.DATA_SAVE_DIR}/{stock_code}.npy"
 
@@ -732,43 +731,35 @@ def demo3_custom_env_fin_rl(stock_code='sh.600036'):
     # ticker_list=None, tech_id_list=None, beg_date=None, end_date=None,
 
     train_env_kwargs = {
-        "ticker_list": ['sh.600036'],
-        "beg_date": start_date,
-        "end_date": end_date,
-        "beg_i": 1,  # 2002-05-10
-        # "end_i": 4500,  # 2021-03-08
-        "end_i": 4466,  # 2021-01-12
-        "max_stock": 10000,
+        "start_date": start_date,
+        "start_eval_date": start_eval_date,
+        "env_eval_date": env_eval_date,
+        "max_stock": 15000,
         "initial_amount": 100000,
         "buy_cost_pct": 0.0003,
         "sell_cost_pct": 0.0003,
-        # "state_space": 1 + (2 + len(config.TECHNICAL_INDICATORS_LIST)) * stock_dimension,
-        # "stock_dim": 1,
-        "tech_id_list": config.TECHNICAL_INDICATORS_LIST,
-        # "action_space": stock_dimension,
-        # "reward_scaling": 1e-4
+        "gamma": 0.99,
+        "if_eval": False
     }
 
     eval_env_kwargs = {
-        "ticker_list": ['sh.600036'],
-        "beg_date": start_date,
-        "end_date": end_date,
-        # "beg_i": 4501,  # 2021-03-09
-        "beg_i": 4467,  # 2021-01-13
-        "end_i": 4525,  # 2021-04-14
-        "max_stock": 10000,
+        "start_date": start_date,
+        "start_eval_date": start_eval_date,
+        "env_eval_date": env_eval_date,
+        "max_stock": 15000,
         "initial_amount": 100000,
         "buy_cost_pct": 0.0003,
         "sell_cost_pct": 0.0003,
-        # "state_space": 1 + (2 + len(config.TECHNICAL_INDICATORS_LIST)) * stock_dimension,
-        # "stock_dim": 1,
-        "tech_id_list": config.TECHNICAL_INDICATORS_LIST,
-        # "action_space": stock_dimension,
-        # "reward_scaling": 1e-4
+        "gamma": 0.99,
+        "if_eval": True
     }
 
-    args.env = StockTradingEnv(**train_env_kwargs)
-    args.env_eval = StockTradingEnvEval(**eval_env_kwargs)
+    # max_stock=1e2, initial_amount=1e6, buy_cost_pct=1e-3, sell_cost_pct=1e-3, gamma=0.99,
+    # start_date='2008-03-19', start_eval_date='2016-01-01', env_eval_date='2021-01-01',
+    # tech_indicator_list=None, initial_stocks=None, if_eval=False
+
+    args.env = StockTradingEnvTrain(**train_env_kwargs)
+    args.env_eval = StockTradingEnvTrain(**eval_env_kwargs)
 
     args.reward_scale = 2 ** 0  # RewardRange: 0 < 1.0 < 1.25 <
     args.break_step = int(5e6)
@@ -866,9 +857,51 @@ def train_and_evaluate(args):
             if_reach_goal = evaluator.evaluate_save(agent.act, steps, obj_a, obj_c)
 
 
+def download_data(stock_code='sh.600036'):
+    parser = argparse.ArgumentParser(description='elegant')
+    # parser.add_argument('--multiprocess_id', type=str, default=multiprocess_id, help='multiprocess id')
+    parser.add_argument('--download_data', type=bool, default=True, help='download data')
+    args = parser.parse_args()
+
+    stock_dim = 1
+
+    # 创建目录
+    if not os.path.exists("./" + config.DATA_SAVE_DIR):
+        os.makedirs("./" + config.DATA_SAVE_DIR)
+    # if not os.path.exists("./" + config.TRAINED_MODEL_DIR):
+    #     os.makedirs("./" + config.TRAINED_MODEL_DIR)
+    # if not os.path.exists("./" + config.TENSORBOARD_LOG_DIR):
+    #     os.makedirs("./" + config.TENSORBOARD_LOG_DIR)
+    # if not os.path.exists("./" + config.RESULTS_DIR):
+    #     os.makedirs("./" + config.RESULTS_DIR)
+    # if not os.path.exists("./" + config.LOGGER_DIR):
+    #     os.makedirs("./" + config.LOGGER_DIR)
+
+    # 股票代码
+    # stock_code = 'sh.600036'
+
+    # 训练开始日期
+    start_date = "2002-05-01"
+    # 停止训练日期 / 开始预测日期
+    # start_trade_date = "2021-03-08"
+    # 停止预测日期
+    end_date = '2021-04-14'
+
+    print("==============下载A股数据==============")
+    if args.download_data:
+        # 下载A股的日K线数据
+        stock_data = StockData(output_dir="./" + config.DATA_SAVE_DIR, date_start=start_date, date_end=end_date)
+        # 获得数据文件路径
+        csv_file_path = stock_data.download(stock_code, fields=stock_data.fields_day)
+    else:
+        csv_file_path = f"./{config.DATA_SAVE_DIR}/{stock_code}.csv"
+    pass
+    print(csv_file_path)
+
+
 if __name__ == '__main__':
     torch.cuda.empty_cache()
-
+    # download_data(stock_code='sh.600036')
     # get_npy(stock_code='sh.600036')
 
     demo3_custom_env_fin_rl(stock_code='sh.600036')
