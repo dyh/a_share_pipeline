@@ -11,7 +11,6 @@ if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
 
 from pipeline.elegant.env_train import StockTradingEnvTrain
-from pipeline.elegant.env_eval import StockTradingEnvEval
 
 from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
 from pipeline.stock_data import StockData
@@ -181,6 +180,11 @@ def mp_train(args, pipe1_eva, pipe1_exp_list):
 
     '''init: Agent, ReplayBuffer'''
     agent.init(net_dim, state_dim, action_dim)
+
+    # ----
+    agent.save_load_model('./AgentPPO/', if_save=False)
+    # ----
+
     if_on_policy = getattr(agent, 'if_on_policy', False)
 
     '''send'''
