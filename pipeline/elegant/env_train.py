@@ -180,17 +180,18 @@ class StockTradingEnvTrain:
 
         # ----
 
-        # raw_df = pd.read_csv(raw_data_path)  # DataFrame of Pandas
-        #
-        # fe = FeatureEngineer(use_turbulence=True,
-        #                      user_defined_feature=False,
-        #                      use_technical_indicator=True,
-        #                      tech_indicator_list=tech_indicator_list, )
+        raw_df = pd.read_csv(raw_data_path)  # DataFrame of Pandas
 
-        # processed_df = fe.preprocess_data(raw_df)
+        fe = FeatureEngineer(use_turbulence=True,
+                             user_defined_feature=False,
+                             use_technical_indicator=True,
+                             tech_indicator_list=tech_indicator_list, )
 
-        # processed_df.to_csv(processed_data_path)
+        processed_df = fe.preprocess_data(raw_df)
+        processed_df.to_csv(processed_data_path, index=False)
+
         processed_df = pd.read_csv(processed_data_path)  # DataFrame of Pandas
+
         # ----
 
         def data_split(df, start, end):
@@ -216,20 +217,18 @@ class StockTradingEnvTrain:
         tech_ary = list()
         price_ary = list()
         for day in range(len(df.index.unique())):
-            item = df.loc[day]
+            item = df.loc[[day]]
 
             price_ary.append(item.close)  # adjusted close price (adjcp)
 
-            # tech_items = [item[tech].values.tolist() for tech in tech_indicator_list]
-            tech_items = [item[tech] for tech in tech_indicator_list]
+            tech_items = [item[tech].values.tolist() for tech in tech_indicator_list]
 
             tech_items_flatten = sum(tech_items, [])
             tech_ary.append(tech_items_flatten)
 
-        # price_ary = np.array(price_ary)
-        price_ary = np.array(price_ary).reshape(-1, 1)
-
+        price_ary = np.array(price_ary)
         tech_ary = np.array(tech_ary)
+
         print(f'| price_ary.shape: {price_ary.shape}, tech_ary.shape: {tech_ary.shape}')
         return price_ary, tech_ary
 
