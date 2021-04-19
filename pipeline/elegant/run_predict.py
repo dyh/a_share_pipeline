@@ -1,6 +1,7 @@
 import argparse
 import sys
 
+from ElegantRL_master.elegantrl.replay import ReplayBufferMP, ReplayBuffer
 
 if 'pipeline' not in sys.path:
     sys.path.append('../../')
@@ -27,7 +28,8 @@ import numpy.random as rd
 import pandas as pd
 
 from copy import deepcopy
-from ElegantRL_master.elegantrl.agent import ReplayBuffer, ReplayBufferMP
+
+# from ElegantRL_master.elegantrl.agent import ReplayBuffer, ReplayBufferMP
 
 gym.logger.set_level(40)  # Block warning: 'WARN: Box bound precision lowered by casting to float32'
 
@@ -184,16 +186,13 @@ def mp_train(args, pipe1_eva, pipe1_exp_list):
 
     if_on_policy = getattr(agent, 'if_on_policy', False)
 
-
-
-
     '''send'''
     pipe1_eva.send(agent.act)  # send
     # act = pipe2_eva.recv()  # recv
 
     buffer_mp = ReplayBufferMP(max_len=max_memo + max_step * rollout_num, if_on_policy=if_on_policy,
                                state_dim=state_dim, action_dim=1 if if_discrete else action_dim,
-                               rollout_num=rollout_num, if_gpu=True)
+                               rollout_num=rollout_num, if_gpu=True, if_per=True)
 
     '''prepare for training'''
     if if_on_policy:
@@ -295,7 +294,7 @@ def mp_explore(args, pipe2_exp, worker_id):
 
     if_on_policy = getattr(agent, 'if_on_policy', False)
     buffer = ReplayBuffer(max_len=max_memo // rollout_num + max_step, if_on_policy=if_on_policy,
-                          state_dim=state_dim, action_dim=1 if if_discrete else action_dim, if_gpu=False)
+                          state_dim=state_dim, action_dim=1 if if_discrete else action_dim, if_gpu=False, if_per=True)
 
     '''start exploring'''
     exp_step = target_step // rollout_num
