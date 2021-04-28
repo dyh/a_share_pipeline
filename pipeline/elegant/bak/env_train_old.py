@@ -7,10 +7,11 @@ import torch
 from pipeline.finrl import config
 
 
-class StockTradingEnvPredict:
+class StockTradingEnvTrain:
     def __init__(self, max_stock=1e2, initial_amount=1e6, buy_cost_pct=1e-3, sell_cost_pct=1e-3, gamma=0.99,
                  start_date='2008-03-19', start_eval_date='2016-01-01', env_eval_date='2021-01-01',
                  tech_indicator_list=None, initial_stocks=None, if_eval=False):
+
         train_df, eval_df = self.load_stock_trading_data(start_date, start_eval_date, env_eval_date)
         df = eval_df if if_eval else train_df
         self.price_ary, self.tech_ary = self.convert_df_to_ary(df, tech_indicator_list)
@@ -40,12 +41,7 @@ class StockTradingEnvPredict:
         self.target_return = 3.5  # 4.3
         self.episode_return = 0.0
 
-        self.text_cache = ''
-
-
     def reset(self):
-        self.text_cache = ''
-
         self.day = 0
         price = self.price_ary[self.day]
 
@@ -74,18 +70,12 @@ class StockTradingEnvPredict:
                 sell_num_shares = min(self.stocks[index], -actions[index])
                 self.stocks[index] -= sell_num_shares
                 self.amount += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
-                # ----
-                self.text_cache += f'第 {self.day+1} 天，卖出 {sell_num_shares} 股, 持股数量 {self.stocks[index]}，收盘 {price[index]}，{self.total_asset} \r\n'
-                # ----
 
         for index in np.where(actions > 0)[0]:  # buy_index:
             if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
                 buy_num_shares = min(self.amount // price[index], actions[index])
                 self.stocks[index] += buy_num_shares
                 self.amount -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
-                # ----
-                self.text_cache += f'第 {self.day+1} 天，买入 {buy_num_shares} 股, 持股数量 {self.stocks[index]}，收盘 {price[index]}，{self.total_asset} \r\n'
-                # ----
 
         state = np.hstack((self.amount * 2 ** -13,
                            price,
@@ -103,20 +93,87 @@ class StockTradingEnvPredict:
             reward = self.gamma_reward
             self.episode_return = total_asset / self.initial_total_asset
             # print(';',reward, self.episode_return)
-
-            # ----
-            print(self.text_cache)
-            print('总资产', self.total_asset)
-            # ----
-
         return state, reward, done, dict()
 
     @staticmethod
     def load_stock_trading_data(start_date='2008-03-19', start_eval_date='2016-01-01', env_eval_date='2021-01-01'):
-        cwd = "./" + config.DATA_SAVE_DIR
-        processed_data_path = f'{cwd}/sh.600036_predict.csv'  # preprocessed data
-        eval_df = pd.read_csv(processed_data_path)  # DataFrame of Pandas
-        return None, eval_df
+        # cwd = './env/FinRL'
+        # cwd = "./" + config.DATA_SAVE_DIR
+
+        # processed_data_path = f'{cwd}/dow_30_daily_2000_2021.csv'
+        # if os.path.exists(processed_data_path):
+        #     processed_df = pd.read_csv(processed_data_path)
+        #     train_df = data_split(processed_df, '2000-01-11', '2014-01-01')  # 3515/5278
+        #     eval_df = data_split(processed_df, '2014-01-01', '2021-01-01')  # 1763/5278
+        #     return train_df, eval_df
+
+        raw_data_path = f'{config.DATA_SAVE_DIR}/raw_data.csv'
+
+        processed_data_path = f'{config.DATA_SAVE_DIR}/prp_data.csv'  # preprocessed data
+
+        tech_indicator_list = ['macd', 'boll_ub', 'boll_lb', 'rsi_30', 'cci_30', 'dx_30',
+                               'close_30_sma', 'close_60_sma']  # finrl.config.TECHNICAL_INDICATORS_LIST
+
+        os.makedirs(config.DATA_SAVE_DIR, exist_ok=True)
+
+        # print("| download data using YahooDownloader")
+        # if os.path.exists(raw_data_path):
+        #     raw_df = pd.read_pickle(raw_data_path)  # DataFrame of Pandas
+        #     # print('| raw_df.columns.values:', raw_df.columns.values)
+        # else:
+        #     raw_df = YahooDownloader(start_date="2000-01-01",
+        #                              end_date="2021-01-01",
+        #                              ticker_list=ticker_list, ).fetch_data()
+        #     raw_df.to_pickle(raw_data_path)
+        # print(f"| load data: {raw_data_path}")
+        #
+        # print("| processed data using FeatureEngineer")
+        # if os.path.exists(processed_data_path):
+        #     processed_df = pd.read_pickle(processed_data_path)  # DataFrame of Pandas
+        #     # print('| processed_df.columns.values:', processed_df.columns.values)
+        # else:
+        #
+        #
+        #     fe = FeatureEngineer(use_turbulence=True,
+        #                          user_defined_feature=False,
+        #                          use_technical_indicator=True,
+        #                          tech_indicator_list=tech_indicator_list, )
+        #     processed_df = fe.preprocess_data(raw_df)
+        #     processed_df.to_pickle(processed_data_path)
+        # print(f"| load data: {processed_data_path}")
+
+        # ----
+
+        raw_df = pd.read_csv(raw_data_path)  # DataFrame of Pandas
+
+        fe = FeatureEngineer(use_turbulence=True,
+                             user_defined_feature=False,
+                             use_technical_indicator=True,
+                             tech_indicator_list=tech_indicator_list, )
+
+        processed_df = fe.preprocess_data(raw_df)
+        processed_df.to_csv(processed_data_path, index=False)
+
+        processed_df = pd.read_csv(processed_data_path)  # DataFrame of Pandas
+
+        # ----
+
+        def data_split(df, start, end):
+            """split the dataset into training or testing using date
+            from finrl.preprocessing.data import data_split
+            """
+            data = df[(df.date >= start) & (df.date < end)]
+            data = data.sort_values(["date", "tic"], ignore_index=True)
+            data.index = data.date.factorize()[0]
+            return data
+
+        train_df = data_split(processed_df, start_date, start_eval_date)
+        train_df.to_csv(f'{config.DATA_SAVE_DIR}/train_df.csv')
+
+        eval_df = data_split(processed_df, start_eval_date, env_eval_date)
+        eval_df.to_csv(f'{config.DATA_SAVE_DIR}/eval_df.csv')
+
+        return train_df, eval_df
 
     @staticmethod
     def convert_df_to_ary(df, tech_indicator_list=None):
@@ -128,12 +185,10 @@ class StockTradingEnvPredict:
         tech_ary = list()
         price_ary = list()
         for day in range(len(df.index.unique())):
-            item = df.loc[[day]]
+            item = df.loc[day]
 
             price_ary.append(item.close)  # adjusted close price (adjcp)
-
             tech_items = [item[tech].values.tolist() for tech in tech_indicator_list]
-
             tech_items_flatten = sum(tech_items, [])
             tech_ary.append(tech_items_flatten)
 

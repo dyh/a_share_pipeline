@@ -1,6 +1,8 @@
 import argparse
 import sys
 
+from ElegantRL_master.elegantrl.replay import ReplayBufferMP, ReplayBuffer
+
 if 'pipeline' not in sys.path:
     sys.path.append('../../')
 
@@ -11,6 +13,9 @@ if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
 
 from pipeline.elegant.env_predict import StockTradingEnvPredict
+
+from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
+from pipeline.stock_data import StockData
 
 from pipeline.finrl import config
 
@@ -23,7 +28,8 @@ import numpy.random as rd
 import pandas as pd
 
 from copy import deepcopy
-from ElegantRL_master.elegantrl.agent import ReplayBuffer, ReplayBufferMP
+
+# from ElegantRL_master.elegantrl.agent import ReplayBuffer, ReplayBufferMP
 
 gym.logger.set_level(40)  # Block warning: 'WARN: Box bound precision lowered by casting to float32'
 
@@ -112,6 +118,275 @@ class Arguments:
 
 
 '''multiprocessing training'''
+
+
+def train_and_evaluate_mp(args):
+    act_workers = args.rollout_num
+    os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
+    '''Python.multiprocessing + PyTorch + CUDA --> semaphore_tracker:UserWarning
+    https://discuss.pytorch.org/t/issue-with-multiprocessing-semaphore-tracking/22943/4
+    '''
+    print("| multiprocessing, act_workers:", act_workers)
+
+    import multiprocessing as mp  # Python built-in multiprocessing library
+    # mp.set_start_method('spawn', force=True)  # force=True to solve "RuntimeError: context has already been set"
+    # mp.set_start_method('fork', force=True)  # force=True to solve "RuntimeError: context has already been set"
+    # mp.set_start_method('forkserver', force=True)  # force=True to solve "RuntimeError: context has already been set"
+
+    pipe1_eva, pipe2_eva = mp.Pipe()  # Pipe() for Process mp_evaluate_agent()
+    pipe2_exp_list = list()  # Pipe() for Process mp_explore_in_env()
+
+    process_train = mp.Process(target=mp_train, args=(args, pipe2_eva, pipe2_exp_list))
+    process_evaluate = mp.Process(target=mp_evaluate, args=(args, pipe1_eva))
+    process = [process_train, process_evaluate]
+
+    for worker_id in range(act_workers):
+        exp_pipe1, exp_pipe2 = mp.Pipe(duplex=True)
+        pipe2_exp_list.append(exp_pipe1)
+        process.append(mp.Process(target=mp_explore, args=(args, exp_pipe2, worker_id)))
+
+    print("| multiprocessing, None:")
+    [p.start() for p in process]
+    process_evaluate.join()
+    process_train.join()
+    import warnings
+    warnings.simplefilter('ignore', UserWarning)
+    # semaphore_tracker: There appear to be 1 leaked semaphores to clean up at shutdown
+    # print("[W CudaIPCTypes.cpp:22]← Don't worry about this warning.")
+    [p.terminate() for p in process]
+
+
+def mp_train(args, pipe1_eva, pipe1_exp_list):
+    args.init_before_training(if_main=False)
+
+    '''basic arguments'''
+    env = args.env
+    cwd = args.cwd
+    agent = args.agent
+    rollout_num = args.rollout_num
+
+    '''training arguments'''
+    net_dim = args.net_dim
+    max_memo = args.max_memo
+    break_step = args.break_step
+    batch_size = args.batch_size
+    target_step = args.target_step
+    repeat_times = args.repeat_times
+    if_break_early = args.if_allow_break
+    del args  # In order to show these hyper-parameters clearly, I put them above.
+
+    '''init: environment'''
+    max_step = env.max_step
+    state_dim = env.state_dim
+    action_dim = env.action_dim
+    if_discrete = env.if_discrete
+
+    '''init: Agent, ReplayBuffer'''
+    agent.init(net_dim, state_dim, action_dim)
+
+    if_on_policy = getattr(agent, 'if_on_policy', False)
+
+    '''send'''
+    pipe1_eva.send(agent.act)  # send
+    # act = pipe2_eva.recv()  # recv
+
+    buffer_mp = ReplayBufferMP(max_len=max_memo + max_step * rollout_num, if_on_policy=if_on_policy,
+                               state_dim=state_dim, action_dim=1 if if_discrete else action_dim,
+                               rollout_num=rollout_num, if_gpu=True, if_per=True)
+
+    '''prepare for training'''
+    if if_on_policy:
+        steps = 0
+    else:  # explore_before_training for off-policy
+        with torch.no_grad():  # update replay buffer
+            steps = 0
+            for i in range(rollout_num):
+                pipe1_exp = pipe1_exp_list[i]
+
+                # pipe2_exp.send((buffer.buf_state[:buffer.now_len], buffer.buf_other[:buffer.now_len]))
+                buf_state, buf_other = pipe1_exp.recv()
+
+                steps += len(buf_state)
+                buffer_mp.extend_buffer(buf_state, buf_other, i)
+
+        agent.update_net(buffer_mp, target_step, batch_size, repeat_times)  # pre-training and hard update
+        agent.act_target.load_state_dict(agent.act.state_dict()) if getattr(env, 'act_target', None) else None
+        agent.cri_target.load_state_dict(agent.cri.state_dict()) if getattr(env, 'cri_target', None) in dir(
+            agent) else None
+    total_step = steps
+    '''send'''
+    pipe1_eva.send((agent.act, steps, 0, 0.5))  # send
+    # act, steps, obj_a, obj_c = pipe2_eva.recv()  # recv
+
+    '''start training'''
+    if_solve = False
+    while not ((if_break_early and if_solve)
+               or total_step > break_step
+               or os.path.exists(f'{cwd}/stop')):
+        '''update ReplayBuffer'''
+        steps = 0  # send by pipe1_eva
+        for i in range(rollout_num):
+            pipe1_exp = pipe1_exp_list[i]
+            '''send'''
+            pipe1_exp.send(agent.act)
+            # agent.act = pipe2_exp.recv()
+            '''recv'''
+            # pipe2_exp.send((buffer.buf_state[:buffer.now_len], buffer.buf_other[:buffer.now_len]))
+            buf_state, buf_other = pipe1_exp.recv()
+
+            steps += len(buf_state)
+            buffer_mp.extend_buffer(buf_state, buf_other, i)
+        total_step += steps
+
+        '''update network parameters'''
+        obj_a, obj_c = agent.update_net(buffer_mp, target_step, batch_size, repeat_times)
+
+        '''saves the agent with max reward'''
+        '''send'''
+        pipe1_eva.send((agent.act, steps, obj_a, obj_c))
+        # q_i_eva_get = pipe2_eva.recv()
+
+        if_solve = pipe1_eva.recv()
+
+        if pipe1_eva.poll():
+            '''recv'''
+            # pipe2_eva.send(if_solve)
+            if_solve = pipe1_eva.recv()
+
+    buffer_mp.print_state_norm(env.neg_state_avg if hasattr(env, 'neg_state_avg') else None,
+                               env.div_state_std if hasattr(env, 'div_state_std') else None)  # 2020-12-12
+
+    '''send'''
+    pipe1_eva.send('stop')
+    # q_i_eva_get = pipe2_eva.recv()
+    time.sleep(4)
+
+
+def mp_explore(args, pipe2_exp, worker_id):
+    args.init_before_training(if_main=False)
+
+    '''basic arguments'''
+    env = args.env
+    agent = args.agent
+    rollout_num = args.rollout_num
+
+    '''training arguments'''
+    net_dim = args.net_dim
+    max_memo = args.max_memo
+    target_step = args.target_step
+    gamma = args.gamma
+    reward_scale = args.reward_scale
+
+    random_seed = args.random_seed
+    torch.manual_seed(random_seed + worker_id)
+    np.random.seed(random_seed + worker_id)
+    del args  # In order to show these hyper-parameters clearly, I put them above.
+
+    '''init: environment'''
+    max_step = env.max_step
+    state_dim = env.state_dim
+    action_dim = env.action_dim
+    if_discrete = env.if_discrete
+
+    '''init: Agent, ReplayBuffer'''
+    agent.init(net_dim, state_dim, action_dim)
+    agent.state = env.reset()
+
+    if_on_policy = getattr(agent, 'if_on_policy', False)
+    buffer = ReplayBuffer(max_len=max_memo // rollout_num + max_step, if_on_policy=if_on_policy,
+                          state_dim=state_dim, action_dim=1 if if_discrete else action_dim, if_gpu=False, if_per=True)
+
+    '''start exploring'''
+    exp_step = target_step // rollout_num
+    with torch.no_grad():
+        if not if_on_policy:
+            explore_before_training(env, buffer, exp_step, reward_scale, gamma)
+
+            buffer.update_now_len_before_sample()
+
+            pipe2_exp.send((buffer.buf_state[:buffer.now_len], buffer.buf_other[:buffer.now_len]))
+            # buf_state, buf_other = pipe1_exp.recv()
+
+            buffer.empty_buffer_before_explore()
+
+        while True:
+            agent.explore_env(env, buffer, exp_step, reward_scale, gamma)
+
+            buffer.update_now_len_before_sample()
+
+            pipe2_exp.send((buffer.buf_state[:buffer.now_len], buffer.buf_other[:buffer.now_len]))
+            # buf_state, buf_other = pipe1_exp.recv()
+
+            buffer.empty_buffer_before_explore()
+
+            # pipe1_exp.send(agent.act)
+            agent.act = pipe2_exp.recv()
+
+
+def mp_evaluate(args, pipe2_eva):
+    args.init_before_training(if_main=True)
+
+    '''basic arguments'''
+    cwd = args.cwd
+    env = args.env
+    agent_id = args.gpu_id
+    env_eval = args.env_eval
+
+    '''evaluating arguments'''
+    show_gap = args.show_gap
+    eval_times1 = args.eval_times1
+    eval_times2 = args.eval_times2
+    env_eval = deepcopy(env) if env_eval is None else deepcopy(env_eval)
+    del args  # In order to show these hyper-parameters clearly, I put them above.
+
+    '''init: Evaluator'''
+    evaluator = Evaluator(cwd=cwd, agent_id=agent_id, device=torch.device("cpu"), env=env_eval,
+                          eval_times1=eval_times1, eval_times2=eval_times2, show_gap=show_gap)  # build Evaluator
+
+    '''act_cpu without gradient for pipe1_eva'''
+    # pipe1_eva.send(agent.act)
+    act = pipe2_eva.recv()
+
+    act_cpu = deepcopy(act).to(torch.device("cpu"))  # for pipe1_eva
+    [setattr(param, 'requires_grad', False) for param in act_cpu.parameters()]
+
+    '''start evaluating'''
+    with torch.no_grad():  # speed up running
+        act, steps, obj_a, obj_c = pipe2_eva.recv()  # pipe2_eva (act, steps, obj_a, obj_c)
+
+        if_loop = True
+        while if_loop:
+            '''update actor'''
+            while not pipe2_eva.poll():  # wait until pipe2_eva not empty
+                time.sleep(1)
+            steps_sum = 0
+            while pipe2_eva.poll():  # receive the latest object from pipe
+                '''recv'''
+                # pipe1_eva.send((agent.act, steps, obj_a, obj_c))
+                # pipe1_eva.send('stop')
+                q_i_eva_get = pipe2_eva.recv()
+
+                if q_i_eva_get == 'stop':
+                    if_loop = False
+                    break
+                act, steps, obj_a, obj_c = q_i_eva_get
+                steps_sum += steps
+
+            act_cpu.load_state_dict(act.state_dict())
+            if_solve = evaluator.evaluate_save(act_cpu, steps_sum, obj_a, obj_c)
+            '''send'''
+            pipe2_eva.send(if_solve)
+            # if_solve = pipe1_eva.recv()
+
+            evaluator.draw_plot()
+
+    '''save the model, rename the directory'''
+    print(f'| SavedDir: {cwd}\n'
+          f'| UsedTime: {time.time() - evaluator.start_time:.0f}')
+
+    while pipe2_eva.poll():  # empty the pipe
+        pipe2_eva.recv()
+
 
 '''utils'''
 
@@ -274,166 +549,165 @@ def explore_before_training(env, buffer, target_step, reward_scale, gamma) -> in
     return steps
 
 
-#
-# def get_npy(stock_code='sh.600036'):
-#     parser = argparse.ArgumentParser(description='elegant')
-#     # parser.add_argument('--multiprocess_id', type=str, default=multiprocess_id, help='multiprocess id')
-#     parser.add_argument('--download_data', type=bool, default=True, help='download data')
-#     args = parser.parse_args()
-#
-#     stock_dim = 1
-#
-#     # 创建目录
-#     if not os.path.exists("./" + config.DATA_SAVE_DIR):
-#         os.makedirs("./" + config.DATA_SAVE_DIR)
-#     # if not os.path.exists("./" + config.TRAINED_MODEL_DIR):
-#     #     os.makedirs("./" + config.TRAINED_MODEL_DIR)
-#     # if not os.path.exists("./" + config.TENSORBOARD_LOG_DIR):
-#     #     os.makedirs("./" + config.TENSORBOARD_LOG_DIR)
-#     # if not os.path.exists("./" + config.RESULTS_DIR):
-#     #     os.makedirs("./" + config.RESULTS_DIR)
-#     # if not os.path.exists("./" + config.LOGGER_DIR):
-#     #     os.makedirs("./" + config.LOGGER_DIR)
-#
-#     # 股票代码
-#     # stock_code = 'sh.600036'
-#
-#     # 训练开始日期
-#     start_date = "2002-05-01"
-#     # 停止训练日期 / 开始预测日期
-#     # start_trade_date = "2021-03-08"
-#     # 停止预测日期
-#     end_date = '2021-04-14'
-#
-#     print("==============下载A股数据==============")
-#     if args.download_data:
-#         # 下载A股的日K线数据
-#         stock_data = StockData(output_dir="./" + config.DATA_SAVE_DIR, date_start=start_date, date_end=end_date)
-#         # 获得数据文件路径
-#         csv_file_path = stock_data.download(stock_code, fields=stock_data.fields_day)
-#     else:
-#         csv_file_path = f"./{config.DATA_SAVE_DIR}/{stock_code}.csv"
-#     pass
-#
-#     # csv_file_path = './datasets_temp/sh.600036.csv'
-#     print("==============处理未来数据==============")
-#
-#     # open今日开盘价为T日数据，其余皆为T-1日数据，避免引入未来数据
-#     df = pd.read_csv(csv_file_path)
-#
-#     # 删除未来数据，把df分为2个表，日期date+开盘open是A表，其余的是B表
-#     df_left = df.drop(df.columns[2:], axis=1)
-#
-#     df_right = df.drop(['date', 'open'], axis=1)
-#
-#     # 删除A表第一行
-#     df_left.drop(df_left.index[0], inplace=True)
-#     df_left.reset_index(drop=True, inplace=True)
-#
-#     # 删除B表最后一行
-#     df_right.drop(df_right.index[-1:], inplace=True)
-#     df_right.reset_index(drop=True, inplace=True)
-#
-#     # 将A表和B表重新拼接，剔除了未来数据
-#     df = pd.concat([df_left, df_right], axis=1)
-#
-#     # # 今天的数据，date、open为空，重新赋值
-#     # df.loc[df.index[-1:], 'date'] = today_date
-#     # df.loc[df.index[-1:], 'open'] = today_open_price
-#
-#     # 缓存文件，debug用
-#     # df.to_csv(f'{config.DATA_SAVE_DIR}/{stock_code}_concat_df.csv', index=False)
-#
-#     print("==============加入技术指标==============")
-#     fe = FeatureEngineer(
-#         use_technical_indicator=True,
-#         tech_indicator_list=config.TECHNICAL_INDICATORS_LIST,
-#         use_turbulence=False,
-#         user_defined_feature=False,
-#     )
-#
-#     df_fe = fe.preprocess_data(df)
-#     df_fe['log_volume'] = np.log(df_fe.volume * df_fe.close)
-#     df_fe['change'] = (df_fe.close - df_fe.open) / df_fe.close
-#     df_fe['daily_variance'] = (df_fe.high - df_fe.low) / df_fe.close
-#
-#     # df_fe.to_csv(f'{config.DATA_SAVE_DIR}/{stock_code}_processed_df.csv', index=False)
-#
-#     print("==============拆分 训练/预测 数据集==============")
-#     # Training & Trading data split
-#     # df_train = df_fe[(df_fe.date >= start_date) & (df_fe.date < start_trade_date)]
-#     # df_train = df_train.sort_values(["date", "tic"], ignore_index=True)
-#     # df_train.index = df_train.date.factorize()[0]
-#     #
-#     # df_predict = df_fe[(df_fe.date >= start_trade_date) & (df_fe.date <= end_date)]
-#     # df_predict = df_predict.sort_values(["date", "tic"], ignore_index=True)
-#     # df_predict.index = df_predict.date.factorize()[0]
-#
-#     print("==============数据准备完成==============")
-#
-#     # data = pd.read_csv('./AAPL_processed.csv', index_col=0)
-#
-#     # from preprocessing.preprocessors import pd, data_split, preprocess_data, add_turbulence
-#     #
-#     # # the following is same as part of run_model()
-#     # preprocessed_path = "done_data.csv"
-#     # if if_load and os.path.exists(preprocessed_path):
-#     #     data = pd.read_csv(preprocessed_path, index_col=0)
-#     # else:
-#     #     data = preprocess_data()
-#     #     data = add_turbulence(data)
-#     #     data.to_csv(preprocessed_path)
-#
-#     # df = df_fe
-#
-#     # print('df_fe.shape:', df_fe.shape)
-#
-#     df_fe.to_csv(f'{config.DATA_SAVE_DIR}/{stock_code}_processed.csv', index=False)
-#
-#     train__df = df_fe
-#
-#     print('train__df.shape:', train__df.shape)
-#
-#     # print(train__df) # df: DataFrame of Pandas
-#
-#     train_ary = train__df.to_numpy().reshape((-1, stock_dim, 25))
-#
-#     '''state_dim = 1 + 6 * stock_dim, stock_dim=30
-#     n   item    index
-#     1   ACCOUNT -
-#     30  adjcp   2
-#     30  stock   -
-#     30  macd    7
-#     30  rsi     8
-#     30  cci     9
-#     30  adx     10
-#     '''
-#     data_ary = np.empty((train_ary.shape[0], 5, stock_dim), dtype=np.float32)
-#     # data_ary[:, 0] = train_ary[:, :, 4]  # adjcp
-#     # data_ary[:, 1] = train_ary[:, :, 8]  # macd
-#     # data_ary[:, 2] = train_ary[:, :, 11]  # rsi
-#     # data_ary[:, 3] = train_ary[:, :, 12]  # cci
-#     # data_ary[:, 4] = train_ary[:, :, 13]  # adx
-#
-#     data_ary[:, 0] = train_ary[:, :, 1]  # T open
-#     data_ary[:, 1] = train_ary[:, :, 2]  # T-1 high
-#     data_ary[:, 2] = train_ary[:, :, 3]  # T-1 low
-#     data_ary[:, 3] = train_ary[:, :, 4]  # T-1 close
-#     data_ary[:, 4] = train_ary[:, :, 14]  # T-1 macs
-#
-#     # 变形
-#     data_ary = data_ary.reshape((-1, 5 * stock_dim))
-#
-#     # os.makedirs(data_path[:data_path.rfind('/')])
-#     data_path = f"./{config.DATA_SAVE_DIR}/{stock_code}.npy"
-#     np.save(data_path, data_ary.astype(np.float16))  # save as float16 (0.5 MB), float32 (1.0 MB)
-#
-#     print('data_ary.shape:', data_ary.shape)
-#
-#     print('| FinanceStockEnv(): save in:', data_path)
-#     # return data_ary
-#     pass
-#
+def get_npy(stock_code='sh.600036'):
+    parser = argparse.ArgumentParser(description='elegant')
+    # parser.add_argument('--multiprocess_id', type=str, default=multiprocess_id, help='multiprocess id')
+    parser.add_argument('--download_data', type=bool, default=True, help='download data')
+    args = parser.parse_args()
+
+    stock_dim = 1
+
+    # 创建目录
+    if not os.path.exists("./" + config.DATA_SAVE_DIR):
+        os.makedirs("./" + config.DATA_SAVE_DIR)
+    # if not os.path.exists("./" + config.TRAINED_MODEL_DIR):
+    #     os.makedirs("./" + config.TRAINED_MODEL_DIR)
+    # if not os.path.exists("./" + config.TENSORBOARD_LOG_DIR):
+    #     os.makedirs("./" + config.TENSORBOARD_LOG_DIR)
+    # if not os.path.exists("./" + config.RESULTS_DIR):
+    #     os.makedirs("./" + config.RESULTS_DIR)
+    # if not os.path.exists("./" + config.LOGGER_DIR):
+    #     os.makedirs("./" + config.LOGGER_DIR)
+
+    # 股票代码
+    # stock_code = 'sh.600036'
+
+    # 训练开始日期
+    start_date = "2002-05-01"
+    # 停止训练日期 / 开始预测日期
+    # start_trade_date = "2021-03-08"
+    # 停止预测日期
+    end_date = '2021-04-14'
+
+    print("==============下载A股数据==============")
+    if args.download_data:
+        # 下载A股的日K线数据
+        stock_data = StockData(output_dir="./" + config.DATA_SAVE_DIR, date_start=start_date, date_end=end_date)
+        # 获得数据文件路径
+        csv_file_path = stock_data.download(stock_code, fields=stock_data.fields_day)
+    else:
+        csv_file_path = f"./{config.DATA_SAVE_DIR}/{stock_code}.csv"
+    pass
+
+    # csv_file_path = './datasets_temp/sh.600036.csv'
+    print("==============处理未来数据==============")
+
+    # open今日开盘价为T日数据，其余皆为T-1日数据，避免引入未来数据
+    df = pd.read_csv(csv_file_path)
+
+    # 删除未来数据，把df分为2个表，日期date+开盘open是A表，其余的是B表
+    df_left = df.drop(df.columns[2:], axis=1)
+
+    df_right = df.drop(['date', 'open'], axis=1)
+
+    # 删除A表第一行
+    df_left.drop(df_left.index[0], inplace=True)
+    df_left.reset_index(drop=True, inplace=True)
+
+    # 删除B表最后一行
+    df_right.drop(df_right.index[-1:], inplace=True)
+    df_right.reset_index(drop=True, inplace=True)
+
+    # 将A表和B表重新拼接，剔除了未来数据
+    df = pd.concat([df_left, df_right], axis=1)
+
+    # # 今天的数据，date、open为空，重新赋值
+    # df.loc[df.index[-1:], 'date'] = today_date
+    # df.loc[df.index[-1:], 'open'] = today_open_price
+
+    # 缓存文件，debug用
+    # df.to_csv(f'{config.DATA_SAVE_DIR}/{stock_code}_concat_df.csv', index=False)
+
+    print("==============加入技术指标==============")
+    fe = FeatureEngineer(
+        use_technical_indicator=True,
+        tech_indicator_list=config.TECHNICAL_INDICATORS_LIST,
+        use_turbulence=False,
+        user_defined_feature=False,
+    )
+
+    df_fe = fe.preprocess_data(df)
+    df_fe['log_volume'] = np.log(df_fe.volume * df_fe.close)
+    df_fe['change'] = (df_fe.close - df_fe.open) / df_fe.close
+    df_fe['daily_variance'] = (df_fe.high - df_fe.low) / df_fe.close
+
+    # df_fe.to_csv(f'{config.DATA_SAVE_DIR}/{stock_code}_processed_df.csv', index=False)
+
+    print("==============拆分 训练/预测 数据集==============")
+    # Training & Trading data split
+    # df_train = df_fe[(df_fe.date >= start_date) & (df_fe.date < start_trade_date)]
+    # df_train = df_train.sort_values(["date", "tic"], ignore_index=True)
+    # df_train.index = df_train.date.factorize()[0]
+    #
+    # df_predict = df_fe[(df_fe.date >= start_trade_date) & (df_fe.date <= end_date)]
+    # df_predict = df_predict.sort_values(["date", "tic"], ignore_index=True)
+    # df_predict.index = df_predict.date.factorize()[0]
+
+    print("==============数据准备完成==============")
+
+    # data = pd.read_csv('./AAPL_processed.csv', index_col=0)
+
+    # from preprocessing.preprocessors import pd, data_split, preprocess_data, add_turbulence
+    #
+    # # the following is same as part of run_model()
+    # preprocessed_path = "done_data.csv"
+    # if if_load and os.path.exists(preprocessed_path):
+    #     data = pd.read_csv(preprocessed_path, index_col=0)
+    # else:
+    #     data = preprocess_data()
+    #     data = add_turbulence(data)
+    #     data.to_csv(preprocessed_path)
+
+    # df = df_fe
+
+    # print('df_fe.shape:', df_fe.shape)
+
+    df_fe.to_csv(f'{config.DATA_SAVE_DIR}/{stock_code}_processed.csv', index=False)
+
+    train__df = df_fe
+
+    print('train__df.shape:', train__df.shape)
+
+    # print(train__df) # df: DataFrame of Pandas
+
+    train_ary = train__df.to_numpy().reshape((-1, stock_dim, 25))
+
+    '''state_dim = 1 + 6 * stock_dim, stock_dim=30
+    n   item    index
+    1   ACCOUNT -
+    30  adjcp   2
+    30  stock   -
+    30  macd    7
+    30  rsi     8
+    30  cci     9
+    30  adx     10
+    '''
+    data_ary = np.empty((train_ary.shape[0], 5, stock_dim), dtype=np.float32)
+    # data_ary[:, 0] = train_ary[:, :, 4]  # adjcp
+    # data_ary[:, 1] = train_ary[:, :, 8]  # macd
+    # data_ary[:, 2] = train_ary[:, :, 11]  # rsi
+    # data_ary[:, 3] = train_ary[:, :, 12]  # cci
+    # data_ary[:, 4] = train_ary[:, :, 13]  # adx
+
+    data_ary[:, 0] = train_ary[:, :, 1]  # T open
+    data_ary[:, 1] = train_ary[:, :, 2]  # T-1 high
+    data_ary[:, 2] = train_ary[:, :, 3]  # T-1 low
+    data_ary[:, 3] = train_ary[:, :, 4]  # T-1 close
+    data_ary[:, 4] = train_ary[:, :, 14]  # T-1 macs
+
+    # 变形
+    data_ary = data_ary.reshape((-1, 5 * stock_dim))
+
+    # os.makedirs(data_path[:data_path.rfind('/')])
+    data_path = f"./{config.DATA_SAVE_DIR}/{stock_code}.npy"
+    np.save(data_path, data_ary.astype(np.float16))  # save as float16 (0.5 MB), float32 (1.0 MB)
+
+    print('data_ary.shape:', data_ary.shape)
+
+    print('| FinanceStockEnv(): save in:', data_path)
+    # return data_ary
+    pass
+
 
 def demo3_custom_env_fin_rl(stock_code='sh.600036'):
     from ElegantRL_master.elegantrl.agent import AgentPPO
@@ -443,12 +717,15 @@ def demo3_custom_env_fin_rl(stock_code='sh.600036'):
     args.agent = AgentPPO()
     args.agent.if_use_gae = False
 
+    # 在这里传入数据
+    # 先用 .npy 格式文件接入1支
+
     # 训练开始日期
-    start_date = '2021-03-08'
+    start_date = "2002-05-01"
     # 停止训练日期 / 开始预测日期
-    # start_trade_date = "2021-03-08"
+    start_eval_date = "2021-03-08"
     # 停止预测日期
-    end_date = '2021-04-16'
+    env_eval_date = '2021-04-14'
 
     # data_path = f"./{config.DATA_SAVE_DIR}/{stock_code}.npy"
 
@@ -457,49 +734,40 @@ def demo3_custom_env_fin_rl(stock_code='sh.600036'):
     # ticker_list=None, tech_id_list=None, beg_date=None, end_date=None,
 
     # train_env_kwargs = {
-    #     "ticker_list": ['sh.600036'],
-    #     "beg_date": start_date,
-    #     "end_date": end_date,
-    #     "beg_i": 1,  # 2002-05-10
-    #     # "end_i": 4500,  # 2021-03-08
-    #     "end_i": 4466,  # 2021-01-12
-    #     "max_stock": 10000,
+    #     "start_date": start_date,
+    #     "start_eval_date": start_eval_date,
+    #     "env_eval_date": env_eval_date,
+    #     "max_stock": 15000,
     #     "initial_amount": 100000,
     #     "buy_cost_pct": 0.0003,
     #     "sell_cost_pct": 0.0003,
-    #     # "state_space": 1 + (2 + len(config.TECHNICAL_INDICATORS_LIST)) * stock_dimension,
-    #     # "stock_dim": 1,
-    #     "tech_id_list": config.TECHNICAL_INDICATORS_LIST,
-    #     # "action_space": stock_dimension,
-    #     # "reward_scaling": 1e-4
+    #     "gamma": 0.99,
+    #     "if_eval": False
     # }
 
-    eval_env_kwargs = {
-        "ticker_list": ['sh.600036'],
-        "beg_date": start_date,
-        "end_date": end_date,
-        # "beg_i": 4501,  # 2021-03-09
-        "beg_i": 0,  # 2021-01-13
-        "end_i": 28,  # 2021-04-14
-        "max_stock": 4000,
-        "initial_amount": 50000,
+    pred_env_kwargs = {
+        "start_date": start_date,
+        "start_eval_date": start_eval_date,
+        "env_eval_date": env_eval_date,
+        "max_stock": 15000,
+        "initial_amount": 100000,
         "buy_cost_pct": 0.0003,
         "sell_cost_pct": 0.0003,
-        # "state_space": 1 + (2 + len(config.TECHNICAL_INDICATORS_LIST)) * stock_dimension,
-        # "stock_dim": 1,
-        "tech_id_list": config.TECHNICAL_INDICATORS_LIST,
-        # "action_space": stock_dimension,
-        # "reward_scaling": 1e-4
+        "gamma": 0.99,
+        "if_eval": True
     }
 
-    args.env = StockTradingEnvPredict(**eval_env_kwargs)
+    # max_stock=1e2, initial_amount=1e6, buy_cost_pct=1e-3, sell_cost_pct=1e-3, gamma=0.99,
+    # start_date='2008-03-19', start_eval_date='2016-01-01', env_eval_date='2021-01-01',
+    # tech_indicator_list=None, initial_stocks=None, if_eval=False
 
-    args.env_eval = StockTradingEnvPredict(**eval_env_kwargs)
+    args.env = StockTradingEnvPredict(**pred_env_kwargs)
+    args.env_eval = StockTradingEnvPredict(**pred_env_kwargs)
 
     args.reward_scale = 2 ** 0  # RewardRange: 0 < 1.0 < 1.25 <
     args.break_step = int(5e6)
     args.net_dim = 2 ** 8
-    args.max_step = args.env_eval.max_step
+    args.max_step = args.env.max_step
     args.max_memo = (args.max_step - 1) * 8
     args.batch_size = 2 ** 11
     args.repeat_times = 2 ** 4
@@ -509,8 +777,10 @@ def demo3_custom_env_fin_rl(stock_code='sh.600036'):
     "TotalStep:  5e4, TargetReward: 1.25, UsedTime:  20s"
     "TotalStep: 20e4, TargetReward: 1.50, UsedTime:  80s"
 
-    '''predict'''
+    '''train and evaluate'''
     predict(args)
+    # args.rollout_num = 8
+    # train_and_evaluate_mp(args)
 
 
 '''single process training'''
@@ -521,44 +791,43 @@ def predict(args):
 
     '''basic arguments'''
     cwd = args.cwd
-    # env = args.env
+    env = args.env
     agent = args.agent
-    # gpu_id = args.gpu_id  # necessary for Evaluator?
+    gpu_id = args.gpu_id  # necessary for Evaluator?
     env_eval = args.env_eval
 
     '''training arguments'''
     net_dim = args.net_dim
-    # max_memo = args.max_memo
-    # break_step = args.break_step
-    # batch_size = args.batch_size
-    # target_step = args.target_step
-    # repeat_times = args.repeat_times
-    # if_break_early = args.if_allow_break
-    # gamma = args.gamma
-    # reward_scale = args.reward_scale
+    max_memo = args.max_memo
+    break_step = args.break_step
+    batch_size = args.batch_size
+    target_step = args.target_step
+    repeat_times = args.repeat_times
+    if_break_early = args.if_allow_break
+    gamma = args.gamma
+    reward_scale = args.reward_scale
 
     '''evaluating arguments'''
-    # show_gap = args.show_gap
-    # eval_times1 = args.eval_times1
-    # eval_times2 = args.eval_times2
-    # env_eval = deepcopy(env) if env_eval is None else deepcopy(env_eval)
-    env_eval = deepcopy(env_eval)
+    show_gap = args.show_gap
+    eval_times1 = args.eval_times1
+    eval_times2 = args.eval_times2
+    env_eval = deepcopy(env) if env_eval is None else deepcopy(env_eval)
     del args  # In order to show these hyper-parameters clearly, I put them above.
 
     '''init: environment'''
-    max_step = env_eval.max_step
-    state_dim = env_eval.state_dim
-    action_dim = env_eval.action_dim
-    if_discrete = env_eval.if_discrete
-    # env_eval = deepcopy(env) if env_eval is None else deepcopy(env_eval)
-    env_eval = deepcopy(env_eval)
+    max_step = env.max_step
+    state_dim = env.state_dim
+    action_dim = env.action_dim
+    if_discrete = env.if_discrete
+    env_eval = deepcopy(env) if env_eval is None else deepcopy(env_eval)
 
     '''init: Agent, ReplayBuffer, Evaluator'''
     agent.init(net_dim, state_dim, action_dim)
+    if_on_policy = getattr(agent, 'if_on_policy', False)
 
+    # ----
     agent.save_load_model('./AgentPPO/', if_save=False)
-
-    # if_on_policy = getattr(agent, 'if_on_policy', False)
+    # ----
 
     # buffer = ReplayBuffer(max_len=max_memo + max_step, if_on_policy=if_on_policy, if_gpu=True,
     #                       state_dim=state_dim, action_dim=1 if if_discrete else action_dim)
@@ -567,7 +836,8 @@ def predict(args):
     #                       eval_times1=eval_times1, eval_times2=eval_times2, show_gap=show_gap)  # build Evaluator
 
     '''prepare for training'''
-    agent.state = env_eval.reset()
+    agent.state = env.reset()
+
     # if if_on_policy:
     #     steps = 0
     # else:  # explore_before_training for off-policy
@@ -578,14 +848,14 @@ def predict(args):
     #     agent.act_target.load_state_dict(agent.act.state_dict()) if getattr(agent, 'act_target', None) else None
     #     agent.cri_target.load_state_dict(agent.cri.state_dict()) if getattr(agent, 'cri_target', None) else None
     # total_step = steps
-
-    '''start training'''
+    #
+    # '''start training'''
     # if_reach_goal = False
     # while not ((if_break_early and if_reach_goal)
     #            or total_step > break_step
     #            or os.path.exists(f'{cwd}/stop')):
     #     with torch.no_grad():  # speed up running
-    #         steps = agent.explore_env(env_eval, buffer, target_step, reward_scale, gamma)
+    #         steps = agent.explore_env(env, buffer, target_step, reward_scale, gamma)
     #
     #     total_step += steps
     #
@@ -594,15 +864,11 @@ def predict(args):
     #     with torch.no_grad():  # speed up running
     #         if_reach_goal = evaluator.evaluate_save(agent.act, steps, obj_a, obj_c)
 
-    # get_episode_return(self.env, act, self.device)
-
     episode_return = 0.0  # sum of rewards in an episode
     # max_step = env_eval.max_step
     if_discrete = env_eval.if_discrete
 
     state = env_eval.reset()
-    # for _ in range(max_step):
-
     with torch.no_grad():  # speed up running
         while True:
             s_tensor = torch.as_tensor((state,), device=agent.device)
@@ -616,11 +882,54 @@ def predict(args):
             if done:
                 break
         pass
+    pass
+
+
+def download_data(stock_code='sh.600036'):
+    parser = argparse.ArgumentParser(description='elegant')
+    # parser.add_argument('--multiprocess_id', type=str, default=multiprocess_id, help='multiprocess id')
+    parser.add_argument('--download_data', type=bool, default=True, help='download data')
+    args = parser.parse_args()
+
+    stock_dim = 1
+
+    # 创建目录
+    if not os.path.exists("./" + config.DATA_SAVE_DIR):
+        os.makedirs("./" + config.DATA_SAVE_DIR)
+    # if not os.path.exists("./" + config.TRAINED_MODEL_DIR):
+    #     os.makedirs("./" + config.TRAINED_MODEL_DIR)
+    # if not os.path.exists("./" + config.TENSORBOARD_LOG_DIR):
+    #     os.makedirs("./" + config.TENSORBOARD_LOG_DIR)
+    # if not os.path.exists("./" + config.RESULTS_DIR):
+    #     os.makedirs("./" + config.RESULTS_DIR)
+    # if not os.path.exists("./" + config.LOGGER_DIR):
+    #     os.makedirs("./" + config.LOGGER_DIR)
+
+    # 股票代码
+    # stock_code = 'sh.600036'
+
+    # 训练开始日期
+    start_date = "2002-05-01"
+    # 停止训练日期 / 开始预测日期
+    # start_trade_date = "2021-03-08"
+    # 停止预测日期
+    end_date = '2021-04-14'
+
+    print("==============下载A股数据==============")
+    if args.download_data:
+        # 下载A股的日K线数据
+        stock_data = StockData(output_dir="./" + config.DATA_SAVE_DIR, date_start=start_date, date_end=end_date)
+        # 获得数据文件路径
+        csv_file_path = stock_data.download(stock_code, fields=stock_data.fields_day)
+    else:
+        csv_file_path = f"./{config.DATA_SAVE_DIR}/{stock_code}.csv"
+    pass
+    print(csv_file_path)
 
 
 if __name__ == '__main__':
     torch.cuda.empty_cache()
-
+    # download_data(stock_code='sh.600036')
     # get_npy(stock_code='sh.600036')
 
     demo3_custom_env_fin_rl(stock_code='sh.600036')

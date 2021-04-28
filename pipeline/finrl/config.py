@@ -1,18 +1,12 @@
-import pathlib
-
-# import finrl
-
-import pandas as pd
-import datetime
-import os
-
 
 # SINGLE_A_STOCK_CODE = ""
 
+STOCK_CODE_LIST = ['sh.600036', 'sh.600655', 'sz.002027', 'sh.601988', 'sz.002024', 'sz.002555']
+
 ## time_fmt = '%Y-%m-%d'
-# START_DATE = "2002-05-01"
-# END_DATE = "2021-03-05"
-# START_TRADE_DATE = "2020-11-16"
+START_DATE = "2011-03-02"
+START_EVAL_DATE = "2021-03-08"
+END_DATE = "2021-04-14"
 
 DATA_SAVE_DIR = f"datasets"
 TRAINED_MODEL_DIR = f"trained_models"

@@ -182,7 +182,11 @@ class StockTradingEnv:
     def processed_raw_data(self, raw_data_path, processed_data_path,
                            ticker_list, tech_indicator_list):
         if os.path.exists(processed_data_path):
-            processed_df = pd.read_pickle(processed_data_path)  # DataFrame of Pandas
+            # processed_df = pd.read_pickle(processed_data_path)  # DataFrame of Pandas
+
+            # ----
+            processed_df = pd.read_csv(processed_data_path.replace('.df', '.csv'))  # DataFrame of Pandas
+            # ----
 
             # print('| processed_df.columns.values:', processed_df.columns.values)
             print(f"| load data: {processed_data_path}")
@@ -196,12 +200,15 @@ class StockTradingEnv:
 
             processed_df = fe.preprocess_data(raw_df)
 
-            processed_df = StockData.fill_zero_value_to_null_date(df=processed_df, code_list=config.STOCK_CODE_LIST,
+            processed_df = StockData.fill_zero_value_to_null_date(processed_df, code_list=['AAPL', 'TSLA'],
                                                                   date_column_name='date', code_column_name='tic')
 
-            processed_df.to_csv(processed_data_path.replace('.df', '.csv'), index=False)
-
             processed_df.to_pickle(processed_data_path)
+
+            # ----
+            processed_df.to_csv(processed_data_path.replace('.df', '.csv'), index=False)
+            # ----
+
             print("| FeatureEngineer: finish processing data")
 
         '''you can also load from csv'''
@@ -213,26 +220,27 @@ class StockTradingEnv:
     @staticmethod
     def get_raw_data(raw_data_path, ticker_list):
         if os.path.exists(raw_data_path):
-            raw_df = pd.read_pickle(raw_data_path)  # DataFrame of Pandas
+            # raw_df = pd.read_pickle(raw_data_path)  # DataFrame of Pandas
+
+            # ----
+            raw_df = pd.read_csv(raw_data_path.replace('.df', '.csv'))  # DataFrame of Pandas
+            # ----
+
             # print('| raw_df.columns.values:', raw_df.columns.values)
             print(f"| load data: {raw_data_path}")
         else:
-            # print("| YahooDownloader: start downloading data (1 minute)")
-            # raw_df = YahooDownloader(start_date="2000-01-01",
-            #                          end_date="2021-01-01",
-            #                          ticker_list=ticker_list, ).fetch_data()
+            print("| YahooDownloader: start downloading data (1 minute)")
+            raw_df = YahooDownloader(start_date="2000-01-01",
+                                     end_date="2021-01-01",
+                                     ticker_list=ticker_list, ).fetch_data()
+
+            raw_df.to_pickle(raw_data_path)
 
             # ----
-            stock_data = StockData(output_dir="./" + config.DATA_SAVE_DIR, date_start=config.START_DATE,
-                                   date_end=config.END_DATE)
-            raw_df = stock_data.download_raw_data(code_list=config.STOCK_CODE_LIST,
-                                                  fields=stock_data.fields_day, frequency='d', adjustflag='3')
             raw_df.to_csv(raw_data_path.replace('.df', '.csv'), index=False)
             # ----
 
-            raw_df.to_pickle(raw_data_path)
-            stock_data.exit()
-            # print("| YahooDownloader: finish downloading data")
+            print("| YahooDownloader: finish downloading data")
         return raw_df
 
     @staticmethod
