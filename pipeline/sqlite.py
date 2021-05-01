@@ -21,7 +21,7 @@ class SQLite:
         try:
             cursor = self.conn.cursor()
             cursor.execute(sql, values)
-            self.commit()
+            # self.commit()
             value = True
         except sqlite3.OperationalError as e:
             logging.exception(e)

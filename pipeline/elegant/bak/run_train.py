@@ -704,7 +704,7 @@ def download_data():
     stock_data = StockData(output_dir="./" + config.DATA_SAVE_DIR, date_start=config.START_DATE,
                            date_end=config.END_DATE)
 
-    csv_file_path = stock_data.download_raw_data(code_list=config.STOCK_CODE_LIST, fields=stock_data.fields_day,
+    csv_file_path = stock_data.download_raw_data(code_list=config.HS300_CODE_LIST, fields=stock_data.fields_day,
                                                  csv_file_name='raw_data.csv')
 
     print(csv_file_path)

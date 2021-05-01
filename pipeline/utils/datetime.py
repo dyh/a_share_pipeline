@@ -45,7 +45,38 @@ def get_next_work_day(datetime_date, next_flag=1):
     return next_date
 
 
+def get_next_day(datetime_date, next_flag=1):
+    """
+    获取下一个日期
+    :param datetime_date: 日期类型
+    :param next_flag: -2 前2天，+1 后1天
+    :return: datetime.date
+    """
+    if next_flag > 0:
+        next_date = datetime_date + datetime.timedelta(days=abs(next_flag))
+    else:
+        next_date = datetime_date - datetime.timedelta(days=abs(next_flag))
+    return next_date
+
+
 def get_today_date():
     # 获取今天日期
     time_format = '%Y-%m-%d'
     return time.strftime(time_format, time.localtime())
+
+
+def is_greater(date1, date2):
+    """
+    日期1是否大于日期2
+    :param date1: 日期1字符串 2001-03-01
+    :param date2: 日期2字符串 2001-01-01
+    :return: True/Flase
+    """
+    temp1 = time.strptime(date1, '%Y-%m-%d')
+    temp2 = time.strptime(date2, '%Y-%m-%d')
+
+    if temp1 > temp2:
+        return True
+    else:
+        return False
+    pass

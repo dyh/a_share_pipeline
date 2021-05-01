@@ -1,7 +1,8 @@
 
+
 # SINGLE_A_STOCK_CODE = ""
 
-STOCK_CODE_LIST = ['sh.600036', 'sh.600655', 'sz.002027', 'sh.601988', 'sz.002024', 'sz.002555']
+HS300_CODE_LIST = []
 
 ## time_fmt = '%Y-%m-%d'
 START_DATE = "2011-03-02"
@@ -13,6 +14,9 @@ TRAINED_MODEL_DIR = f"trained_models"
 TENSORBOARD_LOG_DIR = f"tensorboard_log"
 RESULTS_DIR = f"results"
 LOGGER_DIR = f"logger_log"
+
+# 沪深300数据库地址
+HS300_DB_PATH = "./" + DATA_SAVE_DIR + '/hs300.db'
 
 ## stockstats technical indicator column names
 ## check https://pypi.org/project/stockstats/ for different names

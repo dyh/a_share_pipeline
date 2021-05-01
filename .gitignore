@@ -127,6 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+*.pth
+*.zip
+*.npy
+*.npz
+*.df
+*.csv
+
 /pipeline/informer/checkpoints/
 /pipeline/informer/temp_dataset/
 /pipeline/finrl/datasets_temp/
@@ -134,10 +142,6 @@ dmypy.json
 /pipeline/finrl/tensorboard_log/
 /pipeline/finrl/trained_models/
 /pipeline/informer/results/
-*.pth
-*.zip
-*.npy
 /pipeline/elegant/AgentPPO/
-/pipeline/elegant/sh.600036.csv
-*.csv
 /pipeline/elegant/datasets/
+/pipeline/elegant/bak/

@@ -6,7 +6,7 @@ import torch
 
 from pipeline import stock_data
 from pipeline.finrl import config
-from pipeline.stock_data import StockData
+from pipeline.stock_data import StockData, fields_day
 
 
 class StockTradingEnv:
@@ -98,75 +98,21 @@ class StockTradingEnv:
     def load_data(self, cwd='./envs/FinRL', if_eval=None,
                   ticker_list=None, tech_indicator_list=None,
                   start_date='2008-03-19', end_date='2016-01-01', env_eval_date='2021-01-01'):
-        raw_data_path = f'{cwd}/StockTradingEnv_raw_data.df'
-        processed_data_path = f'{cwd}/StockTradingEnv_processed_data.df'
-        data_path_array = f'{cwd}/StockTradingEnv_arrays_float16.npz'
 
-        tech_indicator_list = [
-            'macd', 'boll_ub', 'boll_lb', 'rsi_30', 'cci_30', 'dx_30', 'close_30_sma', 'close_60_sma'
-        ] if tech_indicator_list is None else tech_indicator_list
+        # 从数据库中读取fe fillzero的数据
+        processed_df = StockData.get_fe_fillzero_from_sqlite(begin_date=start_date, end_date=env_eval_date)
 
-        # ticker_list = [
-        #     'AAPL', 'MSFT', 'JPM', 'V', 'RTX', 'PG', 'GS', 'NKE', 'DIS', 'AXP', 'HD',
-        #     'INTC', 'WMT', 'IBM', 'MRK', 'UNH', 'KO', 'CAT', 'TRV', 'JNJ', 'CVX', 'MCD',
-        #     'VZ', 'CSCO', 'XOM', 'BA', 'MMM', 'PFE', 'WBA', 'DD'
-        # ] if ticker_list is None else ticker_list  # finrl.config.DOW_30_TICKER
-        ticker_list = [
-            'AAPL', 'ADBE', 'ADI', 'ADP', 'ADSK', 'ALGN', 'ALXN', 'AMAT', 'AMD', 'AMGN',
-            'AMZN', 'ASML', 'ATVI', 'BIIB', 'BKNG', 'BMRN', 'CDNS', 'CERN', 'CHKP', 'CMCSA',
-            'COST', 'CSCO', 'CSX', 'CTAS', 'CTSH', 'CTXS', 'DLTR', 'EA', 'EBAY', 'FAST',
-            'FISV', 'GILD', 'HAS', 'HSIC', 'IDXX', 'ILMN', 'INCY', 'INTC', 'INTU', 'ISRG',
-            'JBHT', 'KLAC', 'LRCX', 'MAR', 'MCHP', 'MDLZ', 'MNST', 'MSFT', 'MU', 'MXIM',
-            'NLOK', 'NTAP', 'NTES', 'NVDA', 'ORLY', 'PAYX', 'PCAR', 'PEP', 'QCOM', 'REGN',
-            'ROST', 'SBUX', 'SIRI', 'SNPS', 'SWKS', 'TTWO', 'TXN', 'VRSN', 'VRTX', 'WBA',
-            'WDC', 'WLTW', 'XEL', 'XLNX'
-        ] if ticker_list is None else ticker_list  # finrl.config.NAS_74_TICKER
-        # ticker_list = [
-        #     'AMGN', 'AAPL', 'AMAT', 'INTC', 'PCAR', 'PAYX', 'MSFT', 'ADBE', 'CSCO', 'XLNX',
-        #     'QCOM', 'COST', 'SBUX', 'FISV', 'CTXS', 'INTU', 'AMZN', 'EBAY', 'BIIB', 'CHKP',
-        #     'GILD', 'NLOK', 'CMCSA', 'FAST', 'ADSK', 'CTSH', 'NVDA', 'GOOGL', 'ISRG', 'VRTX',
-        #     'HSIC', 'BIDU', 'ATVI', 'ADP', 'ROST', 'ORLY', 'CERN', 'BKNG', 'MYL', 'MU',
-        #     'DLTR', 'ALXN', 'SIRI', 'MNST', 'AVGO', 'TXN', 'MDLZ', 'FB', 'ADI', 'WDC',
-        #     'REGN', 'LBTYK', 'VRSK', 'NFLX', 'TSLA', 'CHTR', 'MAR', 'ILMN', 'LRCX', 'EA',
-        #     'AAL', 'WBA', 'KHC', 'BMRN', 'JD', 'SWKS', 'INCY', 'PYPL', 'CDW', 'FOXA', 'MXIM',
-        #     'TMUS', 'EXPE', 'TCOM', 'ULTA', 'CSX', 'NTES', 'MCHP', 'CTAS', 'KLAC', 'HAS',
-        #     'JBHT', 'IDXX', 'WYNN', 'MELI', 'ALGN', 'CDNS', 'WDAY', 'SNPS', 'ASML', 'TTWO',
-        #     'PEP', 'NXPI', 'XEL', 'AMD', 'NTAP', 'VRSN', 'LULU', 'WLTW', 'UAL'
-        # ] if ticker_list is None else ticker_list  # finrl.config.NAS_100_TICKER
-        # print(raw_df.loc['2000-01-01'])
-        # j = 40000
-        # check_ticker_list = set(raw_df.loc.obj.tic[j:j + 200].tolist())
-        # print(len(check_ticker_list), check_ticker_list)
+        def data_split(df, start, end):
+            data = df[(df.date >= start) & (df.date < end)]
+            data = data.sort_values(["date", "tic"], ignore_index=True)
+            data.index = data.date.factorize()[0]
+            return data
 
-        '''get: train_price_ary, train_tech_ary, eval_price_ary, eval_tech_ary'''
-        if os.path.exists(data_path_array):
-            load_dict = np.load(data_path_array)
+        train_df = data_split(processed_df, start_date, end_date)
+        eval_df = data_split(processed_df, end_date, env_eval_date)
 
-            train_price_ary = load_dict['train_price_ary'].astype(np.float32)
-            train_tech_ary = load_dict['train_tech_ary'].astype(np.float32)
-            eval_price_ary = load_dict['eval_price_ary'].astype(np.float32)
-            eval_tech_ary = load_dict['eval_tech_ary'].astype(np.float32)
-        else:
-            processed_df = self.processed_raw_data(raw_data_path, processed_data_path,
-                                                   ticker_list, tech_indicator_list)
-
-            def data_split(df, start, end):
-                data = df[(df.date >= start) & (df.date < end)]
-                data = data.sort_values(["date", "tic"], ignore_index=True)
-                data.index = data.date.factorize()[0]
-                return data
-
-            train_df = data_split(processed_df, start_date, end_date)
-            eval_df = data_split(processed_df, end_date, env_eval_date)
-
-            train_price_ary, train_tech_ary = self.convert_df_to_ary(train_df, tech_indicator_list)
-            eval_price_ary, eval_tech_ary = self.convert_df_to_ary(eval_df, tech_indicator_list)
-
-            np.savez_compressed(data_path_array,
-                                train_price_ary=train_price_ary.astype(np.float16),
-                                train_tech_ary=train_tech_ary.astype(np.float16),
-                                eval_price_ary=eval_price_ary.astype(np.float16),
-                                eval_tech_ary=eval_tech_ary.astype(np.float16), )
+        train_price_ary, train_tech_ary = self.convert_df_to_ary(train_df, tech_indicator_list)
+        eval_price_ary, eval_tech_ary = self.convert_df_to_ary(eval_df, tech_indicator_list)
 
         if if_eval is None:
             price_ary = np.concatenate((train_price_ary, eval_price_ary), axis=0)
@@ -177,6 +123,7 @@ class StockTradingEnv:
         else:
             price_ary = train_price_ary
             tech_ary = train_tech_ary
+
         return price_ary, tech_ary
 
     def processed_raw_data(self, raw_data_path, processed_data_path,
@@ -192,11 +139,16 @@ class StockTradingEnv:
                                  user_defined_feature=False,
                                  use_technical_indicator=True,
                                  tech_indicator_list=tech_indicator_list, )
+
+            # ----
             raw_df = self.get_raw_data(raw_data_path, ticker_list)
-
             processed_df = fe.preprocess_data(raw_df)
+            processed_df.to_pickle(processed_data_path.replace('.df', '.df1'))
+            # processed_df = pd.read_pickle(processed_data_path.replace('.df', '.df1'))
+            # ----
 
-            processed_df = StockData.fill_zero_value_to_null_date(df=processed_df, code_list=config.STOCK_CODE_LIST,
+            # 将 processed_df 存入数据库
+            processed_df = StockData.fill_zero_value_to_null_date(df=processed_df, code_list=config.HS300_CODE_LIST,
                                                                   date_column_name='date', code_column_name='tic')
 
             processed_df.to_csv(processed_data_path.replace('.df', '.csv'), index=False)
@@ -223,15 +175,25 @@ class StockTradingEnv:
             #                          ticker_list=ticker_list, ).fetch_data()
 
             # ----
-            stock_data = StockData(output_dir="./" + config.DATA_SAVE_DIR, date_start=config.START_DATE,
-                                   date_end=config.END_DATE)
-            raw_df = stock_data.download_raw_data(code_list=config.STOCK_CODE_LIST,
-                                                  fields=stock_data.fields_day, frequency='d', adjustflag='3')
+            raw_df = StockData.load_hs300_from_sqlite(db_path="./" + config.DATA_SAVE_DIR + '/hs300.db',
+                                                      list_hs_300=ticker_list, date_begin=config.START_DATE,
+                                                      date_end=config.END_DATE)
+
+            raw_df['open'] = raw_df['open'].astype(np.float32)
+            raw_df['high'] = raw_df['high'].astype(np.float32)
+            raw_df['low'] = raw_df['low'].astype(np.float32)
+            raw_df['close'] = raw_df['close'].astype(np.float32)
+            raw_df['volume'] = raw_df['volume'].astype(np.int)
+
+            # stock_data = StockData()
+            # raw_df = stock_data.download_raw_data(code_list=config.STOCK_CODE_LIST,
+            #                                       fields=fields_day, date_start=config.START_DATE,
+            #                                       date_end=config.END_DATE, frequency='d', adjustflag='3')
             raw_df.to_csv(raw_data_path.replace('.df', '.csv'), index=False)
             # ----
 
             raw_df.to_pickle(raw_data_path)
-            stock_data.exit()
+            # stock_data.exit()
             # print("| YahooDownloader: finish downloading data")
         return raw_df
 

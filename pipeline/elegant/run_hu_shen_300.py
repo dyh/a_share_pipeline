@@ -1,5 +1,6 @@
 import sys
 
+
 if 'pipeline' not in sys.path:
     sys.path.append('../../')
 
@@ -10,6 +11,8 @@ if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
 
 import numpy as np
+
+from pipeline.stock_data import StockData
 
 from pipeline.finrl import config
 from elegantrl.run import *
@@ -23,7 +26,10 @@ if __name__ == '__main__':
     args.agent.if_use_gae = True
     args.agent.lambda_entropy = 0.04
 
-    tickers = config.STOCK_CODE_LIST
+    # 沪深300
+    config.HS300_CODE_LIST = StockData.get_hs300_code_list()
+
+    tickers = config.HS300_CODE_LIST
 
     tech_indicator_list = [
         'macd', 'boll_ub', 'boll_lb', 'rsi_30', 'cci_30', 'dx_30',
@@ -40,13 +46,13 @@ if __name__ == '__main__':
     start_eval_date = config.START_EVAL_DATE
     end_eval_date = config.END_DATE
 
-    args.env = StockTradingEnv(cwd='./datasets/', gamma=gamma, max_stock=max_stock, initial_capital=initial_capital,
+    args.env = StockTradingEnv(cwd='./datasets', gamma=gamma, max_stock=max_stock, initial_capital=initial_capital,
                                buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct, start_date=start_date,
                                end_date=start_eval_date, env_eval_date=end_eval_date, ticker_list=tickers,
                                tech_indicator_list=tech_indicator_list, initial_stocks=initial_stocks,
                                if_eval=False)
 
-    args.env_eval = StockTradingEnv(cwd='./datasets/', gamma=gamma, max_stock=max_stock,
+    args.env_eval = StockTradingEnv(cwd='./datasets', gamma=gamma, max_stock=max_stock,
                                     initial_capital=initial_capital,
                                     buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct, start_date=start_date,
                                     end_date=start_eval_date, env_eval_date=end_eval_date, ticker_list=tickers,
@@ -93,7 +99,7 @@ if __name__ == '__main__':
 
     args.rollout_num = 2  # the number of rollout workers (larger is not always faster)
 
-    train_and_evaluate(args)
-    # train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.
+    # train_and_evaluate(args)
+    train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.
 
     pass
