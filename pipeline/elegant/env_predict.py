@@ -49,8 +49,15 @@ class StockTradingEnvPredict:
         self.day = 0
         price = self.price_ary[self.day]
 
-        self.stocks = self.initial_stocks + rd.randint(0, 64, size=self.initial_stocks.shape)
-        self.amount = self.initial_capital * rd.uniform(0.95, 1.05) - (self.stocks * price).sum()
+        # self.stocks = self.initial_stocks + rd.randint(0, 64, size=self.initial_stocks.shape)
+        # self.amount = self.initial_capital * rd.uniform(0.95, 1.05) - (self.stocks * price).sum()
+
+        # ----
+        stock_dim = self.price_ary.shape[1]
+        self.initial_stocks = np.zeros(stock_dim, dtype=np.float32)
+        self.stocks = self.initial_stocks
+        self.amount = self.initial_capital
+        # ----
 
         self.total_asset = self.amount + (self.stocks * price).sum()
         self.initial_total_asset = self.total_asset
@@ -78,33 +85,38 @@ class StockTradingEnvPredict:
             if price[index] > 0:  # Sell only if current asset is > 0
                 sell_num_shares = min(self.stocks[index], -actions[index])
 
+                self.stocks[index] -= sell_num_shares
+                self.amount += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
+
                 # 如果真卖
                 if sell_num_shares > 0:
                     tic_temp = tic_ary_temp[index]
                     date_temp = date_ary_temp[index]
-                    self.output_text_cache += f'第 {self.day + 1} 天，{date_temp}，{tic_temp}，卖出 {sell_num_shares} 股, 持股数量 ' \
-                                              f'{self.stocks[index]}，收盘 {price[index]}，资产 {self.total_asset} 元 \r\n'
-
+                    self.output_text_cache += f'第 {self.day + 1} 天，{date_temp}，{tic_temp}，' \
+                                              f'卖出 {sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
+                                              f'收盘 {price[index]}，资产 {self.total_asset} 元 \r\n'
                     pass
                 pass
-
-                self.stocks[index] -= sell_num_shares
-                self.amount += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
+            pass
+        pass
 
         for index in np.where(actions > 0)[0]:  # buy_index:
             if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
                 buy_num_shares = min(self.amount // price[index], actions[index])
 
+                self.stocks[index] += buy_num_shares
+                self.amount -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
+
                 # 如果真买
                 if buy_num_shares > 0:
                     tic_temp = tic_ary_temp[index]
                     date_temp = date_ary_temp[index]
-                    self.output_text_cache += f'第 {self.day + 1} 天，{date_temp}，{tic_temp}，买入 {buy_num_shares} 股, 持股数量 ' \
-                                              f'{self.stocks[index]}，收盘 {price[index]}，资产 {self.total_asset} 元 \r\n'
+                    self.output_text_cache += f'第 {self.day + 1} 天，{date_temp}，{tic_temp}，' \
+                                              f'买入 {buy_num_shares} 股, 持股数量 {self.stocks[index]}，' \
+                                              f'收盘 {price[index]}，资产 {self.total_asset} 元 \r\n'
                 pass
-
-                self.stocks[index] += buy_num_shares
-                self.amount -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
+            pass
+        pass
 
         state = np.hstack((self.amount * 2 ** -13,
                            price,

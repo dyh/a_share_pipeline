@@ -38,8 +38,8 @@ if __name__ == '__main__':
 
     gamma = 0.99
     # max_stock = 1e2
-    max_stock = 1000
-    initial_capital = 100000
+    max_stock = 100
+    initial_capital = 20000
     initial_stocks = np.zeros(len(tickers), dtype=np.float32)
     buy_cost_pct = 0.0003
     sell_cost_pct = 0.0003
@@ -101,7 +101,7 @@ if __name__ == '__main__':
 
     args.rollout_num = 2  # the number of rollout workers (larger is not always faster)
 
-    # train_and_evaluate(args)
-    train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.
+    train_and_evaluate(args)
+    # train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.
 
     pass

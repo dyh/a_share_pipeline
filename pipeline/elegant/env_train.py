@@ -47,8 +47,35 @@ class StockTradingEnv:
         self.day = 0
         price = self.price_ary[self.day]
 
-        self.stocks = self.initial_stocks + rd.randint(0, 64, size=self.initial_stocks.shape)
+        # self.stocks = self.initial_stocks + rd.randint(0, 64, size=self.initial_stocks.shape)
+        # self.amount = self.initial_capital * rd.uniform(0.95, 1.05) - (self.stocks * price).sum()
+
+        # ----
+        stock_dim = self.price_ary.shape[1]
+        self.initial_stocks = np.zeros(stock_dim, dtype=np.float32)
+        self.stocks = self.initial_stocks + rd.randint(0, 2, size=self.initial_stocks.shape)
         self.amount = self.initial_capital * rd.uniform(0.95, 1.05) - (self.stocks * price).sum()
+
+        if self.amount < 0:
+            self.amount = 0.0
+            print('#' * 40, 'self.amount < 0''#' * 40, )
+            print('#' * 40, 'self.amount < 0''#' * 40, )
+            print('#' * 40, 'self.amount < 0''#' * 40, )
+            print('#' * 40, 'self.amount < 0''#' * 40, )
+            print('#' * 40, 'self.amount < 0''#' * 40, )
+            print('#' * 40, 'self.amount < 0''#' * 40, )
+            print('#' * 40, 'self.amount < 0''#' * 40, )
+            print('#' * 40, 'self.amount < 0''#' * 40, )
+            print('#' * 40, 'self.amount < 0''#' * 40, )
+            print('#' * 40, 'self.amount < 0''#' * 40, )
+            pass
+        pass
+
+        # stock_dim = self.price_ary.shape[1]
+        # self.initial_stocks = np.zeros(stock_dim, dtype=np.float32)
+        # self.stocks = self.initial_stocks
+        # self.amount = self.initial_capital * rd.uniform(0.999, 1.001)
+        # ----
 
         self.total_asset = self.amount + (self.stocks * price).sum()
         self.initial_total_asset = self.total_asset
