@@ -15,7 +15,6 @@ from pipeline.finrl import config
 
 import numpy as np
 
-from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
 
 # 5分钟K线的时间点
 list_time_point_5minutes = ['09:35:00',
@@ -602,8 +601,8 @@ class StockData(object):
         df_result['close_60_sma'] = df_result['close_60_sma'].astype(np.float32)
 
         # 重新索引和排序
-        df_result = df_result.sort_values(by=[date_column_name, code_column_name])
-        # .reset_index(drop=True)
+        df_result = df_result.sort_values(by=[date_column_name, code_column_name]).reset_index(drop=True)
+
         return df_result
 
     @staticmethod

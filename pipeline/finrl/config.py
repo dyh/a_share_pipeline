@@ -5,9 +5,9 @@
 HS300_CODE_LIST = []
 
 ## time_fmt = '%Y-%m-%d'
-START_DATE = "2011-03-02"
-START_EVAL_DATE = "2021-03-08"
-END_DATE = "2021-04-14"
+START_DATE = "2010-01-01"
+START_EVAL_DATE = "2021-02-18"
+END_DATE = "2021-03-26"
 
 DATA_SAVE_DIR = f"datasets"
 TRAINED_MODEL_DIR = f"trained_models"

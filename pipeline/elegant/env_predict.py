@@ -1,22 +1,20 @@
-import os
 import pandas as pd
 import numpy as np
 import numpy.random as rd
-import torch
 
-from pipeline import stock_data
-from pipeline.finrl import config
-from pipeline.stock_data import StockData, fields_day
+from pipeline.stock_data import StockData
 
 
-class StockTradingEnv:
+class StockTradingEnvPredict:
     def __init__(self, cwd='./envs/FinRL', gamma=0.99,
                  max_stock=1e2, initial_capital=1e6, buy_cost_pct=1e-3, sell_cost_pct=1e-3,
                  start_date='2008-03-19', end_date='2016-01-01', env_eval_date='2021-01-01',
                  ticker_list=None, tech_indicator_list=None, initial_stocks=None, if_eval=False):
 
-        self.price_ary, self.tech_ary = self.load_data(cwd, if_eval, ticker_list, tech_indicator_list,
-                                                       start_date, end_date, env_eval_date, )
+        self.price_ary, self.tech_ary, self.tic_ary, self.date_ary = self.load_data(cwd, if_eval, ticker_list,
+                                                                                    tech_indicator_list,
+                                                                                    start_date, end_date,
+                                                                                    env_eval_date, )
         stock_dim = self.price_ary.shape[1]
 
         self.gamma = gamma
@@ -43,6 +41,10 @@ class StockTradingEnv:
         self.target_return = 3.5
         self.episode_return = 0.0
 
+        # 输出的缓存
+        self.output_text_cache = ''
+        pass
+
     def reset(self):
         self.day = 0
         price = self.price_ary[self.day]
@@ -58,6 +60,10 @@ class StockTradingEnv:
                            price,
                            self.stocks,
                            self.tech_ary[self.day],)).astype(np.float32) * 2 ** -5
+
+        # 输出的缓存
+        self.output_text_cache = ''
+
         return state
 
     def step(self, actions):
@@ -65,16 +71,38 @@ class StockTradingEnv:
 
         self.day += 1
         price = self.price_ary[self.day]
+        tic_ary_temp = self.tic_ary[self.day]
+        date_ary_temp = self.date_ary[self.day]
 
         for index in np.where(actions < 0)[0]:  # sell_index:
             if price[index] > 0:  # Sell only if current asset is > 0
                 sell_num_shares = min(self.stocks[index], -actions[index])
+
+                # 如果真卖
+                if sell_num_shares > 0:
+                    tic_temp = tic_ary_temp[index]
+                    date_temp = date_ary_temp[index]
+                    self.output_text_cache += f'第 {self.day + 1} 天，{date_temp}，{tic_temp}，卖出 {sell_num_shares} 股, 持股数量 ' \
+                                              f'{self.stocks[index]}，收盘 {price[index]}，资产 {self.total_asset} 元 \r\n'
+
+                    pass
+                pass
+
                 self.stocks[index] -= sell_num_shares
                 self.amount += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
 
         for index in np.where(actions > 0)[0]:  # buy_index:
             if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
                 buy_num_shares = min(self.amount // price[index], actions[index])
+
+                # 如果真买
+                if buy_num_shares > 0:
+                    tic_temp = tic_ary_temp[index]
+                    date_temp = date_ary_temp[index]
+                    self.output_text_cache += f'第 {self.day + 1} 天，{date_temp}，{tic_temp}，买入 {buy_num_shares} 股, 持股数量 ' \
+                                              f'{self.stocks[index]}，收盘 {price[index]}，资产 {self.total_asset} 元 \r\n'
+                pass
+
                 self.stocks[index] += buy_num_shares
                 self.amount -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
 
@@ -92,6 +120,11 @@ class StockTradingEnv:
         if done:
             reward = self.gamma_reward
             self.episode_return = total_asset / self.initial_total_asset
+            # ----
+            print(self.output_text_cache)
+            print('总资产', self.total_asset)
+            # ----
+            pass
 
         return state, reward, done, dict()
 
@@ -111,25 +144,35 @@ class StockTradingEnv:
         train_df = data_split(processed_df, start_date, end_date)
         eval_df = data_split(processed_df, end_date, env_eval_date)
 
-        train_price_ary, train_tech_ary = self.convert_df_to_ary(train_df, tech_indicator_list)
-        eval_price_ary, eval_tech_ary = self.convert_df_to_ary(eval_df, tech_indicator_list)
+        train_price_ary, train_tech_ary, train_tic_ary, train_date_ary = self.convert_df_to_ary(train_df,
+                                                                                                tech_indicator_list)
+        eval_price_ary, eval_tech_ary, eval_tic_ary, eval_date_ary = self.convert_df_to_ary(eval_df,
+                                                                                            tech_indicator_list)
 
         if if_eval is None:
             price_ary = np.concatenate((train_price_ary, eval_price_ary), axis=0)
             tech_ary = np.concatenate((train_tech_ary, eval_tech_ary), axis=0)
+            tic_ary = None
+            date_ary = None
         elif if_eval:
             price_ary = eval_price_ary
             tech_ary = eval_tech_ary
+            tic_ary = eval_tic_ary
+            date_ary = eval_date_ary
         else:
             price_ary = train_price_ary
             tech_ary = train_tech_ary
+            tic_ary = train_tic_ary
+            date_ary = train_date_ary
 
-        return price_ary, tech_ary
+        return price_ary, tech_ary, tic_ary, date_ary
 
     @staticmethod
     def convert_df_to_ary(df, tech_indicator_list):
         tech_ary = list()
         price_ary = list()
+        tic_ary = list()
+        date_ary = list()
         for day in range(len(df.index.unique())):
             item = df.loc[day]
 
@@ -138,10 +181,18 @@ class StockTradingEnv:
             tech_ary.append(tech_items_flatten)
             price_ary.append(item.close)  # adjusted close price (adjcp)
 
+            # ----
+            tic_ary.append(list(item.tic))
+            date_ary.append(list(item.date))
+            # ----
+
+            pass
+
         price_ary = np.array(price_ary)
         tech_ary = np.array(tech_ary)
+
         print(f'| price_ary.shape: {price_ary.shape}, tech_ary.shape: {tech_ary.shape}')
-        return price_ary, tech_ary
+        return price_ary, tech_ary, tic_ary, date_ary
 
     def draw_cumulative_return(self, args, _torch) -> list:
         state_dim = self.state_dim
@@ -179,127 +230,6 @@ class StockTradingEnv:
         plt.xlabel('multiple of initial_account')
         plt.savefig(f'{cwd}/cumulative_return.jpg')
         return episode_returns
-
-
-def check_stock_trading_env():
-    if_eval = True  # False
-
-    env = StockTradingEnv(if_eval=if_eval)
-    action_dim = env.action_dim
-
-    state = env.reset()
-    print('state_dim', len(state))
-
-    from time import time
-    timer = time()
-
-    step = 1
-    done = False
-    reward = None
-    while not done:
-        action = rd.rand(action_dim) * 2 - 1
-        next_state, reward, done, _ = env.step(action)
-        # print(';', len(next_state), env.day, reward)
-        step += 1
-
-    print(f"| Random action: step {step}, UsedTime {time() - timer:.3f}")
-    print(f"| Random action: terminal reward {reward:.3f}")
-    print(f"| Random action: episode return {env.episode_return:.3f}")
-
-    '''draw_cumulative_return'''
-    from elegantrl.agent import AgentPPO
-    from elegantrl.run import Arguments
-    args = Arguments(if_on_policy=True)
-    args.agent = AgentPPO()
-    args.env = StockTradingEnv(if_eval=True)
-    args.if_remove = False
-    args.cwd = './AgentPPO/StockTradingEnv-v1_0'
-    args.init_before_training()
-
-    env.draw_cumulative_return(args, torch)
-
-
-"""Copy from FinRL"""
-
-
-class YahooDownloader:
-    """Provides methods for retrieving daily stock data from
-    Yahoo Finance API
-    from finrl.marketdata.yahoodownloader import YahooDownloader
-
-    Attributes
-    ----------
-        start_date : str
-            start date of the data (modified from config.py)
-        end_date : str
-            end date of the data (modified from config.py)
-        ticker_list : list
-            a list of stock tickers (modified from config.py)
-
-    Methods
-    -------
-    fetch_data()
-        Fetches data from yahoo API
-
-    """
-
-    def __init__(self, start_date: str, end_date: str, ticker_list: list):
-
-        self.start_date = start_date
-        self.end_date = end_date
-        self.ticker_list = ticker_list
-
-    def fetch_data(self) -> pd.DataFrame:
-        import yfinance as yf  # Yahoo Finance
-        """Fetches data from Yahoo API
-        Parameters
-        ----------
-
-        Returns
-        -------
-        `pd.DataFrame`
-            7 columns: A date, open, high, low, close, volume and tick symbol
-            for the specified stock ticker
-        """
-        # Download and save the data in a pandas DataFrame:
-        data_df = pd.DataFrame()
-        for tic in self.ticker_list:
-            temp_df = yf.download(tic, start=self.start_date, end=self.end_date)
-            temp_df["tic"] = tic
-            data_df = data_df.append(temp_df)
-        # reset the index, we want to use numbers as index instead of dates
-        data_df = data_df.reset_index()
-        try:
-            # convert the column names to standardized names
-            data_df.columns = [
-                "date",
-                "open",
-                "high",
-                "low",
-                "close",
-                "adjcp",
-                "volume",
-                "tic",
-            ]
-            # use adjusted close price instead of close price
-            data_df["close"] = data_df["adjcp"]
-            # drop the adjusted close price column
-            data_df = data_df.drop("adjcp", 1)
-        except NotImplementedError:
-            print("the features are not supported currently")
-        # create day of the week column (monday = 0)
-        data_df["day"] = data_df["date"].dt.dayofweek
-        # convert date to standard string format, easy to filter
-        data_df["date"] = data_df.date.apply(lambda x: x.strftime("%Y-%m-%d"))
-        # drop missing data
-        data_df = data_df.dropna()
-        data_df = data_df.reset_index(drop=True)
-        print("Shape of DataFrame: ", data_df.shape)
-        # print("Display DataFrame: ", data_df.head())
-
-        data_df = data_df.sort_values(by=['date', 'tic']).reset_index(drop=True)
-
-        return data_df
 
 
 class FeatureEngineer:
@@ -464,7 +394,3 @@ class FeatureEngineer:
             {"date": df_price_pivot.index, "turbulence": turbulence_index}
         )
         return turbulence_index
-
-
-if __name__ == '__main__':
-    check_stock_trading_env()

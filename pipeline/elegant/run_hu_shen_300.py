@@ -1,5 +1,6 @@
 import sys
 
+from pipeline.elegant.env_predict import StockTradingEnvPredict
 
 if 'pipeline' not in sys.path:
     sys.path.append('../../')
@@ -37,7 +38,7 @@ if __name__ == '__main__':
 
     gamma = 0.99
     # max_stock = 1e2
-    max_stock = 20000
+    max_stock = 1000
     initial_capital = 100000
     initial_stocks = np.zeros(len(tickers), dtype=np.float32)
     buy_cost_pct = 0.0003
@@ -52,12 +53,13 @@ if __name__ == '__main__':
                                tech_indicator_list=tech_indicator_list, initial_stocks=initial_stocks,
                                if_eval=False)
 
-    args.env_eval = StockTradingEnv(cwd='./datasets', gamma=gamma, max_stock=max_stock,
-                                    initial_capital=initial_capital,
-                                    buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct, start_date=start_date,
-                                    end_date=start_eval_date, env_eval_date=end_eval_date, ticker_list=tickers,
-                                    tech_indicator_list=tech_indicator_list, initial_stocks=initial_stocks,
-                                    if_eval=True)
+    args.env_eval = StockTradingEnvPredict(cwd='./datasets', gamma=gamma, max_stock=max_stock,
+                                           initial_capital=initial_capital,
+                                           buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
+                                           start_date=start_date,
+                                           end_date=start_eval_date, env_eval_date=end_eval_date, ticker_list=tickers,
+                                           tech_indicator_list=tech_indicator_list, initial_stocks=initial_stocks,
+                                           if_eval=True)
 
     args.env.target_reward = 3
     args.env_eval.target_reward = 3
