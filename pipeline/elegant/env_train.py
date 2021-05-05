@@ -4,9 +4,7 @@ import numpy as np
 import numpy.random as rd
 import torch
 
-from pipeline import stock_data
-from pipeline.finrl import config
-from pipeline.stock_data import StockData, fields_day
+from pipeline.stock_data import StockData
 
 
 class StockTradingEnv:
@@ -47,35 +45,13 @@ class StockTradingEnv:
         self.day = 0
         price = self.price_ary[self.day]
 
-        # self.stocks = self.initial_stocks + rd.randint(0, 64, size=self.initial_stocks.shape)
-        # self.amount = self.initial_capital * rd.uniform(0.95, 1.05) - (self.stocks * price).sum()
-
         # ----
         stock_dim = self.price_ary.shape[1]
         self.initial_stocks = np.zeros(stock_dim, dtype=np.float32)
-        self.stocks = self.initial_stocks + rd.randint(0, 2, size=self.initial_stocks.shape)
-        self.amount = self.initial_capital * rd.uniform(0.95, 1.05) - (self.stocks * price).sum()
-
-        if self.amount < 0:
-            self.amount = 0.0
-            print('#' * 40, 'self.amount < 0''#' * 40, )
-            print('#' * 40, 'self.amount < 0''#' * 40, )
-            print('#' * 40, 'self.amount < 0''#' * 40, )
-            print('#' * 40, 'self.amount < 0''#' * 40, )
-            print('#' * 40, 'self.amount < 0''#' * 40, )
-            print('#' * 40, 'self.amount < 0''#' * 40, )
-            print('#' * 40, 'self.amount < 0''#' * 40, )
-            print('#' * 40, 'self.amount < 0''#' * 40, )
-            print('#' * 40, 'self.amount < 0''#' * 40, )
-            print('#' * 40, 'self.amount < 0''#' * 40, )
-            pass
-        pass
-
-        # stock_dim = self.price_ary.shape[1]
-        # self.initial_stocks = np.zeros(stock_dim, dtype=np.float32)
-        # self.stocks = self.initial_stocks
-        # self.amount = self.initial_capital * rd.uniform(0.999, 1.001)
         # ----
+
+        self.stocks = self.initial_stocks + rd.randint(0, 64, size=self.initial_stocks.shape)
+        self.amount = self.initial_capital * rd.uniform(0.95, 1.05) - (self.stocks * price).sum()
 
         self.total_asset = self.amount + (self.stocks * price).sum()
         self.initial_total_asset = self.total_asset
@@ -112,6 +88,7 @@ class StockTradingEnv:
 
         total_asset = self.amount + (self.stocks * price).sum()
         reward = (total_asset - self.total_asset) * 2 ** -14  # reward scaling
+        # reward = (total_asset - self.total_asset) * 2 ** -8  # reward scaling
         self.total_asset = total_asset
 
         self.gamma_reward = self.gamma_reward * self.gamma + reward
@@ -119,6 +96,8 @@ class StockTradingEnv:
         if done:
             reward = self.gamma_reward
             self.episode_return = total_asset / self.initial_total_asset
+
+        # print('reward', reward)
 
         return state, reward, done, dict()
 
@@ -129,14 +108,20 @@ class StockTradingEnv:
         # 从数据库中读取fe fillzero的数据
         processed_df = StockData.get_fe_fillzero_from_sqlite(begin_date=start_date, end_date=env_eval_date)
 
-        def data_split(df, start, end):
+        def data_split_train(df, start, end):
             data = df[(df.date >= start) & (df.date < end)]
             data = data.sort_values(["date", "tic"], ignore_index=True)
             data.index = data.date.factorize()[0]
             return data
 
-        train_df = data_split(processed_df, start_date, end_date)
-        eval_df = data_split(processed_df, end_date, env_eval_date)
+        def data_split_eval(df, start, end):
+            data = df[(df.date >= start) & (df.date <= end)]
+            data = data.sort_values(["date", "tic"], ignore_index=True)
+            data.index = data.date.factorize()[0]
+            return data
+
+        train_df = data_split_train(processed_df, start_date, end_date)
+        eval_df = data_split_eval(processed_df, end_date, env_eval_date)
 
         train_price_ary, train_tech_ary = self.convert_df_to_ary(train_df, tech_indicator_list)
         eval_price_ary, eval_tech_ary = self.convert_df_to_ary(eval_df, tech_indicator_list)

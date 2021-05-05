@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-import numpy.random as rd
 
+from pipeline.elegant import config
 from pipeline.stock_data import StockData
 
 
@@ -68,8 +68,10 @@ class StockTradingEnvPredict:
                            self.stocks,
                            self.tech_ary[self.day],)).astype(np.float32) * 2 ** -5
 
-        # 输出的缓存
+        # ----
+        # 清空输出的缓存
         self.output_text_cache = ''
+        # ----
 
         return state
 
@@ -77,9 +79,14 @@ class StockTradingEnvPredict:
         actions = (actions * self.max_stock).astype(int)
 
         self.day += 1
+
         price = self.price_ary[self.day]
         tic_ary_temp = self.tic_ary[self.day]
+        # 日期
         date_ary_temp = self.date_ary[self.day]
+        date_temp = date_ary_temp[0]
+
+        self.output_text_cache += f'第 {self.day+1} 天，{date_temp}\r\n'
 
         for index in np.where(actions < 0)[0]:  # sell_index:
             if price[index] > 0:  # Sell only if current asset is > 0
@@ -91,8 +98,8 @@ class StockTradingEnvPredict:
                 # 如果真卖
                 if sell_num_shares > 0:
                     tic_temp = tic_ary_temp[index]
-                    date_temp = date_ary_temp[index]
-                    self.output_text_cache += f'第 {self.day + 1} 天，{date_temp}，{tic_temp}，' \
+                    # date_temp = date_ary_temp[index]
+                    self.output_text_cache += f'        {tic_temp}，' \
                                               f'卖出 {sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
                                               f'收盘 {price[index]}，资产 {self.total_asset} 元 \r\n'
                     pass
@@ -110,8 +117,8 @@ class StockTradingEnvPredict:
                 # 如果真买
                 if buy_num_shares > 0:
                     tic_temp = tic_ary_temp[index]
-                    date_temp = date_ary_temp[index]
-                    self.output_text_cache += f'第 {self.day + 1} 天，{date_temp}，{tic_temp}，' \
+                    # date_temp = date_ary_temp[index]
+                    self.output_text_cache += f'        {tic_temp}，' \
                                               f'买入 {buy_num_shares} 股, 持股数量 {self.stocks[index]}，' \
                                               f'收盘 {price[index]}，资产 {self.total_asset} 元 \r\n'
                 pass
@@ -125,6 +132,7 @@ class StockTradingEnvPredict:
 
         total_asset = self.amount + (self.stocks * price).sum()
         reward = (total_asset - self.total_asset) * 2 ** -14  # reward scaling
+        # reward = (total_asset - self.total_asset) * 2 ** -7  # reward scaling
         self.total_asset = total_asset
 
         self.gamma_reward = self.gamma_reward * self.gamma + reward
@@ -132,11 +140,19 @@ class StockTradingEnvPredict:
         if done:
             reward = self.gamma_reward
             self.episode_return = total_asset / self.initial_total_asset
+
             # ----
-            print(self.output_text_cache)
-            print('总资产', self.total_asset)
+            if config.IF_SHOW_PREDICT_INFO:
+                # date_temp = date_ary_temp[index]
+                print(self.output_text_cache)
+                print(f'第 {self.day+1} 天，{date_temp}，现金：{self.amount}，'
+                      f'股票：{str((self.stocks * price).sum())}，总资产：{self.total_asset}')
+
+                # print(str(actions))
             # ----
             pass
+
+        # print('reward', reward)
 
         return state, reward, done, dict()
 
@@ -147,14 +163,20 @@ class StockTradingEnvPredict:
         # 从数据库中读取fe fillzero的数据
         processed_df = StockData.get_fe_fillzero_from_sqlite(begin_date=start_date, end_date=env_eval_date)
 
-        def data_split(df, start, end):
+        def data_split_train(df, start, end):
             data = df[(df.date >= start) & (df.date < end)]
             data = data.sort_values(["date", "tic"], ignore_index=True)
             data.index = data.date.factorize()[0]
             return data
 
-        train_df = data_split(processed_df, start_date, end_date)
-        eval_df = data_split(processed_df, end_date, env_eval_date)
+        def data_split_eval(df, start, end):
+            data = df[(df.date >= start) & (df.date <= end)]
+            data = data.sort_values(["date", "tic"], ignore_index=True)
+            data.index = data.date.factorize()[0]
+            return data
+
+        train_df = data_split_train(processed_df, start_date, end_date)
+        eval_df = data_split_eval(processed_df, end_date, env_eval_date)
 
         train_price_ary, train_tech_ary, train_tic_ary, train_date_ary = self.convert_df_to_ary(train_df,
                                                                                                 tech_indicator_list)

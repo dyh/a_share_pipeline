@@ -1,19 +1,27 @@
 
-
 # SINGLE_A_STOCK_CODE = ""
+
+# 显示预测信息
+IF_SHOW_PREDICT_INFO = True
+
+# 工作日标记，用于加载对应的weights
+WORK_DAY_FLAG = ''
 
 HS300_CODE_LIST = []
 
 ## time_fmt = '%Y-%m-%d'
-START_DATE = "2010-01-01"
+START_DATE = "2005-01-01"
 START_EVAL_DATE = "2021-03-12"
-END_DATE = "2021-04-15"
+END_DATE = "2021-04-16"
 
 DATA_SAVE_DIR = f"datasets"
 TRAINED_MODEL_DIR = f"trained_models"
 TENSORBOARD_LOG_DIR = f"tensorboard_log"
 RESULTS_DIR = f"results"
 LOGGER_DIR = f"logger_log"
+
+# 沪深300数据库地址
+HS300_DB_PATH = "./" + DATA_SAVE_DIR + '/hs300.db'
 
 ## stockstats technical indicator column names
 ## check https://pypi.org/project/stockstats/ for different names

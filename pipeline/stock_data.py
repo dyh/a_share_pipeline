@@ -1,7 +1,5 @@
 import sys
 
-from pandas import DataFrame
-
 sys.path.append('../FinRL_Library_master')
 
 from pipeline.sqlite import SQLite
@@ -11,10 +9,9 @@ from pipeline.utils.datetime import get_today_date, is_greater, get_datetime_fro
 import baostock as bs
 import pandas as pd
 import os
-from pipeline.finrl import config
+from pipeline.elegant import config
 
 import numpy as np
-
 
 # 5分钟K线的时间点
 list_time_point_5minutes = ['09:35:00',
@@ -546,7 +543,7 @@ class StockData(object):
         pass
 
     @staticmethod
-    def get_hs300_code_list():
+    def download_hs300_code_list():
         """
         获取沪深300股的代码列表
         :return: list[]
@@ -563,6 +560,72 @@ class StockData(object):
         bs.logout()
         return hs300_stocks
 
+    @staticmethod
+    def get_hs300_code_from_sqlite(table_name='hs300_list'):
+        """
+        从数据库读取沪深300代码的 list
+        :param table_name: 表名 hs300_list
+        :return: list()
+        """
+        sqlite = SQLite(dbname=config.HS300_DB_PATH)
+
+        query_sql = f'SELECT hs300_list_text FROM "{table_name}" LIMIT 1'
+        text_hs300 = sqlite.fetchone(query_sql)
+        sqlite.close()
+        list_hs300_code = text_hs300[0].split(',')
+
+        return list_hs300_code
+
+    @staticmethod
+    def save_hs300_code_to_sqlite(list_hs300_code, table_name='hs300_list'):
+        """
+        保存沪深300代码到数据库
+        :param table_name: 表名称
+        :param list_hs300_code: 沪深300代码 list()
+        :return:
+        """
+
+        assert len(list_hs300_code) == 300
+
+        text_hs300 = ''
+
+        for item in list_hs300_code:
+            text_hs300 += item
+            text_hs300 += ','
+
+        # 去掉最后一个逗号
+        if text_hs300[-1] == ',':
+            text_hs300 = text_hs300[0:-1]
+
+        sqlite = SQLite(dbname=config.HS300_DB_PATH)
+
+        # 查询是否有同名的表
+        if_exists = sqlite.table_exists(table_name)
+
+        # 如果没有同名的表，则新建
+        if if_exists is None:
+            sqlite.execute_non_query(sql=f'CREATE TABLE "{table_name}" (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+                                         f'hs300_list_text TEXT NOT NULL);')
+            pass
+        else:
+            pass
+            sqlite.execute_non_query(sql=f'DELETE FROM "{table_name}"')
+        pass
+        # 提交
+        sqlite.commit()
+        sqlite.close()
+
+        sqlite = SQLite(dbname=config.HS300_DB_PATH)
+
+        insert_sql = f'INSERT INTO "{table_name}" (hs300_list_text) ' \
+                     f'VALUES (?)'
+
+        insert_value = (str(text_hs300),)
+        sqlite.execute_non_query(sql=insert_sql, values=insert_value)
+
+        sqlite.commit()
+        sqlite.close()
+        pass
 
     @staticmethod
     def get_fe_fillzero_from_sqlite(begin_date, end_date, date_column_name='date', code_column_name='tic'):
@@ -580,6 +643,34 @@ class StockData(object):
                     f'ORDER BY date, tic ASC'
 
         list_all = sqlite.fetchall(query_sql)
+
+        # 如果最后一行的 date 与 end_date 是否相同，如果不相同，则添加一条全是10的假数据
+        # 注意价格，不能等于0，如果等于0，则不买/卖
+        last_record_date = list_all[-1][0]
+
+        if last_record_date != end_date:
+            # 添加300行
+            print('# 添加300行假数据，日期', end_date)
+
+            for item in config.HS300_CODE_LIST:
+                list_all.append((end_date,
+                                 '10.000',
+                                 '10.000',
+                                 '10.000',
+                                 '10.000',
+                                 '1001000',
+                                 str(item),
+                                 '10.000',
+                                 '10.000',
+                                 '10.000',
+                                 '10.000',
+                                 '10.000',
+                                 '10.000',
+                                 '10.000',
+                                 '10.000'))
+            pass
+        pass
+
         df_result = pd.DataFrame(data=list_all, columns=columns_list)
 
         # 关闭数据库连接

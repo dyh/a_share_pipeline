@@ -80,3 +80,42 @@ def is_greater(date1, date2):
     else:
         return False
     pass
+
+
+def get_begin_vali_date_list(end_vali_date):
+    """
+    获取7个日期列表
+    :return: list()
+    """
+
+    list_result = list()
+
+    # 90周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-134)
+    list_result.append((90, begin_vali_date))
+
+    # 72周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-108)
+    list_result.append((72, begin_vali_date))
+
+    # 60周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-91)
+    list_result.append((60, begin_vali_date))
+
+    # 50周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-77)
+    list_result.append((50, begin_vali_date))
+
+    # 40周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-56)
+    list_result.append((40, begin_vali_date))
+
+    # 30周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-42)
+    list_result.append((30, begin_vali_date))
+
+    # 20周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-28)
+    list_result.append((20, begin_vali_date))
+
+    return list_result

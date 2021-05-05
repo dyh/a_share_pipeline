@@ -1,6 +1,5 @@
 import sys
 
-
 if 'pipeline' not in sys.path:
     sys.path.append('../../')
 
@@ -10,19 +9,13 @@ if 'FinRL_Library_master' not in sys.path:
 if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
 
-import pandas as pd
-import numpy as np
-from pipeline.sqlite import SQLite
-
 from pipeline.elegant.env_train import FeatureEngineer
 from pipeline.utils.datetime import get_today_date, get_next_day, get_datetime_from_date_str
 
 from pipeline.stock_data import StockData
 
-from pipeline.finrl import config
+from pipeline.elegant import config
 from elegantrl.run import *
-from elegantrl.agent import AgentPPO, AgentDDPG
-from env_train import StockTradingEnv
 
 if __name__ == '__main__':
 
@@ -30,10 +23,12 @@ if __name__ == '__main__':
     # 如果是第一次运行，processed_df和fillzero，先清空表内所有内容，再insert into，即不查询是否有数据
     if_create_or_update = False
 
-    config.HS300_CODE_LIST = StockData.get_hs300_code_list()
+    # # 从baostock下载到sqlite
+    # hs300_code_list = StockData.download_hs300_code_list()
+    # # 保存hs300股票代码字符串到数据库
+    # StockData.save_hs300_code_to_sqlite(hs300_code_list)
 
-    # 从baostock下载到sqlite
-    # StockData.update_hs300_sqlite()
+    config.HS300_CODE_LIST = StockData.get_hs300_code_from_sqlite()
 
     today_date = get_today_date()
     # 从sqlite读取到df
