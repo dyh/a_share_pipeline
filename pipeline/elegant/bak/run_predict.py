@@ -12,7 +12,7 @@ if 'FinRL_Library_master' not in sys.path:
 if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
 
-from pipeline.elegant.env_predict import StockTradingEnvPredict
+from pipeline.elegant.env_predict_hs300 import StockTradingEnvPredict
 
 from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
 from pipeline.stock_data import StockData

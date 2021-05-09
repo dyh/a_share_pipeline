@@ -1,5 +1,5 @@
-
-# SINGLE_A_STOCK_CODE = ""
+# 批量训练股票代码List
+BATCH_A_STOCK_CODE = []
 
 # 显示预测信息
 IF_SHOW_PREDICT_INFO = True
@@ -7,18 +7,21 @@ IF_SHOW_PREDICT_INFO = True
 # 工作日标记，用于加载对应的weights
 WORK_DAY_FLAG = ''
 
-HS300_CODE_LIST = []
-
 ## time_fmt = '%Y-%m-%d'
-START_DATE = "2005-01-01"
-START_EVAL_DATE = "2021-03-12"
-END_DATE = "2021-04-16"
+START_DATE = ""
+START_EVAL_DATE = ""
+END_DATE = ""
 
 DATA_SAVE_DIR = f"datasets"
 TRAINED_MODEL_DIR = f"trained_models"
 TENSORBOARD_LOG_DIR = f"tensorboard_log"
 RESULTS_DIR = f"results"
 LOGGER_DIR = f"logger_log"
+
+# batch股票数据库地址
+BATCH_DB_PATH = "./" + DATA_SAVE_DIR + '/batch.db'
+
+HS300_CODE_LIST = []
 
 # 沪深300数据库地址
 HS300_DB_PATH = "./" + DATA_SAVE_DIR + '/hs300.db'

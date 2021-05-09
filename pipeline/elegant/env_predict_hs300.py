@@ -80,13 +80,18 @@ class StockTradingEnvPredict:
 
         self.day += 1
 
+        # ----
+        yesterday_price = self.price_ary[self.day - 1]
+        # ----
+
         price = self.price_ary[self.day]
+
         tic_ary_temp = self.tic_ary[self.day]
         # 日期
         date_ary_temp = self.date_ary[self.day]
         date_temp = date_ary_temp[0]
 
-        self.output_text_cache += f'第 {self.day+1} 天，{date_temp}\r\n'
+        self.output_text_cache += f'第 {self.day + 1} 天，{date_temp}\r\n'
 
         for index in np.where(actions < 0)[0]:  # sell_index:
             if price[index] > 0:  # Sell only if current asset is > 0
@@ -99,9 +104,11 @@ class StockTradingEnvPredict:
                 if sell_num_shares > 0:
                     tic_temp = tic_ary_temp[index]
                     # date_temp = date_ary_temp[index]
+                    price_diff = str(round(price[index] - yesterday_price[index], 6))
                     self.output_text_cache += f'        {tic_temp}，' \
-                                              f'卖出 {sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
-                                              f'收盘 {price[index]}，资产 {self.total_asset} 元 \r\n'
+                                              f'卖出：{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
+                                              f'涨跌：￥{price_diff} 元，' \
+                                              f'现金：{self.amount}，资产：{self.total_asset} \r\n'
                     pass
                 pass
             pass
@@ -118,9 +125,11 @@ class StockTradingEnvPredict:
                 if buy_num_shares > 0:
                     tic_temp = tic_ary_temp[index]
                     # date_temp = date_ary_temp[index]
+                    price_diff = str(round(price[index] - yesterday_price[index], 6))
                     self.output_text_cache += f'        {tic_temp}，' \
-                                              f'买入 {buy_num_shares} 股, 持股数量 {self.stocks[index]}，' \
-                                              f'收盘 {price[index]}，资产 {self.total_asset} 元 \r\n'
+                                              f'买入：{buy_num_shares} 股, 持股数量：{self.stocks[index]}，' \
+                                              f'涨跌：￥{price_diff} 元，' \
+                                              f'现金：{self.amount}，资产：{self.total_asset} \r\n'
                 pass
             pass
         pass
@@ -145,7 +154,7 @@ class StockTradingEnvPredict:
             if config.IF_SHOW_PREDICT_INFO:
                 # date_temp = date_ary_temp[index]
                 print(self.output_text_cache)
-                print(f'第 {self.day+1} 天，{date_temp}，现金：{self.amount}，'
+                print(f'第 {self.day + 1} 天，{date_temp}，现金：{self.amount}，'
                       f'股票：{str((self.stocks * price).sum())}，总资产：{self.total_asset}')
 
                 # print(str(actions))

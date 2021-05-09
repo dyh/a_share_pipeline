@@ -9,13 +9,10 @@ if 'FinRL_Library_master' not in sys.path:
 if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
 
+from ElegantRL_master.elegantrl.agent import AgentPPO
 from pipeline.utils.datetime import get_datetime_from_date_str, get_begin_vali_date_list
-
-from pipeline.stock_data import StockData
-from pipeline.elegant.env_predict_hs300 import StockTradingEnvPredict
-
-from pipeline.elegant.run_hs300 import *
-from elegantrl.agent import AgentPPO, AgentDDPG
+from pipeline.elegant.env_predict_batch import StockTradingEnvPredict
+from pipeline.elegant.run_batch import *
 
 if __name__ == '__main__':
     # 日期列表
@@ -44,16 +41,14 @@ if __name__ == '__main__':
 
         # 从100到1k
         max_stock = 1000
-        # max_stock = rd.randint(100, 300)
-        # print('random max_stock', max_stock)
 
         work_days, begin_date = begin_vali_item
 
-        # 更新工作日标记，用于 run_hs300.py 加载训练过的 weights 文件
+        # 更新工作日标记，用于 run_batch.py 加载训练过的 weights 文件
         config.WORK_DAY_FLAG = str(work_days)
 
         # weights 文件目录
-        model_folder_path = f'./AgentPPO/hs300_{config.WORK_DAY_FLAG}'
+        model_folder_path = f'./AgentPPO/batch_{config.WORK_DAY_FLAG}'
 
         # 如果存在目录则预测
         if os.path.exists(model_folder_path):
@@ -76,11 +71,7 @@ if __name__ == '__main__':
             args.agent.if_use_gae = True
             args.agent.lambda_entropy = 0.04
 
-            # 沪深300
-            # config.HS300_CODE_LIST = StockData.download_hs300_code_list()
-            config.HS300_CODE_LIST = StockData.get_hs300_code_from_sqlite()
-
-            tickers = config.HS300_CODE_LIST
+            tickers = config.BATCH_A_STOCK_CODE
 
             tech_indicator_list = [
                 'macd', 'boll_ub', 'boll_lb', 'rsi_30', 'cci_30', 'dx_30',
@@ -206,10 +197,10 @@ if __name__ == '__main__':
 
             # ----
             # work_days，周期数，用于存储和提取训练好的模型
-            model_file_path = f'./AgentPPO/hs300_{config.WORK_DAY_FLAG}/actor.pth'
+            model_file_path = f'./AgentPPO/batch_{config.WORK_DAY_FLAG}/actor.pth'
             # 如果model存在，则加载
             if os.path.exists(model_file_path):
-                agent.save_load_model(f'./AgentPPO/hs300_{config.WORK_DAY_FLAG}', if_save=False)
+                agent.save_load_model(f'./AgentPPO/batch_{config.WORK_DAY_FLAG}', if_save=False)
             pass
             # ----
 
