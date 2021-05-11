@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     config.START_DATE = "2002-05-01"
     config.START_EVAL_DATE = "2021-03-12"
-    config.END_DATE = "2021-04-16"
+    config.END_DATE = "2021-04-30"
 
     # 下载、更新 股票数据
     StockData.update_batch_stock_sqlite(config.BATCH_A_STOCK_CODE)
@@ -52,9 +52,11 @@ if __name__ == '__main__':
     # fe_df = pd.read_pickle('raw_to_fe.df')
 
     # 将 fe_df 存入数据库
+    # 增量fe
     StockData.save_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name)
 
     # fe -> fillzero
+    # 增量fillzero
     fillzero_df = StockData.fill_zero_value_to_null_date(df=fe_df, code_list=config.BATCH_A_STOCK_CODE,
                                                          table_name='fe_fillzero', date_column_name='date',
                                                          code_column_name='tic')

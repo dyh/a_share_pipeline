@@ -18,10 +18,13 @@ if __name__ == '__main__':
     # 日期列表
     # 4月16日向前，20,30,40,50,60,72,90周期
     # end_vali_date = get_datetime_from_date_str('2021-04-16')
-
     config.IF_SHOW_PREDICT_INFO = True
 
     # 要预测的那一天
+    # config.BATCH_A_STOCK_CODE = ['sh.600036', 'sh.600295', ]
+
+    config.START_DATE = "2002-05-01"
+    config.START_EVAL_DATE = "2021-03-12"
     config.END_DATE = '2021-04-30'
 
     # 预测的截至日期

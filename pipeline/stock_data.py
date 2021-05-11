@@ -768,8 +768,11 @@ class StockData(object):
         dict_code_with_date = {}
 
         for _, row in df.iterrows():
-            date_temp = str(row['date'])
-            tic_temp = str(row['tic'])
+            # date_temp = str(row['date'])
+            # tic_temp = str(row['tic'])
+
+            date_temp = str(row[date_column_name])
+            tic_temp = str(row[code_column_name])
 
             key = f'{tic_temp}_{date_temp}'
             dict_code_with_date[key] = row
