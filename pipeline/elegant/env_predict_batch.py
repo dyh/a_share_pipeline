@@ -178,7 +178,8 @@ class StockTradingEnvPredict:
                   start_date='2008-03-19', end_date='2016-01-01', env_eval_date='2021-01-01'):
 
         # 从数据库中读取fe fillzero的数据
-        processed_df = StockData.get_fe_fillzero_from_sqlite(begin_date=start_date, end_date=env_eval_date)
+        processed_df = StockData.get_fe_fillzero_from_sqlite(begin_date=start_date, end_date=env_eval_date,
+                                                             list_stock_code=config.BATCH_A_STOCK_CODE)
 
         def data_split_train(df, start, end):
             data = df[(df.date >= start) & (df.date < end)]

@@ -24,8 +24,8 @@ if __name__ == '__main__':
     config.BATCH_A_STOCK_CODE = ['sh.600036', 'sh.600295', ]
 
     config.START_DATE = "2002-05-01"
-    config.START_EVAL_DATE = "2021-03-12"
-    config.END_DATE = "2021-04-30"
+    # config.START_EVAL_DATE = "2021-03-12"
+    config.END_DATE = "2021-05-12"
 
     # 下载、更新 股票数据
     StockData.update_batch_stock_sqlite(config.BATCH_A_STOCK_CODE)

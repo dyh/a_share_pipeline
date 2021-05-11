@@ -662,14 +662,18 @@ class StockData(object):
         last_close_price = list_all[-1][4]
         last_volume = list_all[-1][5]
 
-        if last_record_date != end_date:
-            print('# 添加假数据，日期', end_date)
-            print('# 添加假数据，日期', end_date)
-            print('# 添加假数据，日期', end_date)
-            print('# 添加假数据，日期', end_date)
+        # if last_record_date != end_date:
+        while is_greater(end_date, last_record_date):
+
+            date_temp = get_datetime_from_date_str(last_record_date)
+            date_temp = get_next_work_day(datetime_date=date_temp, next_flag=+1)
+
+            last_record_date = str(date_temp)
+
+            print('# 添加假数据，日期', last_record_date)
 
             for item in list_stock_code:
-                list_all.append((end_date,
+                list_all.append((last_record_date,
                                  '10.000',
                                  '10.000',
                                  '10.000',
