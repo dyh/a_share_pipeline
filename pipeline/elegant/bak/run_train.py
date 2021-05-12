@@ -1,4 +1,3 @@
-import argparse
 import sys
 
 if 'pipeline' not in sys.path:
@@ -12,9 +11,8 @@ if 'ElegantRL_master' not in sys.path:
 
 from ElegantRL_master.elegantrl.replay import ReplayBufferMP, ReplayBuffer
 
-from pipeline.elegant.env_train_hs300 import StockTradingEnvTrain
+from pipeline.elegant.hs300.env_train_hs300 import StockTradingEnvTrain
 
-from FinRL_Library_master.finrl.preprocessing.preprocessors import FeatureEngineer
 from pipeline.stock_data import StockData
 
 from pipeline.finrl import config
@@ -25,7 +23,6 @@ import time
 import torch
 import numpy as np
 import numpy.random as rd
-import pandas as pd
 
 from copy import deepcopy
 

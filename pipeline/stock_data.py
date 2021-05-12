@@ -647,50 +647,56 @@ class StockData(object):
         # 从数据库中再次提取到 DataFrame 中
         columns_list = fields_prep.split(',')
 
-        query_sql = f'SELECT date, open, high, low, close, volume, tic, ' \
-                    f'macd, boll_ub, boll_lb, rsi_30, cci_30, dx_30, ' \
-                    f'close_30_sma, close_60_sma FROM "{table_name_fillzero}" ' \
-                    f'WHERE date >= "{begin_date}" AND date <= "{end_date}" ' \
-                    f'ORDER BY date, tic ASC'
+        list_all = []
 
-        list_all = sqlite.fetchall(query_sql)
+        for item_stock_code in list_stock_code:
 
-        # 如果最后一行的 date 与 end_date 是否相同，如果不相同，则添加一条全是10的假数据
-        # 注意价格，不能等于0，如果等于0，则不买/卖
-        last_record_date = list_all[-1][0]
-        # 假设close、volume与最后一天的close相同
-        last_close_price = list_all[-1][4]
-        last_volume = list_all[-1][5]
+            query_sql = f'SELECT date, open, high, low, close, volume, tic, ' \
+                        f'macd, boll_ub, boll_lb, rsi_30, cci_30, dx_30, ' \
+                        f'close_30_sma, close_60_sma FROM "{table_name_fillzero}" ' \
+                        f'WHERE tic = "{item_stock_code}" AND date >= "{begin_date}" AND date <= "{end_date}" ' \
+                        f'ORDER BY date, tic ASC'
 
-        # if last_record_date != end_date:
-        while is_greater(end_date, last_record_date):
+            list_single = sqlite.fetchall(query_sql)
 
-            date_temp = get_datetime_from_date_str(last_record_date)
-            date_temp = get_next_work_day(datetime_date=date_temp, next_flag=+1)
+            # 如果最后一行的 date 与 end_date 是否相同，如果不相同，则添加一条全是10的假数据
+            # 注意价格，不能等于0，如果等于0，则不买/卖
+            last_record_date = list_single[-1][0]
+            # 假设close、volume与最后一天的close相同
+            last_close_price = list_single[-1][4]
+            last_volume = list_single[-1][5]
 
-            last_record_date = str(date_temp)
+            # if last_record_date != end_date:
+            while is_greater(end_date, last_record_date):
+                date_temp = get_datetime_from_date_str(last_record_date)
+                date_temp = get_next_work_day(datetime_date=date_temp, next_flag=+1)
 
-            print('# 添加假数据，日期', last_record_date)
+                last_record_date = str(date_temp)
 
-            for item in list_stock_code:
-                list_all.append((last_record_date,
-                                 '10.000',
-                                 '10.000',
-                                 '10.000',
-                                 str(last_close_price),
-                                 str(last_volume),
-                                 str(item),
-                                 '10.000',
-                                 '10.000',
-                                 '10.000',
-                                 '10.000',
-                                 '10.000',
-                                 '10.000',
-                                 '10.000',
-                                 '10.000'))
+                print('# 添加假数据，日期', last_record_date)
+
+                # for item in list_stock_code:
+                list_single.append((last_record_date,
+                                    '10.000',
+                                    '10.000',
+                                    '10.000',
+                                    str(last_close_price),
+                                    str(last_volume),
+                                    str(item_stock_code),
+                                    '10.000',
+                                    '10.000',
+                                    '10.000',
+                                    '10.000',
+                                    '10.000',
+                                    '10.000',
+                                    '10.000',
+                                    '10.000'))
+                pass
+            pass
+
+            list_all += list_single
             pass
         pass
-
         df_result = pd.DataFrame(data=list_all, columns=columns_list)
 
         # 关闭数据库连接
@@ -717,7 +723,8 @@ class StockData(object):
         return df_result
 
     @staticmethod
-    def fill_zero_value_to_null_date(df, code_list, table_name='fe_fillzero', date_column_name='date', code_column_name='tic', dbname=config.BATCH_DB_PATH):
+    def fill_zero_value_to_null_date(df, code_list, table_name='fe_fillzero', date_column_name='date',
+                                     code_column_name='tic', dbname=config.BATCH_DB_PATH):
         """
         向没有数据的日期填充 0 值
         :param code_column_name: 股票代码列的名称

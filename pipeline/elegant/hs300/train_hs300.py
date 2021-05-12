@@ -1,23 +1,23 @@
 import sys
 
 if 'pipeline' not in sys.path:
-    sys.path.append('../../')
+    sys.path.append('../../../')
 
 if 'FinRL_Library_master' not in sys.path:
-    sys.path.append('../../FinRL_Library_master')
+    sys.path.append('../../../FinRL_Library_master')
 
 if 'ElegantRL_master' not in sys.path:
-    sys.path.append('../../ElegantRL_master')
+    sys.path.append('../../../ElegantRL_master')
 
 import shutil
 
 from pipeline.utils.datetime import get_datetime_from_date_str, time_point, get_begin_vali_date_list
 
 from pipeline.stock_data import StockData
-from pipeline.elegant.env_predict_hs300 import StockTradingEnvPredict
+from pipeline.elegant.hs300.env_predict_hs300 import StockTradingEnvPredict
 
-from pipeline.elegant.run_hs300 import *
-from elegantrl.agent import AgentPPO, AgentDDPG
+from pipeline.elegant.hs300.run_hs300 import *
+from elegantrl.agent import AgentPPO
 from env_train_hs300 import StockTradingEnv
 
 if __name__ == '__main__':
