@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     config.START_DATE = "2002-05-01"
     config.START_EVAL_DATE = "2021-05-01"
-    config.END_DATE = '2021-05-12'
+    config.END_DATE = '2021-05-27'
 
     # 预测的截至日期
     end_vali_date = get_datetime_from_date_str(config.END_DATE)
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     # ----
     # 从1万-2k万
-    initial_capital = 100000
+    initial_capital = 10000
 
     # 循环 vali_date_list 训练7次
     for begin_vali_item in list_begin_vali_date:

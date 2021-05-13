@@ -47,21 +47,16 @@ if __name__ == '__main__':
                          tech_indicator_list=config.TECHNICAL_INDICATORS_LIST, )
 
     fe_df = fe.preprocess_data(raw_df)
-    # 保存pickle
-    # fe_df.to_pickle('raw_to_fe.df')
-    # fe_df = pd.read_pickle('raw_to_fe.df')
 
     # 将 fe_df 存入数据库
     # 增量fe
     StockData.save_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name)
 
+    # 单支预测，不用fill_zero
     # fe -> fillzero
-    # 增量fillzero
     fillzero_df = StockData.fill_zero_value_to_null_date(df=fe_df, code_list=config.BATCH_A_STOCK_CODE,
                                                          table_name='fe_fillzero', date_column_name='date',
                                                          code_column_name='tic')
-    # 保存pickle
-    # 将 fillzero_df 存入数据库
 
     print('done!')
 
