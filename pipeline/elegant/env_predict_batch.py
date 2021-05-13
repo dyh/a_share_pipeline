@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 from pipeline.elegant import config
-from pipeline.stock_data import StockData
+from pipeline.stock_data import StockData, fields_prep
 
 
 class StockTradingEnvPredict:
@@ -232,8 +232,16 @@ class StockTradingEnvPredict:
         price_ary = list()
         tic_ary = list()
         date_ary = list()
+
+        columns_list = fields_prep.split(',')
+
         for day in range(len(df.index.unique())):
-            item = df.loc[day]
+            # item = df.loc[day]
+            list_temp = df.loc[day]
+            if list_temp.ndim == 1:
+                list_temp = [df.loc[day]]
+                pass
+            item = pd.DataFrame(data=list_temp, columns=columns_list)
 
             tech_items = [item[tech].values.tolist() for tech in tech_indicator_list]
             tech_items_flatten = sum(tech_items, [])

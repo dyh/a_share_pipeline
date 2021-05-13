@@ -23,7 +23,8 @@ if __name__ == '__main__':
 
     # 开始训练的日期，在程序启动之后，不要改变。
     # 在 daily_update_stockdb_batch 里，修改 config.BATCH_A_STOCK_CODE list ，和 训练-预测-结束 日期。
-    config.BATCH_A_STOCK_CODE = ['sh.600036', 'sh.600295', ]
+    # config.BATCH_A_STOCK_CODE = ['sh.600036', 'sh.600295', ]
+    config.BATCH_A_STOCK_CODE = ['sh.600036', ]
 
     config.START_DATE = "2002-05-01"
     config.START_EVAL_DATE = "2021-03-12"
@@ -39,7 +40,7 @@ if __name__ == '__main__':
 
     # ----
     # 从1万-2k万
-    initial_capital = 100000
+    initial_capital = 10000
 
     # 循环 vali_date_list 训练7次
     for begin_vali_item in list_begin_vali_date:

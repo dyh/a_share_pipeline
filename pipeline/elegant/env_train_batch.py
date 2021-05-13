@@ -4,7 +4,8 @@ import numpy as np
 import numpy.random as rd
 import torch
 
-from pipeline.stock_data import StockData
+from pipeline.elegant import config
+from pipeline.stock_data import StockData, fields_prep
 
 
 class StockTradingEnv:
@@ -118,7 +119,8 @@ class StockTradingEnv:
                   start_date='2008-03-19', end_date='2016-01-01', env_eval_date='2021-01-01'):
 
         # 从数据库中读取fe fillzero的数据
-        processed_df = StockData.get_fe_fillzero_from_sqlite(begin_date=start_date, end_date=env_eval_date)
+        processed_df = StockData.get_fe_fillzero_from_sqlite(begin_date=start_date, end_date=env_eval_date,
+                                                             list_stock_code=config.BATCH_A_STOCK_CODE)
 
         def data_split_train(df, start, end):
             data = df[(df.date >= start) & (df.date < end)]
@@ -154,8 +156,17 @@ class StockTradingEnv:
     def convert_df_to_ary(df, tech_indicator_list):
         tech_ary = list()
         price_ary = list()
+
+        columns_list = fields_prep.split(',')
+
         for day in range(len(df.index.unique())):
-            item = df.loc[day]
+
+            list_temp = df.loc[day]
+            if list_temp.ndim == 1:
+                list_temp = [df.loc[day]]
+                pass
+
+            item = pd.DataFrame(data=list_temp, columns=columns_list)
 
             tech_items = [item[tech].values.tolist() for tech in tech_indicator_list]
             tech_items_flatten = sum(tech_items, [])

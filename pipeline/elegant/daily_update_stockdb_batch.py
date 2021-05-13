@@ -18,14 +18,14 @@ from pipeline.elegant import config
 from ElegantRL_master.elegantrl.run import *
 
 if __name__ == '__main__':
-
     # 开始训练的日期，在程序启动之后，不要改变。
     # 在 daily_update_stockdb_batch 里，修改 config.BATCH_A_STOCK_CODE list ，和 训练-预测-结束 日期。
-    config.BATCH_A_STOCK_CODE = ['sh.600036', 'sh.600295', ]
+    # config.BATCH_A_STOCK_CODE = ['sh.600036', 'sh.600295', ]
+    config.BATCH_A_STOCK_CODE = ['sh.600036', ]
 
     config.START_DATE = "2002-05-01"
     # config.START_EVAL_DATE = "2021-03-12"
-    config.END_DATE = "2021-05-12"
+    config.END_DATE = "2021-05-13"
 
     # 下载、更新 股票数据
     StockData.update_batch_stock_sqlite(config.BATCH_A_STOCK_CODE)

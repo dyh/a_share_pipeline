@@ -21,7 +21,8 @@ if __name__ == '__main__':
     config.IF_SHOW_PREDICT_INFO = True
 
     # 要预测的那一天
-    config.BATCH_A_STOCK_CODE = ['sh.600036', 'sh.600295', ]
+    # config.BATCH_A_STOCK_CODE = ['sh.600036', 'sh.600295', ]
+    config.BATCH_A_STOCK_CODE = ['sh.600036', ]
 
     config.START_DATE = "2002-05-01"
     config.START_EVAL_DATE = "2021-05-01"
