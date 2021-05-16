@@ -1,5 +1,6 @@
-# 批量训练股票代码List
-BATCH_A_STOCK_CODE = []
+
+# 单支股票代码List
+SINGLE_A_STOCK_CODE = []
 
 # 显示预测信息
 IF_SHOW_PREDICT_INFO = True
@@ -19,7 +20,10 @@ RESULTS_DIR = f"results"
 LOGGER_DIR = f"logger_log"
 
 # batch股票数据库地址
-BATCH_DB_PATH = "./" + DATA_SAVE_DIR + '/batch.db'
+STOCK_DB_PATH = "./" + DATA_SAVE_DIR + '/stock.db'
+
+# 批量训练股票代码List
+BATCH_A_STOCK_CODE = []
 
 HS300_CODE_LIST = []
 
