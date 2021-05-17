@@ -11,58 +11,37 @@ if 'ElegantRL_master' not in sys.path:
 
 import shutil
 
-from pipeline.sqlite import SQLite
 from pipeline.stock_data import StockData
-from pipeline.utils.datetime import get_datetime_from_date_str, time_point, get_begin_vali_date_list, get_next_day
+from pipeline.utils.datetime import get_datetime_from_date_str, time_point, get_begin_vali_date_list, get_next_day, \
+    get_next_work_day
 from pipeline.elegant.run_single import *
-from ElegantRL_master.elegantrl.agent import AgentPPO
+from pipeline.elegant.agent_single import *
 from pipeline.elegant.env_train_single import StockTradingEnv
 from pipeline.elegant.env_predict_single import StockTradingEnvPredict, FeatureEngineer
 
 if __name__ == '__main__':
+    # AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentDuelingDQN(), AgentModSAC(), AgentSharedSAC
+    # 选择agent
+    config.AGENT_NAME = 'AgentPPO'
+    config.CWD = f'./{config.AGENT_NAME}/StockTradingEnv-v1'
 
-    # 查找hs300，2002年5月1日之前的hs300,有哪些。
-    hs300_code_list = StockData.get_hs300_code_from_sqlite(table_name='hs300_list', dbname=config.STOCK_DB_PATH)
+    if_on_policy = True
+    if_use_gae = True
 
-    # 倒序
-    hs300_code_list.reverse()
+    # 开始训练的日期，在程序启动之后，不要改变。
+    config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
 
-    sqlite = SQLite(dbname=config.STOCK_DB_PATH)
+    config.IF_SHOW_PREDICT_INFO = False
 
-    index = 0
+    loop_date_flag_1 = get_datetime_from_date_str("2021-02-18")
+    loop_date_flag_2 = get_datetime_from_date_str('2021-03-17')
 
-    # 所有将要训练的股票代码
-    list_loop_stock_code = []
-
-    # TODO 临时替换成招商银行
-    # list_loop_stock_code = ['sh.600036', ]
-
-    for stock_code in hs300_code_list:
-        query_sql = f'SELECT date FROM "{stock_code}" WHERE date <= "2002-05-01" LIMIT 1'
-        text_date = sqlite.fetchone(query_sql)
-        if text_date is not None:
-            list_loop_stock_code.append(str(stock_code))
-            index += 1
-            # print(text_date, stock_code)
-        pass
-
-    print('count', index)
-    sqlite.close()
-
-    # 训练
-    for stock_code_1 in list_loop_stock_code:
-
-        print('\r\n')
-        print('>' * 20, 'training', stock_code_1, '<' * 20)
-
-        # 开始训练的日期，在程序启动之后，不要改变。
-        config.SINGLE_A_STOCK_CODE = [stock_code_1, ]
-
-        config.IF_SHOW_PREDICT_INFO = False
+    while loop_date_flag_1 <= loop_date_flag_2:
 
         config.START_DATE = "2002-05-01"
         config.START_EVAL_DATE = ""
-        config.END_DATE = "2021-04-16"
+        # config.END_DATE = "2021-03-17"
+        config.END_DATE = str(loop_date_flag_1)
 
         # 4月16日向前，20,30,40,50,60,72,90周期
 
@@ -70,16 +49,22 @@ if __name__ == '__main__':
         end_vali_date = get_datetime_from_date_str(config.END_DATE)
 
         # 获取7个日期list
-        list_begin_vali_date = []
-
-        # 周期
-        begin_vali_date = get_next_day(end_vali_date, next_flag=-134)
-        list_begin_vali_date.append((90, begin_vali_date))
-
         # list_begin_vali_date = get_begin_vali_date_list(end_vali_date)
+        # 倒序
+        # list_begin_vali_date.reverse()
 
-        initial_capital = 10000
+        # 只训练20周期的
+        begin_vali_date = get_next_day(end_vali_date, next_flag=-28)
+        list_begin_vali_date = [(20, begin_vali_date), ]
+
+        # 初始现金
+        initial_capital = 20000
+
+        # 单次 购买/卖出 最大股数
         max_stock = 1000
+
+        # 下载、更新 股票数据
+        StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE, dbname=config.STOCK_DB_PATH)
 
         # do fe
         # 缓存 raw 数据 为 df 。
@@ -101,7 +86,7 @@ if __name__ == '__main__':
         fe_df = fe.preprocess_data(raw_df)
 
         # 将 fe_df 存入数据库
-        # 增量fe
+        # 先清空，再 insert
         StockData.clear_and_insert_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name)
 
         # 循环 list_begin_vali_date
@@ -112,7 +97,7 @@ if __name__ == '__main__':
             # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
             config.WORK_DAY_FLAG = str(work_days)
 
-            model_folder_path = f'./AgentPPO/single_{config.WORK_DAY_FLAG}'
+            model_folder_path = f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}'
 
             if not os.path.exists(model_folder_path):
                 os.makedirs(model_folder_path)
@@ -122,7 +107,9 @@ if __name__ == '__main__':
             config.START_EVAL_DATE = str(begin_date)
 
             print('\r\n')
-            print('#' * 40)
+            print('-' * 40)
+            print('config.AGENT_NAME', config.AGENT_NAME)
+            print('config.CWD', config.CWD)
             print('# 训练-预测周期', config.START_DATE, '-', config.START_EVAL_DATE, '-', config.END_DATE)
             print('# work_days', work_days)
             print('# model_folder_path', model_folder_path)
@@ -130,9 +117,33 @@ if __name__ == '__main__':
             print('# max_stock', max_stock)
 
             # Agent
-            args = Arguments(if_on_policy=True)
-            args.agent = AgentPPO()  # AgentSAC(), AgentTD3(), AgentDDPG()
-            args.agent.if_use_gae = True
+            # args = Arguments(if_on_policy=True)
+            args = Arguments(if_on_policy=if_on_policy)
+
+            if config.AGENT_NAME == 'AgentPPO':
+                args.agent = AgentPPO()
+                pass
+            elif config.AGENT_NAME == 'AgentSAC':
+                args.agent = AgentSAC()
+                pass
+            elif config.AGENT_NAME == 'AgentTD3':
+                args.agent = AgentTD3()
+                pass
+            elif config.AGENT_NAME == 'AgentDDPG':
+                args.agent = AgentDDPG()
+                pass
+            elif config.AGENT_NAME == 'AgentModSAC':
+                args.agent = AgentModSAC()
+                pass
+            elif config.AGENT_NAME == 'AgentDuelingDQN':
+                args.agent = AgentDuelingDQN()
+                pass
+            elif config.AGENT_NAME == 'AgentSharedSAC':
+                args.agent = AgentSharedSAC()
+                pass
+
+            # args.agent.if_use_gae = True
+            args.agent.if_use_gae = if_use_gae
             args.agent.lambda_entropy = 0.04
 
             tech_indicator_list = [
@@ -141,9 +152,19 @@ if __name__ == '__main__':
 
             gamma = 0.99
             # max_stock = 1e2
-            # max_stock = 100
             # initial_capital = 100000
-            initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
+            # initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
+
+            initial_stocks_train = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
+            initial_stocks_vali = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
+
+            # 默认持有100股
+            initial_stocks_train[0] = 100.0
+            initial_stocks_vali[0] = 100.0
+
+            print('# initial_stocks_train', initial_stocks_train)
+            print('# initial_stocks_vali', initial_stocks_vali)
+
             buy_cost_pct = 0.0003
             sell_cost_pct = 0.0003
             start_date = config.START_DATE
@@ -154,8 +175,9 @@ if __name__ == '__main__':
             args.env = StockTradingEnv(cwd='./datasets', gamma=gamma, max_stock=max_stock,
                                        initial_capital=initial_capital,
                                        buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct, start_date=start_date,
-                                       end_date=start_eval_date, env_eval_date=end_eval_date, ticker_list=config.SINGLE_A_STOCK_CODE,
-                                       tech_indicator_list=tech_indicator_list, initial_stocks=initial_stocks,
+                                       end_date=start_eval_date, env_eval_date=end_eval_date,
+                                       ticker_list=config.SINGLE_A_STOCK_CODE,
+                                       tech_indicator_list=tech_indicator_list, initial_stocks=initial_stocks_train,
                                        if_eval=False)
 
             # eval
@@ -166,7 +188,7 @@ if __name__ == '__main__':
                                                    end_date=start_eval_date, env_eval_date=end_eval_date,
                                                    ticker_list=config.SINGLE_A_STOCK_CODE,
                                                    tech_indicator_list=tech_indicator_list,
-                                                   initial_stocks=initial_stocks,
+                                                   initial_stocks=initial_stocks_vali,
                                                    if_eval=True)
 
             args.env.target_reward = 3
@@ -209,21 +231,27 @@ if __name__ == '__main__':
 
             args.rollout_num = 2  # the number of rollout workers (larger is not always faster)
 
-            # train_and_evaluate(args)
-            train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.
+            train_and_evaluate(args)
+            # train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.
 
             # 保存训练后的模型
-            model_file_path = f'./AgentPPO/single_{config.WORK_DAY_FLAG}/actor.pth'
-            shutil.copyfile('AgentPPO/StockTradingEnv-v1_0/actor.pth', model_file_path)
+            # cwd: ./AgentPPO/StockTradingEnv-v1_0
+
+            model_file_path = f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}/actor.pth'
+            shutil.copyfile(f'{config.CWD}/actor.pth', model_file_path)
 
             # 保存训练曲线图
             # plot_learning_curve.jpg
             timepoint_temp = time_point()
-            plot_learning_curve_file_path = f'./AgentPPO/single_{config.WORK_DAY_FLAG}/plot_{timepoint_temp}.jpg'
-            shutil.copyfile('AgentPPO/StockTradingEnv-v1_0/plot_learning_curve.jpg', plot_learning_curve_file_path)
+            plot_learning_curve_file_path = f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}/plot_{timepoint_temp}.jpg'
+            shutil.copyfile(f'{config.CWD}/plot_learning_curve.jpg', plot_learning_curve_file_path)
 
             # sleep 60 秒
             print('sleep 60 秒')
             time.sleep(60)
             pass
         pass
+
+        # 日期+1 workday
+        loop_date_flag_1 = get_next_work_day(loop_date_flag_1, 1)
+    pass

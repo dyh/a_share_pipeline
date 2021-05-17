@@ -12,11 +12,14 @@ if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
 
 from ElegantRL_master.elegantrl.agent import AgentPPO
-from pipeline.utils.datetime import get_datetime_from_date_str, get_begin_vali_date_list
+from pipeline.utils.datetime import get_datetime_from_date_str, get_begin_vali_date_list, get_end_vali_date_list
 from pipeline.elegant.env_predict_single import StockTradingEnvPredict, FeatureEngineer
 from pipeline.elegant.run_single import *
 
 if __name__ == '__main__':
+
+    # 预测的开始日期和结束日期，都固定
+
     # 日期列表
     # 4月16日向前，20,30,40,50,60,72,90周期
     # end_vali_date = get_datetime_from_date_str('2021-04-16')
@@ -26,50 +29,28 @@ if __name__ == '__main__':
     config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
 
     config.START_DATE = "2002-05-01"
-    config.START_EVAL_DATE = ""
+    config.START_EVAL_DATE = "2021-04-16"
     config.END_DATE = '2021-05-14'
-
-    # # ----
-    # # 插入 600036 的 fe 数据
-    # raw_df = StockData.load_batch_stock_from_sqlite(list_batch_code=config.SINGLE_A_STOCK_CODE,
-    #                                                 date_begin=config.START_DATE, date_end=config.END_DATE,
-    #                                                 db_path=config.STOCK_DB_PATH)
-    #
-    # # raw_df -> fe
-    # fe_origin_table_name = "fe_origin"
-    #
-    # # 创建fe表
-    # StockData.create_fe_table(db_path=config.STOCK_DB_PATH, table_name=fe_origin_table_name)
-    #
-    # fe = FeatureEngineer(use_turbulence=False,
-    #                      user_defined_feature=False,
-    #                      use_technical_indicator=True,
-    #                      tech_indicator_list=config.TECHNICAL_INDICATORS_LIST, )
-    #
-    # fe_df = fe.preprocess_data(raw_df)
-    #
-    # # 将 fe_df 存入数据库
-    # # 先清空，再 insert
-    # StockData.clear_and_insert_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name)
-    # # ----
+    # config.START_EVAL_DATE = "2021-03-12"
+    # config.END_DATE = "2021-04-15"
 
     # 预测的截至日期
-    end_vali_date = get_datetime_from_date_str(config.END_DATE)
+    begin_vali_date = get_datetime_from_date_str(config.START_EVAL_DATE)
 
     # 获取7个日期list
-    list_begin_vali_date = get_begin_vali_date_list(end_vali_date)
+    list_end_vali_date = get_end_vali_date_list(begin_vali_date)
 
-    initial_capital = 10000
+    initial_capital = 20000
 
     # 循环 vali_date_list 训练7次
-    for begin_vali_item in list_begin_vali_date:
+    for end_vali_item in list_end_vali_date:
 
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
 
         # 从100到1k
         max_stock = 1000
 
-        work_days, begin_date = begin_vali_item
+        work_days, _ = end_vali_item
 
         # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
         config.WORK_DAY_FLAG = str(work_days)
@@ -80,14 +61,14 @@ if __name__ == '__main__':
         # 如果存在目录则预测
         if os.path.exists(model_folder_path):
 
-            # 开始预测的日期
-            config.START_EVAL_DATE = str(begin_date)
+            # 停止预测的日期
+            # config.END_DATE = str(end_eval_date)
 
             print('\r\n')
             print('#' * 40)
             print('# 预测周期', config.START_EVAL_DATE, '-', config.END_DATE)
 
-            print('# work_days', work_days)
+            print('# 模型的 work_days', work_days)
             print('# model_folder_path', model_folder_path)
             print('# initial_capital', initial_capital)
             print('# max_stock', max_stock)
@@ -98,8 +79,6 @@ if __name__ == '__main__':
             args.agent.if_use_gae = True
             args.agent.lambda_entropy = 0.04
 
-            tickers = config.SINGLE_A_STOCK_CODE
-
             tech_indicator_list = [
                 'macd', 'boll_ub', 'boll_lb', 'rsi_30', 'cci_30', 'dx_30',
                 'close_30_sma', 'close_60_sma']  # finrl.config.TECHNICAL_INDICATORS_LIST
@@ -108,7 +87,9 @@ if __name__ == '__main__':
             # max_stock = 1e2
             # max_stock = 100
             # initial_capital = 100000
-            initial_stocks = np.zeros(len(tickers), dtype=np.float32)
+            initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
+            initial_stocks[0] = 100.0
+
             buy_cost_pct = 0.0003
             sell_cost_pct = 0.0003
             start_date = config.START_DATE
@@ -127,7 +108,7 @@ if __name__ == '__main__':
                                               buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
                                               start_date=start_date,
                                               end_date=start_eval_date, env_eval_date=end_eval_date,
-                                              ticker_list=tickers,
+                                              ticker_list=config.SINGLE_A_STOCK_CODE,
                                               tech_indicator_list=tech_indicator_list,
                                               initial_stocks=initial_stocks,
                                               if_eval=True)
@@ -137,7 +118,7 @@ if __name__ == '__main__':
                                                    buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
                                                    start_date=start_date,
                                                    end_date=start_eval_date, env_eval_date=end_eval_date,
-                                                   ticker_list=tickers,
+                                                   ticker_list=config.SINGLE_A_STOCK_CODE,
                                                    tech_indicator_list=tech_indicator_list,
                                                    initial_stocks=initial_stocks,
                                                    if_eval=True)

@@ -1,4 +1,15 @@
 
+# current work directory，正在训练使用的目录，cwd: ./AgentPPO/StockTradingEnv-v1_0
+# from ctypes import c_char_p
+# from multiprocessing import Manager
+# manager = Manager()
+# CWD = manager.Value(c_char_p, "")
+
+# CWD = './AgentPPO/StockTradingEnv-v1'
+CWD = ''
+
+AGENT_NAME = ''
+
 # 单支股票代码List
 SINGLE_A_STOCK_CODE = []
 

@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="9e89b71b-f959-4196-bdad-c897441ae9b7" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/pipeline/elegant/agent_single.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pipeline/elegant/predict_single_both_date_fixed.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pipeline/elegant/train_single_increment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/a_share_pipeline.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/a_share_pipeline.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ElegantRL_master" beforeDir="false" afterPath="$PROJECT_DIR$/ElegantRL_master" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pipeline/elegant/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pipeline/elegant/daily_update_stockdb_batch.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/daily_update_stockdb_batch.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pipeline/elegant/env_predict_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/env_predict_single.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pipeline/elegant/env_train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/env_train_single.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pipeline/elegant/predict_single_end_date_fixed.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/predict_single_end_date_fixed.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pipeline/elegant/run_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/run_single.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pipeline/elegant/super_train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/super_train_single.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pipeline/elegant/train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/train_single.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pipeline/stock_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/stock_data.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="JupyterTrust" id="1025bab0-1f88-46e0-ad5d-621d2b260017" />
+  <component name="ProjectId" id="1sewuRk7nz1zo0tExbbzD8fZ1nX" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../a_share_pipeline2" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pipeline/elegant" />
+      <recent name="$PROJECT_DIR$/pipeline" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.predict_single_both_date_fixed">
+    <configuration name="config" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="a_share_pipeline" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pipeline/elegant" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pipeline/elegant/config.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="daily_update_stockdb_batch" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="a_share_pipeline" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pipeline/elegant" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pipeline/elegant/daily_update_stockdb_batch.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="predict_single_both_date_fixed" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="a_share_pipeline" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pipeline/elegant" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pipeline/elegant/predict_single_both_date_fixed.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="train_single" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="a_share_pipeline" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pipeline/elegant" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pipeline/elegant/train_single.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="train_single_increment" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="a_share_pipeline" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pipeline/elegant" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pipeline/elegant/train_single_increment.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.train_single_increment" />
+      <item itemvalue="Python.predict_single_both_date_fixed" />
+      <item itemvalue="Python.train_single" />
+      <item itemvalue="Python.daily_update_stockdb_batch" />
+      <item itemvalue="Python.config" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.predict_single_both_date_fixed" />
+        <item itemvalue="Python.daily_update_stockdb_batch" />
+        <item itemvalue="Python.config" />
+        <item itemvalue="Python.train_single" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="9e89b71b-f959-4196-bdad-c897441ae9b7" name="Default Changelist" comment="" />
+      <created>1621246586654</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1621246586654</updated>
+      <workItem from="1621246587999" duration="76000" />
+      <workItem from="1621246669919" duration="400000" />
+      <workItem from="1621250476369" duration="643000" />
+      <workItem from="1621251230582" duration="368000" />
+      <workItem from="1621251668682" duration="2946000" />
+      <workItem from="1621261543991" duration="1342000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="3298" y="377" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1621246970394">
+      <screen x="2560" y="0" width="2560" height="1440" />
+    </state>
+    <state x="3298" y="377" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1621246970394" />
+    <state width="700" height="608" key="DebuggerActiveHint" timestamp="1621254510982">
+      <screen x="0" y="27" width="2493" height="1413" />
+    </state>
+    <state width="700" height="608" key="DebuggerActiveHint/0.27.2493.1413@0.27.2493.1413" timestamp="1621254510982" />
+    <state x="1029" y="490" width="424" height="484" key="FileChooserDialogImpl" timestamp="1621251465574">
+      <screen x="0" y="27" width="2493" height="1413" />
+    </state>
+    <state x="1029" y="490" width="424" height="484" key="FileChooserDialogImpl/0.27.2493.1413@0.27.2493.1413" timestamp="1621251465574" />
+    <state width="2439" height="267" key="GridCell.Tab.0.bottom" timestamp="1621262628768">
+      <screen x="0" y="27" width="2493" height="1413" />
+    </state>
+    <state width="2439" height="267" key="GridCell.Tab.0.bottom/0.27.2493.1413@0.27.2493.1413" timestamp="1621262628768" />
+    <state width="2506" height="439" key="GridCell.Tab.0.bottom/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1621247069439" />
+    <state width="2439" height="267" key="GridCell.Tab.0.center" timestamp="1621262628767">
+      <screen x="0" y="27" width="2493" height="1413" />
+    </state>
+    <state width="2439" height="267" key="GridCell.Tab.0.center/0.27.2493.1413@0.27.2493.1413" timestamp="1621262628767" />
+    <state width="2506" height="439" key="GridCell.Tab.0.center/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1621247069439" />
+    <state width="2439" height="267" key="GridCell.Tab.0.left" timestamp="1621262628766">
+      <screen x="0" y="27" width="2493" height="1413" />
+    </state>
+    <state width="2439" height="267" key="GridCell.Tab.0.left/0.27.2493.1413@0.27.2493.1413" timestamp="1621262628766" />
+    <state width="2506" height="439" key="GridCell.Tab.0.left/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1621247069439" />
+    <state width="2439" height="267" key="GridCell.Tab.0.right" timestamp="1621262628767">
+      <screen x="0" y="27" width="2493" height="1413" />
+    </state>
+    <state width="2439" height="267" key="GridCell.Tab.0.right/0.27.2493.1413@0.27.2493.1413" timestamp="1621262628767" />
+    <state width="2506" height="439" key="GridCell.Tab.0.right/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1621247069439" />
+    <state width="2439" height="231" key="GridCell.Tab.1.bottom" timestamp="1621262308734">
+      <screen x="0" y="27" width="2493" height="1413" />
+    </state>
+    <state width="2439" height="231" key="GridCell.Tab.1.bottom/0.27.2493.1413@0.27.2493.1413" timestamp="1621262308734" />
+    <state width="2506" height="439" key="GridCell.Tab.1.bottom/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1621247069439" />
+    <state width="2439" height="231" key="GridCell.Tab.1.center" timestamp="1621262308734">
+      <screen x="0" y="27" width="2493" height="1413" />
+    </state>
+    <state width="2439" height="231" key="GridCell.Tab.1.center/0.27.2493.1413@0.27.2493.1413" timestamp="1621262308734" />
+    <state width="2506" height="439" key="GridCell.Tab.1.center/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1621247069439" />
+    <state width="2439" height="231" key="GridCell.Tab.1.left" timestamp="1621262308733">
+      <screen x="0" y="27" width="2493" height="1413" />
+    </state>
+    <state width="2439" height="231" key="GridCell.Tab.1.left/0.27.2493.1413@0.27.2493.1413" timestamp="1621262308733" />
+    <state width="2506" height="439" key="GridCell.Tab.1.left/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1621247069439" />
+    <state width="2439" height="231" key="GridCell.Tab.1.right" timestamp="1621262308734">
+      <screen x="0" y="27" width="2493" height="1413" />
+    </state>
+    <state width="2439" height="231" key="GridCell.Tab.1.right/0.27.2493.1413@0.27.2493.1413" timestamp="1621262308734" />
+    <state width="2506" height="439" key="GridCell.Tab.1.right/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1621247069439" />
+    <state x="3321" y="354" key="SettingsEditor" timestamp="1621246600427">
+      <screen x="2560" y="0" width="2560" height="1440" />
+    </state>
+    <state x="3321" y="354" key="SettingsEditor/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1621246600427" />
+    <state x="939" y="200" width="1007" height="844" key="find.popup" timestamp="1621262157026">
+      <screen x="0" y="27" width="2493" height="1413" />
+    </state>
+    <state x="939" y="200" width="1007" height="844" key="find.popup/0.27.2493.1413@0.27.2493.1413" timestamp="1621262157026" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pipeline/elegant/predict_single_end_date_fixed.py</url>
+          <line>22</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pipeline/elegant/env_predict_single.py</url>
+          <line>140</line>
+          <option name="timeStamp" value="23" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pipeline/elegant/env_predict_single.py</url>
+          <line>115</line>
+          <option name="timeStamp" value="24" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pipeline/elegant/env_predict_single.py</url>
+          <line>92</line>
+          <option name="timeStamp" value="26" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pipeline/elegant/env_predict_single.py</url>
+          <line>191</line>
+          <option name="timeStamp" value="27" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pipeline/elegant/daily_update_stockdb_batch.py</url>
+          <line>29</line>
+          <option name="timeStamp" value="30" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/a_share_pipeline$train_single.coverage" NAME="train_single Coverage Results" MODIFIED="1621251055077" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
+    <SUITE FILE_PATH="coverage/a_share_pipeline$daily_update_stockdb_batch.coverage" NAME="daily_update_stockdb_batch Coverage Results" MODIFIED="1621262254760" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
+    <SUITE FILE_PATH="coverage/a_share_pipeline$train_single_increment.coverage" NAME="train_single_increment Coverage Results" MODIFIED="1621262177300" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
+    <SUITE FILE_PATH="coverage/a_share_pipeline$config.coverage" NAME="config Coverage Results" MODIFIED="1621251296716" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
+    <SUITE FILE_PATH="coverage/a_share_pipeline$test1.coverage" NAME="test1 Coverage Results" MODIFIED="1621246982782" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
+    <SUITE FILE_PATH="coverage/a_share_pipeline$predict_single_both_date_fixed.coverage" NAME="predict_single_both_date_fixed Coverage Results" MODIFIED="1621262566433" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
+  </component>
+</project>

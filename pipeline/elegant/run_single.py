@@ -15,6 +15,7 @@ from pipeline.elegant import config
 class Arguments:
     def __init__(self, agent=None, env=None, gpu_id=None, if_on_policy=False):
         self.agent = agent  # Deep Reinforcement Learning algorithm
+
         self.cwd = None  # current work directory. cwd is None means set it automatically
         self.env = env  # the environment for training
         self.env_eval = None  # the environment for evaluating
@@ -70,7 +71,8 @@ class Arguments:
         '''set cwd automatically'''
         if self.cwd is None:
             agent_name = self.agent.__class__.__name__
-            self.cwd = f'./{agent_name}/{self.env.env_name}_{self.gpu_id}'
+            # self.cwd = f'./{agent_name}/{self.env.env_name}_{self.gpu_id}'
+            self.cwd = f'./{agent_name}/{self.env.env_name}'
 
         if if_main:
             print(f'| GPU id: {self.gpu_id}, cwd: {self.cwd}')
@@ -138,10 +140,10 @@ def train_and_evaluate(args):
 
     # ----
     # work_days，周期数，用于存储和提取训练好的模型
-    model_file_path = f'./AgentPPO/single_{config.WORK_DAY_FLAG}/actor.pth'
+    model_file_path = f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}/actor.pth'
     # 如果model存在，则加载
     if os.path.exists(model_file_path):
-        agent.save_load_model(f'./AgentPPO/single_{config.WORK_DAY_FLAG}', if_save=False)
+        agent.save_load_model(f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}', if_save=False)
     pass
     # ----
 
@@ -238,10 +240,10 @@ def mp_train(args, pipe1_eva, pipe1_exp_list):
 
     # ----
     # work_days，周期数，用于存储和提取训练好的模型
-    model_file_path = f'./AgentPPO/single_{config.WORK_DAY_FLAG}/actor.pth'
+    model_file_path = f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}/actor.pth'
     # 如果model存在，则加载
     if os.path.exists(model_file_path):
-        agent.save_load_model(f'./AgentPPO/single_{config.WORK_DAY_FLAG}', if_save=False)
+        agent.save_load_model(f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}', if_save=False)
     pass
     # ----
 
@@ -355,10 +357,10 @@ def mp_explore(args, pipe2_exp, worker_id):
 
     # ----
     # work_days，周期数，用于存储和提取训练好的模型
-    model_file_path = f'./AgentPPO/single_{config.WORK_DAY_FLAG}/actor.pth'
+    model_file_path = f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}/actor.pth'
     # 如果model存在，则加载
     if os.path.exists(model_file_path):
-        agent.save_load_model(f'./AgentPPO/single_{config.WORK_DAY_FLAG}', if_save=False)
+        agent.save_load_model(f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}', if_save=False)
     pass
     # ----
 

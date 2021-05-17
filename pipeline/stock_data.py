@@ -1098,7 +1098,7 @@ class StockData(object):
         pass
 
     @staticmethod
-    def load_batch_stock_from_sqlite(list_batch_code, date_begin='', date_end='', db_path=config.STOCK_DB_PATH):
+    def load_stock_raw_data_from_sqlite(list_batch_code, date_begin='', date_end='', db_path=config.STOCK_DB_PATH):
         """
         从sqlite数据库加载批量股票数据
         :param list_batch_code: 股票代码List
