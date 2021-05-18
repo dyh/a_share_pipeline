@@ -1,7 +1,5 @@
 import sys
 
-from pipeline.stock_data import StockData
-
 if 'pipeline' not in sys.path:
     sys.path.append('../../')
 

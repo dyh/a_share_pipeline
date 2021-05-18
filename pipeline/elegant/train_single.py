@@ -221,7 +221,7 @@ if __name__ == '__main__':
         args.if_allow_break = True
         # ----
 
-        args.rollout_num = 3  # the number of rollout workers (larger is not always faster)
+        args.rollout_num = 2  # the number of rollout workers (larger is not always faster)
 
         # train_and_evaluate(args)
         train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.

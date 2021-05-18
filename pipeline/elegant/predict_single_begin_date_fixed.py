@@ -38,7 +38,7 @@ if __name__ == '__main__':
     # 获取7个日期list
     list_end_vali_date = get_end_vali_date_list(begin_vali_date)
 
-    initial_capital = 10000
+    initial_capital = 20000
 
     # 循环 vali_date_list 训练7次
     for end_vali_item in list_end_vali_date:
@@ -86,6 +86,8 @@ if __name__ == '__main__':
             # max_stock = 100
             # initial_capital = 100000
             initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
+            initial_stocks[0] = 100.0
+
             buy_cost_pct = 0.0003
             sell_cost_pct = 0.0003
             start_date = config.START_DATE
