@@ -22,8 +22,9 @@ from pipeline.elegant.env_predict_single import StockTradingEnvPredict, FeatureE
 if __name__ == '__main__':
     # AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentDuelingDQN(), AgentModSAC(), AgentSharedSAC
     # 选择agent
-    config.AGENT_NAME = 'AgentPPO'
+    config.AGENT_NAME = 'AgentSAC'
     config.CWD = f'./{config.AGENT_NAME}/StockTradingEnv-v1'
+    break_step = int(2e5)
 
     if_on_policy = True
     if_use_gae = True
@@ -45,8 +46,8 @@ if __name__ == '__main__':
     # 获取7个日期list
     list_begin_vali_date = get_begin_vali_date_list(end_vali_date)
 
-    # 倒序
-    # list_begin_vali_date.reverse()
+    # 倒序，由大到小
+    list_begin_vali_date.reverse()
 
     # 只训练20周期的
     # begin_vali_date = get_next_day(end_vali_date, next_flag=-28)
@@ -139,6 +140,7 @@ if __name__ == '__main__':
         # args.agent.if_use_gae = True
         args.agent.if_use_gae = if_use_gae
         args.agent.lambda_entropy = 0.04
+        args.gpu_id = 0
 
         tech_indicator_list = [
             'macd', 'boll_ub', 'boll_lb', 'rsi_30', 'cci_30', 'dx_30',
@@ -191,7 +193,7 @@ if __name__ == '__main__':
         # ----
         # args.break_step = int(5e6)
         # args.break_step = int(2e6)
-        args.break_step = int(3e6)
+        args.break_step = break_step
         # ----
 
         args.net_dim = 2 ** 9

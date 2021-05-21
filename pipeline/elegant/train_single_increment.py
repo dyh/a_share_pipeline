@@ -142,6 +142,7 @@ if __name__ == '__main__':
                 args.agent = AgentSharedSAC()
                 pass
 
+            args.gpu_id = 0
             # args.agent.if_use_gae = True
             args.agent.if_use_gae = if_use_gae
             args.agent.lambda_entropy = 0.04

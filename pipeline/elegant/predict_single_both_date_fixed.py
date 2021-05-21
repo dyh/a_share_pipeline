@@ -1,5 +1,6 @@
 import sys
 
+
 if 'pipeline' not in sys.path:
     sys.path.append('../../')
 
@@ -9,12 +10,19 @@ if 'FinRL_Library_master' not in sys.path:
 if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
 
-from ElegantRL_master.elegantrl.agent import AgentPPO
+from pipeline.elegant.agent_single import *
 from pipeline.utils.datetime import get_datetime_from_date_str, get_begin_vali_date_list, get_end_vali_date_list
 from pipeline.elegant.env_predict_single import StockTradingEnvPredict, FeatureEngineer
 from pipeline.elegant.run_single import *
 
 if __name__ == '__main__':
+
+    config.AGENT_NAME = 'AgentSAC'
+    config.CWD = f'./{config.AGENT_NAME}/StockTradingEnv-v1'
+    break_step = int(1e5)
+
+    if_on_policy = True
+    if_use_gae = True
 
     # 预测的开始日期和结束日期，都固定
 
@@ -54,7 +62,7 @@ if __name__ == '__main__':
         config.WORK_DAY_FLAG = str(work_days)
 
         # weights 文件目录
-        model_folder_path = f'./AgentPPO/single_{config.WORK_DAY_FLAG}'
+        model_folder_path = f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}'
 
         # 如果存在目录则预测
         if os.path.exists(model_folder_path):
@@ -64,17 +72,40 @@ if __name__ == '__main__':
 
             print('\r\n')
             print('#' * 40)
+            print('config.AGENT_NAME', config.AGENT_NAME)
             print('# 预测周期', config.START_EVAL_DATE, '-', config.END_DATE)
-
             print('# 模型的 work_days', work_days)
             print('# model_folder_path', model_folder_path)
             print('# initial_capital', initial_capital)
             print('# max_stock', max_stock)
 
             # Agent
-            args = Arguments(if_on_policy=True)
-            args.agent = AgentPPO()  # AgentSAC(), AgentTD3(), AgentDDPG()
-            args.agent.if_use_gae = True
+            args = Arguments(if_on_policy=if_on_policy)
+
+            if config.AGENT_NAME == 'AgentPPO':
+                args.agent = AgentPPO()
+                pass
+            elif config.AGENT_NAME == 'AgentSAC':
+                args.agent = AgentSAC()
+                pass
+            elif config.AGENT_NAME == 'AgentTD3':
+                args.agent = AgentTD3()
+                pass
+            elif config.AGENT_NAME == 'AgentDDPG':
+                args.agent = AgentDDPG()
+                pass
+            elif config.AGENT_NAME == 'AgentModSAC':
+                args.agent = AgentModSAC()
+                pass
+            elif config.AGENT_NAME == 'AgentDuelingDQN':
+                args.agent = AgentDuelingDQN()
+                pass
+            elif config.AGENT_NAME == 'AgentSharedSAC':
+                args.agent = AgentSharedSAC()
+                pass
+
+            args.gpu_id = 0
+            args.agent.if_use_gae = if_use_gae
             args.agent.lambda_entropy = 0.04
 
             tech_indicator_list = [
@@ -128,7 +159,8 @@ if __name__ == '__main__':
             args.gamma = gamma
             # ----
             # args.break_step = int(5e6)
-            args.break_step = int(3e6)
+            # args.break_step = int(3e6)
+            args.break_step = break_step
             # ----
 
             args.net_dim = 2 ** 9
@@ -203,49 +235,52 @@ if __name__ == '__main__':
 
             # ----
             # work_days，周期数，用于存储和提取训练好的模型
-            model_file_path = f'./AgentPPO/single_{config.WORK_DAY_FLAG}/actor.pth'
+            model_file_path = f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}/actor.pth'
             # 如果model存在，则加载
             if os.path.exists(model_file_path):
-                agent.save_load_model(f'./AgentPPO/single_{config.WORK_DAY_FLAG}', if_save=False)
+                agent.save_load_model(f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}', if_save=False)
+
+                # if_on_policy = getattr(agent, 'if_on_policy', False)
+                #
+                # buffer = ReplayBuffer(max_len=max_memo + max_step, state_dim=state_dim,
+                #                       action_dim=1 if if_discrete else action_dim,
+                #                       if_on_policy=if_on_policy, if_per=if_per, if_gpu=True)
+                #
+                # evaluator = Evaluator(cwd=cwd, agent_id=gpu_id, device=agent.device, env=env_eval,
+                #                       eval_gap=eval_gap, eval_times1=eval_times1, eval_times2=eval_times2, )
+
+                '''prepare for training'''
+                agent.state = env.reset()
+
+                episode_return = 0.0  # sum of rewards in an episode
+                episode_step = 1
+                max_step = env.max_step
+                if_discrete = env.if_discrete
+
+                state = env.reset()
+
+                with torch.no_grad():  # speed up running
+
+                    # for episode_step in range(max_step):
+                    while True:
+                        s_tensor = torch.as_tensor((state,), device=agent.device)
+                        a_tensor = agent.act(s_tensor)
+                        if if_discrete:
+                            a_tensor = a_tensor.argmax(dim=1)
+                        action = a_tensor.detach().cpu().numpy()[
+                            0]  # not need detach(), because with torch.no_grad() outside
+                        state, reward, done, _ = env.step(action)
+                        episode_return += reward
+                        if done:
+                            break
+                        pass
+                    pass
+                    episode_return = getattr(env, 'episode_return', episode_return)
+                pass
+            else:
+                print('未找到模型文件', model_file_path)
             pass
             # ----
 
-            # if_on_policy = getattr(agent, 'if_on_policy', False)
-            #
-            # buffer = ReplayBuffer(max_len=max_memo + max_step, state_dim=state_dim,
-            #                       action_dim=1 if if_discrete else action_dim,
-            #                       if_on_policy=if_on_policy, if_per=if_per, if_gpu=True)
-            #
-            # evaluator = Evaluator(cwd=cwd, agent_id=gpu_id, device=agent.device, env=env_eval,
-            #                       eval_gap=eval_gap, eval_times1=eval_times1, eval_times2=eval_times2, )
-
-            '''prepare for training'''
-            agent.state = env.reset()
-
-            episode_return = 0.0  # sum of rewards in an episode
-            episode_step = 1
-            max_step = env.max_step
-            if_discrete = env.if_discrete
-
-            state = env.reset()
-
-            with torch.no_grad():  # speed up running
-
-                # for episode_step in range(max_step):
-                while True:
-                    s_tensor = torch.as_tensor((state,), device=agent.device)
-                    a_tensor = agent.act(s_tensor)
-                    if if_discrete:
-                        a_tensor = a_tensor.argmax(dim=1)
-                    action = a_tensor.detach().cpu().numpy()[
-                        0]  # not need detach(), because with torch.no_grad() outside
-                    state, reward, done, _ = env.step(action)
-                    episode_return += reward
-                    if done:
-                        break
-                    pass
-                pass
-                episode_return = getattr(env, 'episode_return', episode_return)
-            pass
         pass
     pass

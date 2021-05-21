@@ -74,6 +74,7 @@ if __name__ == '__main__':
             args.agent = AgentPPO()  # AgentSAC(), AgentTD3(), AgentDDPG()
             args.agent.if_use_gae = True
             args.agent.lambda_entropy = 0.04
+            args.gpu_id = 0
 
             tickers = config.BATCH_A_STOCK_CODE
 
