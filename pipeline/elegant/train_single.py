@@ -22,9 +22,10 @@ from pipeline.elegant.env_predict_single import StockTradingEnvPredict, FeatureE
 if __name__ == '__main__':
     # AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentDuelingDQN(), AgentModSAC(), AgentSharedSAC
     # 选择agent
-    config.AGENT_NAME = 'AgentSAC'
+    config.AGENT_NAME = 'AgentPPO'
     config.CWD = f'./{config.AGENT_NAME}/StockTradingEnv-v1'
-    break_step = int(2e5)
+    # break_step = int(2e5)
+    break_step = int(3e6)
 
     if_on_policy = True
     if_use_gae = True
@@ -37,6 +38,7 @@ if __name__ == '__main__':
     config.START_DATE = "2002-05-01"
     config.START_EVAL_DATE = "2021-03-12"
     config.END_DATE = "2021-04-15"
+    # config.END_DATE = "2021-05-23"
 
     # 4月16日向前，20,30,40,50,60,72,90周期
 
@@ -59,9 +61,10 @@ if __name__ == '__main__':
     # 单次 购买/卖出 最大股数
     max_stock = 1000
 
-    # 下载、更新 股票数据
-    # StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE, dbname=config.STOCK_DB_PATH)
-
+    # # 下载、更新 股票数据
+    # StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE,
+    #                                     dbname=config.STOCK_DB_PATH, adjustflag='2')
+    #
     # # do fe
     # # 缓存 raw 数据 为 df 。
     # raw_df = StockData.load_stock_raw_data_from_sqlite(list_batch_code=config.SINGLE_A_STOCK_CODE,

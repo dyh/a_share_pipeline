@@ -43,6 +43,9 @@ class StockTradingEnvPredict:
 
         # 输出的缓存
         self.output_text_cache = ''
+
+        # 输出的list
+        self.list_output = []
         pass
 
     def reset(self):
@@ -75,6 +78,9 @@ class StockTradingEnvPredict:
         # ----
         # 清空输出的缓存
         self.output_text_cache = ''
+
+        # 输出的list
+        self.list_output = []
         # ----
 
         return state
@@ -101,6 +107,8 @@ class StockTradingEnvPredict:
             if price[index] > 0:  # Sell only if current asset is > 0
                 sell_num_shares = min(self.stocks[index], -actions[index])
 
+                tic_temp = tic_ary_temp[index]
+
                 if sell_num_shares >= 100:
                     # 地板除，卖1手整
                     sell_num_shares = sell_num_shares // 100 * 100
@@ -110,21 +118,32 @@ class StockTradingEnvPredict:
 
                     # 如果真卖
                     if sell_num_shares > 0:
-                        tic_temp = tic_ary_temp[index]
                         # date_temp = date_ary_temp[index]
                         price_diff = str(round(price[index] - yesterday_price[index], 6))
                         self.output_text_cache += f'        {tic_temp}，' \
                                                   f'卖出：{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
                                                   f'涨跌：￥{price_diff} 元，' \
                                                   f'现金：{self.amount}，资产：{self.total_asset} \r\n'
+
+                        # tic, date, sell/buy, hold, 第x天
+                        list_item = (tic_temp, date_temp, sell_num_shares, self.stocks[index], self.day + 1)
+                        # 添加到输出list
+                        self.list_output.append(list_item)
                         pass
                     pass
+                else:
+                    # tic, date, sell/buy, hold, 第x天
+                    list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1)
+                    # 添加到输出list
+                    self.list_output.append(list_item)
             pass
         pass
 
         for index in np.where(actions > 0)[0]:  # buy_index:
             if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
                 buy_num_shares = min(self.amount // price[index], actions[index])
+
+                tic_temp = tic_ary_temp[index]
 
                 if buy_num_shares >= 100:
                     # 地板除，买1手整
@@ -135,14 +154,34 @@ class StockTradingEnvPredict:
 
                     # 如果真买
                     if buy_num_shares > 0:
-                        tic_temp = tic_ary_temp[index]
                         # date_temp = date_ary_temp[index]
                         price_diff = str(round(price[index] - yesterday_price[index], 6))
                         self.output_text_cache += f'        {tic_temp}，' \
                                                   f'买入：{buy_num_shares} 股, 持股数量：{self.stocks[index]}，' \
                                                   f'涨跌：￥{price_diff} 元，' \
                                                   f'现金：{self.amount}，资产：{self.total_asset} \r\n'
+
+                        # tic, date, sell/buy, hold, 第x天
+                        list_item = (tic_temp, date_temp, buy_num_shares, self.stocks[index], self.day + 1)
+                        # 添加到输出list
+                        self.list_output.append(list_item)
                     pass
+                else:
+                    # tic, date, sell/buy, hold, 第x天
+                    list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1)
+                    # 添加到输出list
+                    self.list_output.append(list_item)
+            pass
+        pass
+
+        for index in np.where(actions == 0)[0]:  # sell_index:
+            if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
+                # tic, date, sell/buy, hold, 第x天
+                tic_temp = tic_ary_temp[index]
+                list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1)
+                # 添加到输出list
+                self.list_output.append(list_item)
+                pass
             pass
         pass
 

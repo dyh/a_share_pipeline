@@ -10,14 +10,65 @@ if 'FinRL_Library_master' not in sys.path:
 if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
 
+from pipeline.stock_data import StockData
 from pipeline.elegant.agent_single import *
 from pipeline.utils.datetime import get_datetime_from_date_str, get_begin_vali_date_list, get_end_vali_date_list
 from pipeline.elegant.env_predict_single import StockTradingEnvPredict, FeatureEngineer
 from pipeline.elegant.run_single import *
 
-if __name__ == '__main__':
 
-    config.AGENT_NAME = 'AgentSAC'
+def update_stock_data(date_append_to_raw_df='', open_value=0.0, high_value=0.0,
+                      low_value=0.0, close_value=0.0, volume_value=0, tic=''):
+    # # 要预测的股票
+    # config.BATCH_A_STOCK_CODE = ['sh.600036', ]
+    #
+    # # 默认初始数据日期，因为距离预测开始和结束时间非常远，对预测无影响
+    # config.START_DATE = "2002-05-01"
+    #
+    # # 要预测的日期
+    # config.END_DATE = end_date
+
+    # 下载、更新 股票数据
+    # StockData.update_batch_stock_sqlite(list_stock_code=config.BATCH_A_STOCK_CODE, dbname=config.STOCK_DB_PATH)
+
+    # 缓存 raw 数据 为 df 。
+    raw_df = StockData.load_stock_raw_data_from_sqlite(list_batch_code=config.SINGLE_A_STOCK_CODE,
+                                                       date_begin=config.START_DATE, date_end=config.END_DATE,
+                                                       db_path=config.STOCK_DB_PATH)
+
+    # 查询raw_df里是否有 date 日期的数据，如果没有，则添加临时真实数据
+    if raw_df.loc[raw_df["date"] == date_append_to_raw_df].empty is True:
+        # 为 raw 添加今日行情数据
+        list1 = [(date_append_to_raw_df, open_value, high_value, low_value, close_value, volume_value, tic), ]
+        raw_df = StockData.append_rows_to_raw_df(raw_df, list1)
+        pass
+
+    # raw_df -> fe
+    fe_origin_table_name = "fe_origin"
+
+    # 创建fe表
+    StockData.create_fe_table(db_path=config.STOCK_DB_PATH, table_name=fe_origin_table_name)
+
+    fe = FeatureEngineer(use_turbulence=False,
+                         user_defined_feature=False,
+                         use_technical_indicator=True,
+                         tech_indicator_list=config.TECHNICAL_INDICATORS_LIST, )
+
+    fe_df = fe.preprocess_data(raw_df)
+
+    # 将 fe_df 存入数据库
+    # 增量fe
+    # StockData.save_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name, dbname=config.STOCK_DB_PATH)
+    StockData.clear_and_insert_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name)
+
+    pass
+
+
+if __name__ == '__main__':
+    config.OUTPUT_DATE = '2021-05-24'
+
+    # AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentDuelingDQN(), AgentModSAC(), AgentSharedSAC
+    config.AGENT_NAME = 'AgentPPO'
     config.CWD = f'./{config.AGENT_NAME}/StockTradingEnv-v1'
     break_step = int(1e5)
 
@@ -35,12 +86,17 @@ if __name__ == '__main__':
     config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
 
     config.START_DATE = "2002-05-01"
-    config.START_EVAL_DATE = "2021-04-16"
-    config.END_DATE = '2021-05-14'
-    # config.START_EVAL_DATE = "2021-03-12"
-    # config.END_DATE = "2021-04-15"
+    # config.START_EVAL_DATE = "2021-04-16"
+    # config.END_DATE = '2021-05-14'
+    config.START_EVAL_DATE = "2021-05-10"
+    config.END_DATE = "2021-06-04"
 
-    # 预测的截至日期
+    # 更新股票数据
+    update_stock_data(date_append_to_raw_df='2021-05-21', open_value=55.8699989318848, high_value=55.9000015258789,
+                      low_value=53.7999992370605, close_value=54.1100006103516,
+                      volume_value=51486455, tic='sh.600036')
+
+    # 预测的截止日期
     begin_vali_date = get_datetime_from_date_str(config.START_EVAL_DATE)
 
     # 获取7个日期list
@@ -275,6 +331,10 @@ if __name__ == '__main__':
                             break
                         pass
                     pass
+
+                    print('>>>> env.list_output', env.list_output)
+                    # 插入数据库
+
                     episode_return = getattr(env, 'episode_return', episode_return)
                 pass
             else:

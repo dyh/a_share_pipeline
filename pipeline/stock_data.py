@@ -1008,7 +1008,7 @@ class StockData(object):
         # return df_result
 
     @staticmethod
-    def update_batch_stock_sqlite(list_stock_code, dbname=config.STOCK_DB_PATH):
+    def update_batch_stock_sqlite(list_stock_code, dbname=config.STOCK_DB_PATH, adjustflag='2'):
         """
         更新 批量 股票数据，直到今天
         :param list_stock_code: 股票代码List
@@ -1049,9 +1049,11 @@ class StockData(object):
                 # 如果有同名的表，获取日期最大的一条记录
                 query_sql = f'SELECT date FROM "{stock_code}" ORDER BY date DESC LIMIT 1'
                 max_date = sqlite.fetchone(query_sql)
-                if len(max_date) > 0:
-                    # 开始更新数据的日期
-                    update_begin_date = max_date[0]
+                if max_date is not None:
+                    if len(max_date) > 0:
+                        # 开始更新数据的日期
+                        update_begin_date = max_date[0]
+                    pass
                 pass
             pass
 
@@ -1067,7 +1069,7 @@ class StockData(object):
                 # 下载股票数据，存入到sqlite
                 raw_df = stock_data.download_raw_data(code_list=[stock_code, ],
                                                       fields=fields_day, date_start=update_begin_date,
-                                                      date_end=update_end_date, frequency='d', adjustflag='3')
+                                                      date_end=update_end_date, frequency='d', adjustflag=adjustflag)
 
                 # 如果为空，则下一个循环
                 if raw_df is None or raw_df.empty is True:
@@ -1150,6 +1152,25 @@ class StockData(object):
         df['volume'] = df['volume'].astype(np.int)
 
         return df
+
+    @staticmethod
+    def append_rows_to_raw_df(raw_df, rows, columns=None):
+        # 添加rows到df
+        if columns is None:
+            columns = ['date', 'open', 'high', 'low', 'close', 'volume', 'tic']
+        pass
+
+        df_rows = pd.DataFrame(data=rows, columns=columns)
+        df_rows['open'] = df_rows['open'].astype(np.float32)
+        df_rows['high'] = df_rows['high'].astype(np.float32)
+        df_rows['low'] = df_rows['low'].astype(np.float32)
+        df_rows['close'] = df_rows['close'].astype(np.float32)
+        df_rows['volume'] = df_rows['volume'].astype(np.int)
+
+        # date,open,high,low,close,volume,tic
+        raw_df = raw_df.append(df_rows, ignore_index=True)
+        return raw_df
+        pass
 
 
 if __name__ == '__main__':

@@ -23,6 +23,8 @@ WORK_DAY_FLAG = ''
 START_DATE = ""
 START_EVAL_DATE = ""
 END_DATE = ""
+# 要输出的日期
+OUTPUT_DATE = ''
 
 DATA_SAVE_DIR = f"datasets"
 TRAINED_MODEL_DIR = f"trained_models"
