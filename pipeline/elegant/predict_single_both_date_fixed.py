@@ -1,6 +1,5 @@
 import sys
 
-
 if 'pipeline' not in sys.path:
     sys.path.append('../../')
 
@@ -10,6 +9,7 @@ if 'FinRL_Library_master' not in sys.path:
 if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
 
+from pipeline.utils.psqldb import Psqldb
 from pipeline.stock_data import StockData
 from pipeline.elegant.agent_single import *
 from pipeline.utils.datetime import get_datetime_from_date_str, get_begin_vali_date_list, get_end_vali_date_list
@@ -17,8 +17,8 @@ from pipeline.elegant.env_predict_single import StockTradingEnvPredict, FeatureE
 from pipeline.elegant.run_single import *
 
 
-def update_stock_data(date_append_to_raw_df='', open_value=0.0, high_value=0.0,
-                      low_value=0.0, close_value=0.0, volume_value=0, tic=''):
+def update_stock_data(date_append_to_raw_df='', tic_code=''):
+
     # # 要预测的股票
     # config.BATCH_A_STOCK_CODE = ['sh.600036', ]
     #
@@ -26,20 +26,24 @@ def update_stock_data(date_append_to_raw_df='', open_value=0.0, high_value=0.0,
     # config.START_DATE = "2002-05-01"
     #
     # # 要预测的日期
-    # config.END_DATE = end_date
+    # config.END_DATE = '2021-05-24'
 
     # 下载、更新 股票数据
-    # StockData.update_batch_stock_sqlite(list_stock_code=config.BATCH_A_STOCK_CODE, dbname=config.STOCK_DB_PATH)
+    StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE, dbname=config.STOCK_DB_PATH)
 
-    # 缓存 raw 数据 为 df 。
+    # 缓存 raw 数据 为 df
     raw_df = StockData.load_stock_raw_data_from_sqlite(list_batch_code=config.SINGLE_A_STOCK_CODE,
                                                        date_begin=config.START_DATE, date_end=config.END_DATE,
                                                        db_path=config.STOCK_DB_PATH)
 
+    open1, high1, low1, close1, volume1 = StockData.get_today_stock_data_from_sina_api(
+        tic_code=tic_code.replace('.', ''),
+        date=date_append_to_raw_df)
+
     # 查询raw_df里是否有 date 日期的数据，如果没有，则添加临时真实数据
     if raw_df.loc[raw_df["date"] == date_append_to_raw_df].empty is True:
         # 为 raw 添加今日行情数据
-        list1 = [(date_append_to_raw_df, open_value, high_value, low_value, close_value, volume_value, tic), ]
+        list1 = [(date_append_to_raw_df, open1, high1, low1, close1, volume1, tic_code), ]
         raw_df = StockData.append_rows_to_raw_df(raw_df, list1)
         pass
 
@@ -65,7 +69,15 @@ def update_stock_data(date_append_to_raw_df='', open_value=0.0, high_value=0.0,
 
 
 if __name__ == '__main__':
-    config.OUTPUT_DATE = '2021-05-24'
+
+    # psql对象
+    psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
+                         password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
+
+    config.OUTPUT_DATE = '2021-05-25'
+
+    # 前10后10，前10后x，前x后10
+    config.PREDICT_PERIOD = '前10后10'
 
     # AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentDuelingDQN(), AgentModSAC(), AgentSharedSAC
     config.AGENT_NAME = 'AgentPPO'
@@ -91,10 +103,11 @@ if __name__ == '__main__':
     config.START_EVAL_DATE = "2021-05-10"
     config.END_DATE = "2021-06-04"
 
+    # 创建预测结果表
+    # StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
+
     # 更新股票数据
-    update_stock_data(date_append_to_raw_df='2021-05-21', open_value=55.8699989318848, high_value=55.9000015258789,
-                      low_value=53.7999992370605, close_value=54.1100006103516,
-                      volume_value=51486455, tic='sh.600036')
+    update_stock_data(date_append_to_raw_df=config.OUTPUT_DATE, tic_code=config.SINGLE_A_STOCK_CODE[0])
 
     # 预测的截止日期
     begin_vali_date = get_datetime_from_date_str(config.START_EVAL_DATE)
@@ -106,19 +119,18 @@ if __name__ == '__main__':
 
     # 循环 vali_date_list 训练7次
     for end_vali_item in list_end_vali_date:
-
         # torch.cuda.empty_cache()
 
         # 从100到1k
         max_stock = 1000
 
-        work_days, _ = end_vali_item
+        vali_days, _ = end_vali_item
 
         # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
-        config.WORK_DAY_FLAG = str(work_days)
+        config.VALI_DAYS_FLAG = str(vali_days)
 
         # weights 文件目录
-        model_folder_path = f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}'
+        model_folder_path = f'./{config.AGENT_NAME}/single_{config.VALI_DAYS_FLAG}'
 
         # 如果存在目录则预测
         if os.path.exists(model_folder_path):
@@ -130,7 +142,7 @@ if __name__ == '__main__':
             print('#' * 40)
             print('config.AGENT_NAME', config.AGENT_NAME)
             print('# 预测周期', config.START_EVAL_DATE, '-', config.END_DATE)
-            print('# 模型的 work_days', work_days)
+            print('# 模型的 work_days', vali_days)
             print('# model_folder_path', model_folder_path)
             print('# initial_capital', initial_capital)
             print('# max_stock', max_stock)
@@ -291,10 +303,10 @@ if __name__ == '__main__':
 
             # ----
             # work_days，周期数，用于存储和提取训练好的模型
-            model_file_path = f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}/actor.pth'
+            model_file_path = f'./{config.AGENT_NAME}/single_{config.VALI_DAYS_FLAG}/actor.pth'
             # 如果model存在，则加载
             if os.path.exists(model_file_path):
-                agent.save_load_model(f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}', if_save=False)
+                agent.save_load_model(f'./{config.AGENT_NAME}/single_{config.VALI_DAYS_FLAG}', if_save=False)
 
                 # if_on_policy = getattr(agent, 'if_on_policy', False)
                 #
@@ -332,10 +344,27 @@ if __name__ == '__main__':
                         pass
                     pass
 
-                    print('>>>> env.list_output', env.list_output)
-                    # 插入数据库
+                    print('>>>> env.list_output', env.list_buy_or_sell_output)
 
-                    episode_return = getattr(env, 'episode_return', episode_return)
+                    # 插入数据库
+                    # tic, date, -sell/+buy, hold, 第x天 = env.list_buy_or_sell_output
+                    # agent，vali_days，pred_period = config.AGENT_NAME, config.VALI_DAYS_FLAG, config.PREDICT_PERIOD
+
+                    # 获取要预测的日期，保存到数据库中
+                    for item in env.list_buy_or_sell_output:
+                        tic, date, action, hold, day = item
+                        if str(date) == config.OUTPUT_DATE:
+                            # 找到要预测的那一天，存储到psql
+                            StockData.push_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
+                                                                  vali_period_value=config.VALI_DAYS_FLAG,
+                                                                  pred_period_name=config.PREDICT_PERIOD,
+                                                                  tic=tic, date=date, action=action, hold=hold, day=day)
+                            pass
+                        pass
+                    pass
+
+                    # episode_return = getattr(env, 'episode_return', episode_return)
+
                 pass
             else:
                 print('未找到模型文件', model_file_path)
@@ -343,4 +372,7 @@ if __name__ == '__main__':
             # ----
 
         pass
+
+    psql_object.close()
+
     pass

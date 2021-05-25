@@ -1,5 +1,7 @@
 import sys
 
+from pipeline.utils.psqldb import Psqldb
+
 sys.path.append('../FinRL_Library_master')
 
 from pipeline.sqlite import SQLite
@@ -12,6 +14,8 @@ import os
 from pipeline.elegant import config
 
 import numpy as np
+
+import requests
 
 # 5分钟K线的时间点
 list_time_point_5minutes = ['09:35:00',
@@ -1171,6 +1175,66 @@ class StockData(object):
         raw_df = raw_df.append(df_rows, ignore_index=True)
         return raw_df
         pass
+
+    @staticmethod
+    def push_predict_result_to_psql(psql, agent, vali_period_value, pred_period_name, tic, date, action, hold, day):
+
+        # list_buy_or_sell_output
+        # tic, date, agent, vali_period_value, pred_period_name, sell_buy, hold
+        # tic, date, sell/buy, hold, 第x天
+
+        sql_cmd = f'INSERT INTO "public"."{tic}" ("date", "agent", "vali_period_value", ' \
+                  f'"pred_period_name", "action", "hold", "day") VALUES (%s,%s,%s,%s,%s,%s,%s)'
+
+        sql_values = (str(date), agent, vali_period_value, pred_period_name, str(action), str(hold), str(day))
+
+        psql.execute_non_query(sql=sql_cmd, values=sql_values)
+        psql.commit()
+        pass
+
+    pass
+
+    @staticmethod
+    def create_predict_result_table_psql(tic=''):
+        psql = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
+                      password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
+
+        sql_cmd = f'CREATE TABLE "public"."{tic}" ' \
+                  f'("id" serial8, "date" date NOT NULL, "agent" text NOT NULL, ' \
+                  f'"vali_period_value" int4 NOT NULL, "pred_period_name" text NOT NULL, ' \
+                  f'"action" decimal NOT NULL, "hold" decimal NOT NULL, "day" int4 NOT NULL, ' \
+                  f'PRIMARY KEY ("id"));'
+
+        # sql_value = ''
+        psql.execute_non_query(sql=sql_cmd)
+        psql.commit()
+        psql.close()
+        pass
+
+    @staticmethod
+    def get_today_stock_data_from_sina_api(tic_code='', date=''):
+        url = f'http://hq.sinajs.cn/list={tic_code}'
+        res = requests.get(url)
+        list1 = res.text.split('"')
+
+        if len(list1) == 3:
+            text1 = list1[1]
+            list2 = text1.split(',')
+
+            if len(list2) == 34:
+                if list2[30] == date:
+                    open1 = list2[1]
+                    high1 = list2[4]
+                    low1 = list2[5]
+                    close1 = list2[6]
+                    volume1 = list2[8]
+                    return open1, high1, low1, close1, volume1
+                pass
+            pass
+        pass
+
+        return None, None, None, None, None
+    pass
 
 
 if __name__ == '__main__':

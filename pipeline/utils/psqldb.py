@@ -4,8 +4,6 @@ import time
 import logging
 import psycopg2
 
-# from libs.cli_output import console
-
 
 # 判断是否数据库超时或者数据库连接关闭
 def is_timeout_or_closed_error(str_exception):

@@ -45,7 +45,7 @@ class StockTradingEnvPredict:
         self.output_text_cache = ''
 
         # 输出的list
-        self.list_output = []
+        self.list_buy_or_sell_output = []
         pass
 
     def reset(self):
@@ -80,7 +80,8 @@ class StockTradingEnvPredict:
         self.output_text_cache = ''
 
         # 输出的list
-        self.list_output = []
+        self.list_buy_or_sell_output.clear()
+        self.list_buy_or_sell_output = []
         # ----
 
         return state
@@ -126,16 +127,16 @@ class StockTradingEnvPredict:
                                                   f'现金：{self.amount}，资产：{self.total_asset} \r\n'
 
                         # tic, date, sell/buy, hold, 第x天
-                        list_item = (tic_temp, date_temp, sell_num_shares, self.stocks[index], self.day + 1)
+                        list_item = (tic_temp, date_temp, -1 * sell_num_shares, self.stocks[index], self.day + 1)
                         # 添加到输出list
-                        self.list_output.append(list_item)
+                        self.list_buy_or_sell_output.append(list_item)
                         pass
                     pass
                 else:
                     # tic, date, sell/buy, hold, 第x天
                     list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1)
                     # 添加到输出list
-                    self.list_output.append(list_item)
+                    self.list_buy_or_sell_output.append(list_item)
             pass
         pass
 
@@ -164,13 +165,13 @@ class StockTradingEnvPredict:
                         # tic, date, sell/buy, hold, 第x天
                         list_item = (tic_temp, date_temp, buy_num_shares, self.stocks[index], self.day + 1)
                         # 添加到输出list
-                        self.list_output.append(list_item)
+                        self.list_buy_or_sell_output.append(list_item)
                     pass
                 else:
                     # tic, date, sell/buy, hold, 第x天
                     list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1)
                     # 添加到输出list
-                    self.list_output.append(list_item)
+                    self.list_buy_or_sell_output.append(list_item)
             pass
         pass
 
@@ -180,7 +181,7 @@ class StockTradingEnvPredict:
                 tic_temp = tic_ary_temp[index]
                 list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1)
                 # 添加到输出list
-                self.list_output.append(list_item)
+                self.list_buy_or_sell_output.append(list_item)
                 pass
             pass
         pass

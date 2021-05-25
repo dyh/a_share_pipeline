@@ -10,6 +10,8 @@ CWD = ''
 
 AGENT_NAME = ''
 
+PREDICT_PERIOD = ''
+
 # 单支股票代码List
 SINGLE_A_STOCK_CODE = []
 
@@ -17,7 +19,8 @@ SINGLE_A_STOCK_CODE = []
 IF_SHOW_PREDICT_INFO = True
 
 # 工作日标记，用于加载对应的weights
-WORK_DAY_FLAG = ''
+# weights的vali周期
+VALI_DAYS_FLAG = ''
 
 ## time_fmt = '%Y-%m-%d'
 START_DATE = ""
@@ -35,8 +38,17 @@ LOGGER_DIR = f"logger_log"
 # batch股票数据库地址
 STOCK_DB_PATH = "./" + DATA_SAVE_DIR + '/stock.db'
 
+# ----
+# PostgreSQL
+PSQL_HOST = "192.168.192.1"
+PSQL_PORT = "5432"
+PSQL_DATABASE = "a_share"
+PSQL_USER = "dyh"
+PSQL_PASSWORD = "9898BdlLsdfsHsbgp"
+# ----
+
 # 批量训练股票代码List
-BATCH_A_STOCK_CODE = []
+# BATCH_A_STOCK_CODE = []
 
 HS300_CODE_LIST = []
 

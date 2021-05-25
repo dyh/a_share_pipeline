@@ -54,10 +54,10 @@ if __name__ == '__main__':
         work_days, end_eval_date = end_vali_item
 
         # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
-        config.WORK_DAY_FLAG = str(work_days)
+        config.VALI_DAYS_FLAG = str(work_days)
 
         # weights 文件目录
-        model_folder_path = f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}'
+        model_folder_path = f'./{config.AGENT_NAME}/single_{config.VALI_DAYS_FLAG}'
 
         # 如果存在目录则预测
         if os.path.exists(model_folder_path):
@@ -230,10 +230,10 @@ if __name__ == '__main__':
 
             # ----
             # work_days，周期数，用于存储和提取训练好的模型
-            model_file_path = f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}/actor.pth'
+            model_file_path = f'./{config.AGENT_NAME}/single_{config.VALI_DAYS_FLAG}/actor.pth'
             # 如果model存在，则加载
             if os.path.exists(model_file_path):
-                agent.save_load_model(f'./{config.AGENT_NAME}/single_{config.WORK_DAY_FLAG}', if_save=False)
+                agent.save_load_model(f'./{config.AGENT_NAME}/single_{config.VALI_DAYS_FLAG}', if_save=False)
                 # ----
 
                 # if_on_policy = getattr(agent, 'if_on_policy', False)

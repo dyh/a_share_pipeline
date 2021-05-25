@@ -138,10 +138,10 @@ def train_and_evaluate(args):
 
     # ----
     # work_days，周期数，用于存储和提取训练好的模型
-    model_file_path = f'./AgentPPO/hs300_{config.WORK_DAY_FLAG}/actor.pth'
+    model_file_path = f'./AgentPPO/hs300_{config.VALI_DAYS_FLAG}/actor.pth'
     # 如果model存在，则加载
     if os.path.exists(model_file_path):
-        agent.save_load_model(f'./AgentPPO/hs300_{config.WORK_DAY_FLAG}', if_save=False)
+        agent.save_load_model(f'./AgentPPO/hs300_{config.VALI_DAYS_FLAG}', if_save=False)
     pass
     # ----
 
@@ -238,10 +238,10 @@ def mp_train(args, pipe1_eva, pipe1_exp_list):
 
     # ----
     # work_days，周期数，用于存储和提取训练好的模型
-    model_file_path = f'./AgentPPO/hs300_{config.WORK_DAY_FLAG}/actor.pth'
+    model_file_path = f'./AgentPPO/hs300_{config.VALI_DAYS_FLAG}/actor.pth'
     # 如果model存在，则加载
     if os.path.exists(model_file_path):
-        agent.save_load_model(f'./AgentPPO/hs300_{config.WORK_DAY_FLAG}', if_save=False)
+        agent.save_load_model(f'./AgentPPO/hs300_{config.VALI_DAYS_FLAG}', if_save=False)
     pass
     # ----
 
@@ -355,10 +355,10 @@ def mp_explore(args, pipe2_exp, worker_id):
 
     # ----
     # work_days，周期数，用于存储和提取训练好的模型
-    model_file_path = f'./AgentPPO/hs300_{config.WORK_DAY_FLAG}/actor.pth'
+    model_file_path = f'./AgentPPO/hs300_{config.VALI_DAYS_FLAG}/actor.pth'
     # 如果model存在，则加载
     if os.path.exists(model_file_path):
-        agent.save_load_model(f'./AgentPPO/hs300_{config.WORK_DAY_FLAG}', if_save=False)
+        agent.save_load_model(f'./AgentPPO/hs300_{config.VALI_DAYS_FLAG}', if_save=False)
     pass
     # ----
 

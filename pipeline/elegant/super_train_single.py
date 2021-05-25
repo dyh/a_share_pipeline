@@ -110,9 +110,9 @@ if __name__ == '__main__':
             work_days, begin_date = begin_vali_item
 
             # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
-            config.WORK_DAY_FLAG = str(work_days)
+            config.VALI_DAYS_FLAG = str(work_days)
 
-            model_folder_path = f'./AgentPPO/single_{config.WORK_DAY_FLAG}'
+            model_folder_path = f'./AgentPPO/single_{config.VALI_DAYS_FLAG}'
 
             if not os.path.exists(model_folder_path):
                 os.makedirs(model_folder_path)
@@ -213,13 +213,13 @@ if __name__ == '__main__':
             train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.
 
             # 保存训练后的模型
-            model_file_path = f'./AgentPPO/single_{config.WORK_DAY_FLAG}/actor.pth'
+            model_file_path = f'./AgentPPO/single_{config.VALI_DAYS_FLAG}/actor.pth'
             shutil.copyfile('AgentPPO/StockTradingEnv-v1_0/actor.pth', model_file_path)
 
             # 保存训练曲线图
             # plot_learning_curve.jpg
             timepoint_temp = time_point()
-            plot_learning_curve_file_path = f'./AgentPPO/single_{config.WORK_DAY_FLAG}/plot_{timepoint_temp}.jpg'
+            plot_learning_curve_file_path = f'./AgentPPO/single_{config.VALI_DAYS_FLAG}/plot_{timepoint_temp}.jpg'
             shutil.copyfile('AgentPPO/StockTradingEnv-v1_0/plot_learning_curve.jpg', plot_learning_curve_file_path)
 
             # sleep 60 秒
