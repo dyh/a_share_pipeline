@@ -133,6 +133,9 @@ class StockTradingEnvPredict:
                         pass
                     pass
                 else:
+                    # 未达到1手，不卖
+                    sell_num_shares = 0
+
                     # tic, date, sell/buy, hold, 第x天
                     list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1)
                     # 添加到输出list
@@ -172,10 +175,14 @@ class StockTradingEnvPredict:
 
                         # tic, date, sell/buy, hold, 第x天
                         list_item = (tic_temp, date_temp, buy_num_shares, self.stocks[index], self.day + 1)
+
                         # 添加到输出list
                         self.list_buy_or_sell_output.append(list_item)
                     pass
                 else:
+                    # 未达到1手，不买
+                    buy_num_shares = 0
+
                     # tic, date, sell/buy, hold, 第x天
                     list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1)
                     # 添加到输出list

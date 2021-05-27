@@ -1017,6 +1017,7 @@ class StockData(object):
         更新 批量 股票数据，直到今天
         :param list_stock_code: 股票代码List
         :param dbname: 数据库文件地址
+        :param adjustflag: 2前复权
         """
         # 连接数据库
         sqlite = SQLite(dbname=dbname)
@@ -1220,7 +1221,7 @@ class StockData(object):
         pass
 
     @staticmethod
-    def get_today_stock_data_from_sina_api(tic_code='', date=''):
+    def get_today_stock_data_from_sina_api(tic_code=''):
         url = f'http://hq.sinajs.cn/list={tic_code}'
         res = requests.get(url)
         list1 = res.text.split('"')
@@ -1230,14 +1231,14 @@ class StockData(object):
             list2 = text1.split(',')
 
             if len(list2) == 34:
-                if list2[30] == date:
-                    open1 = list2[1]
-                    high1 = list2[4]
-                    low1 = list2[5]
-                    close1 = list2[6]
-                    volume1 = list2[8]
-                    return open1, high1, low1, close1, volume1
-                pass
+                # if list2[30] == date:
+                open1 = list2[1]
+                high1 = list2[4]
+                low1 = list2[5]
+                close1 = list2[6]
+                volume1 = list2[8]
+                date1 = list2[30]
+                return date1, open1, high1, low1, close1, volume1
             pass
         pass
 

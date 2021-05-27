@@ -20,21 +20,21 @@ from pipeline.elegant.run_single import *
 def update_stock_data(date_append_to_raw_df='', tic_code=''):
 
     # 下载、更新 股票数据
-    StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE, dbname=config.STOCK_DB_PATH)
+    StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE,
+                                        dbname=config.STOCK_DB_PATH, adjustflag='2')
 
     # 缓存 raw 数据 为 df
     raw_df = StockData.load_stock_raw_data_from_sqlite(list_batch_code=config.SINGLE_A_STOCK_CODE,
                                                        date_begin=config.START_DATE, date_end=config.END_DATE,
                                                        db_path=config.STOCK_DB_PATH)
 
-    open1, high1, low1, close1, volume1 = StockData.get_today_stock_data_from_sina_api(
-        tic_code=tic_code.replace('.', ''),
-        date=date_append_to_raw_df)
+    date1, open1, high1, low1, close1, volume1 = StockData.get_today_stock_data_from_sina_api(
+        tic_code=tic_code.replace('.', ''))
 
     # 查询raw_df里是否有 date 日期的数据，如果没有，则添加临时真实数据
-    if raw_df.loc[raw_df["date"] == date_append_to_raw_df].empty is True:
+    if raw_df.loc[raw_df["date"] == date1].empty is True:
         # 为 raw 添加今日行情数据
-        list1 = [(date_append_to_raw_df, open1, high1, low1, close1, volume1, tic_code), ]
+        list1 = [(date1, open1, high1, low1, close1, volume1, tic_code), ]
         raw_df = StockData.append_rows_to_raw_df(raw_df, list1)
         pass
 
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                          password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-    config.OUTPUT_DATE = '2021-05-27'
+    config.OUTPUT_DATE = '2021-05-28'
 
     # 前10后10，前10后x，前x后10
     config.PREDICT_PERIOD = '前10后10'
