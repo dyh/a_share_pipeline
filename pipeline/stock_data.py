@@ -1064,6 +1064,7 @@ class StockData(object):
             # 由字符串获得日期
             date_temp = get_datetime_from_date_str(update_begin_date)
             # 获取下一个日期（不区分工作日、休息日）
+            # 开始更新的日期，比数据库中现有最大日期+1，避免插入重复数据
             date_temp = get_next_day(datetime_date=date_temp, next_flag=+1)
             # 转成字符串格式
             update_begin_date = str(date_temp)
@@ -1177,7 +1178,13 @@ class StockData(object):
         pass
 
     @staticmethod
-    def push_predict_result_to_psql(psql, agent, vali_period_value, pred_period_name, tic, date, action, hold, day):
+    def update_predict_result_to_psql(psql, agent, vali_period_value, pred_period_name, tic, date, action, hold, day):
+
+        # 为避免重复数据，删除date相同、agent相同、pred_period_name相同的历史数据
+        sql_cmd = f'DELETE FROM "public"."{tic}" WHERE "date"=%s AND "agent"=%s AND "vali_period_value"=%s AND "pred_period_name"=%s'
+        sql_values = (str(date), agent, vali_period_value, pred_period_name)
+        psql.execute_non_query(sql=sql_cmd, values=sql_values)
+        psql.commit()
 
         # list_buy_or_sell_output
         # tic, date, agent, vali_period_value, pred_period_name, sell_buy, hold
@@ -1198,16 +1205,17 @@ class StockData(object):
     def create_predict_result_table_psql(tic=''):
         psql = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                       password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
-
-        sql_cmd = f'CREATE TABLE "public"."{tic}" ' \
-                  f'("id" serial8, "date" date NOT NULL, "agent" text NOT NULL, ' \
-                  f'"vali_period_value" int4 NOT NULL, "pred_period_name" text NOT NULL, ' \
-                  f'"action" decimal NOT NULL, "hold" decimal NOT NULL, "day" int4 NOT NULL, ' \
-                  f'PRIMARY KEY ("id"));'
-
-        # sql_value = ''
-        psql.execute_non_query(sql=sql_cmd)
-        psql.commit()
+        # 如果不存在此表
+        if psql.table_exists(table_name=tic) is None:
+            sql_cmd = f'CREATE TABLE "public"."{tic}" ' \
+                      f'("id" serial8, "date" date NOT NULL, "agent" text NOT NULL, ' \
+                      f'"vali_period_value" int4 NOT NULL, "pred_period_name" text NOT NULL, ' \
+                      f'"action" decimal NOT NULL, "hold" decimal NOT NULL, "day" int4 NOT NULL, ' \
+                      f'"create_time" timestamp(6) DEFAULT CURRENT_TIMESTAMP , ' \
+                      f'PRIMARY KEY ("id"));'
+            psql.execute_non_query(sql=sql_cmd)
+            psql.commit()
+            pass
         psql.close()
         pass
 

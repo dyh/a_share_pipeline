@@ -120,11 +120,11 @@ class StockTradingEnvPredict:
                     # 如果真卖
                     if sell_num_shares > 0:
                         # date_temp = date_ary_temp[index]
-                        price_diff = str(round(price[index] - yesterday_price[index], 6))
-                        self.output_text_cache += f'        {tic_temp}，' \
-                                                  f'卖出：{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
-                                                  f'涨跌：￥{price_diff} 元，' \
-                                                  f'现金：{self.amount}，资产：{self.total_asset} \r\n'
+                        # price_diff = str(round(price[index] - yesterday_price[index], 6))
+                        # self.output_text_cache += f'        {tic_temp}，' \
+                        #                           f'卖出：{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
+                        #                           f'涨跌：￥{price_diff} 元，' \
+                        #                           f'现金：{self.amount}，资产：{self.total_asset} \r\n'
 
                         # tic, date, sell/buy, hold, 第x天
                         list_item = (tic_temp, date_temp, -1 * sell_num_shares, self.stocks[index], self.day + 1)
@@ -137,6 +137,14 @@ class StockTradingEnvPredict:
                     list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1)
                     # 添加到输出list
                     self.list_buy_or_sell_output.append(list_item)
+                    pass
+                pass
+
+                price_diff = str(round(price[index] - yesterday_price[index], 6))
+                self.output_text_cache += f'        > {tic_temp}，' \
+                                          f'卖出：{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
+                                          f'涨跌：￥{price_diff} 元，' \
+                                          f'现金：{self.amount}，资产：{self.total_asset} \r\n'
             pass
         pass
 
@@ -156,11 +164,11 @@ class StockTradingEnvPredict:
                     # 如果真买
                     if buy_num_shares > 0:
                         # date_temp = date_ary_temp[index]
-                        price_diff = str(round(price[index] - yesterday_price[index], 6))
-                        self.output_text_cache += f'        {tic_temp}，' \
-                                                  f'买入：{buy_num_shares} 股, 持股数量：{self.stocks[index]}，' \
-                                                  f'涨跌：￥{price_diff} 元，' \
-                                                  f'现金：{self.amount}，资产：{self.total_asset} \r\n'
+                        # price_diff = str(round(price[index] - yesterday_price[index], 6))
+                        # self.output_text_cache += f'        {tic_temp}，' \
+                        #                           f'买入：{buy_num_shares} 股, 持股数量：{self.stocks[index]}，' \
+                        #                           f'涨跌：￥{price_diff} 元，' \
+                        #                           f'现金：{self.amount}，资产：{self.total_asset} \r\n'
 
                         # tic, date, sell/buy, hold, 第x天
                         list_item = (tic_temp, date_temp, buy_num_shares, self.stocks[index], self.day + 1)
@@ -172,6 +180,15 @@ class StockTradingEnvPredict:
                     list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1)
                     # 添加到输出list
                     self.list_buy_or_sell_output.append(list_item)
+                    pass
+                pass
+
+                price_diff = str(round(price[index] - yesterday_price[index], 6))
+                self.output_text_cache += f'        > {tic_temp}，' \
+                                          f'买入：{buy_num_shares} 股, 持股数量：{self.stocks[index]}，' \
+                                          f'涨跌：￥{price_diff} 元，' \
+                                          f'现金：{self.amount}，资产：{self.total_asset} \r\n'
+
             pass
         pass
 
@@ -196,12 +213,12 @@ class StockTradingEnvPredict:
         # reward = (total_asset - self.total_asset) * 2 ** -7  # reward scaling
         self.total_asset = total_asset
 
-        for index in range(len(self.stocks)):
-            tic_temp = tic_ary_temp[index]
-            # print(tic_temp, '持股数量', self.stocks)
-            self.output_text_cache += f'         > {tic_temp}, 持股数量, {self.stocks[index]} \r\n'
-
-        pass
+        # for index in range(len(self.stocks)):
+        #     tic_temp = tic_ary_temp[index]
+        #     # print(tic_temp, '持股数量', self.stocks)
+        #     self.output_text_cache += f'         > {tic_temp}, 持股数量, {self.stocks[index]} \r\n'
+        #
+        # pass
 
         self.gamma_reward = self.gamma_reward * self.gamma + reward
         done = self.day == self.max_step

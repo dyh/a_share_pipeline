@@ -162,20 +162,25 @@ class Psqldb:
                     break
         return result
 
-    # # 查询，返回一条结果
-    # def table_exists(self, table_name):
-    #     try:
-    #         cursor = self.conn.cursor()
-    #         cursor.execute("select name from sqlite_master where type = 'table' and name = '{}'".format(table_name))
-    #         value = cursor.fetchone()
-    #         return value
-    #     except psycopg2.OperationalError as e:
-    #         logging.exception(e)
-    #         pass
-    #     except Exception as e:
-    #         logging.exception(e)
-    #     finally:
-    #         pass
+    # 查询，返回一条结果
+    def table_exists(self, table_name):
+        result = None
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(f"select count(*) from pg_class where relname = \'{table_name}\';")
+            value = cursor.fetchone()[0]
+            if value == 0:
+                result = None
+            else:
+                result = value
+        except psycopg2.OperationalError as e:
+            logging.exception(e)
+            pass
+        except Exception as e:
+            logging.exception(e)
+        finally:
+            return result
+            pass
     #
     # # 删除一个表
     # def drop_table(self, table_name):

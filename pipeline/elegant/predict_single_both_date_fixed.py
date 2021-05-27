@@ -19,15 +19,6 @@ from pipeline.elegant.run_single import *
 
 def update_stock_data(date_append_to_raw_df='', tic_code=''):
 
-    # # 要预测的股票
-    # config.BATCH_A_STOCK_CODE = ['sh.600036', ]
-    #
-    # # 默认初始数据日期，因为距离预测开始和结束时间非常远，对预测无影响
-    # config.START_DATE = "2002-05-01"
-    #
-    # # 要预测的日期
-    # config.END_DATE = '2021-05-24'
-
     # 下载、更新 股票数据
     StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE, dbname=config.STOCK_DB_PATH)
 
@@ -74,7 +65,7 @@ if __name__ == '__main__':
     psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                          password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-    config.OUTPUT_DATE = '2021-05-25'
+    config.OUTPUT_DATE = '2021-05-27'
 
     # 前10后10，前10后x，前x后10
     config.PREDICT_PERIOD = '前10后10'
@@ -104,7 +95,7 @@ if __name__ == '__main__':
     config.END_DATE = "2021-06-04"
 
     # 创建预测结果表
-    # StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
+    StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
 
     # 更新股票数据
     update_stock_data(date_append_to_raw_df=config.OUTPUT_DATE, tic_code=config.SINGLE_A_STOCK_CODE[0])
@@ -355,10 +346,10 @@ if __name__ == '__main__':
                         tic, date, action, hold, day = item
                         if str(date) == config.OUTPUT_DATE:
                             # 找到要预测的那一天，存储到psql
-                            StockData.push_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
-                                                                  vali_period_value=config.VALI_DAYS_FLAG,
-                                                                  pred_period_name=config.PREDICT_PERIOD,
-                                                                  tic=tic, date=date, action=action, hold=hold, day=day)
+                            StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
+                                                                    vali_period_value=config.VALI_DAYS_FLAG,
+                                                                    pred_period_name=config.PREDICT_PERIOD,
+                                                                    tic=tic, date=date, action=action, hold=hold, day=day)
                             pass
                         pass
                     pass
