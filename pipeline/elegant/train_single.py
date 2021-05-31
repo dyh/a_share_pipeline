@@ -29,10 +29,10 @@ if __name__ == '__main__':
 
     # AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentDuelingDQN(), AgentModSAC(), AgentSharedSAC
     # 选择agent
-    config.AGENT_NAME = 'AgentPPO'
+    config.AGENT_NAME = 'AgentSAC'
     config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
-    # break_step = int(1e5)
-    break_step = int(3e6)
+    break_step = int(50000)
+    # break_step = int(3e6)
 
     if_on_policy = True
     if_use_gae = True
