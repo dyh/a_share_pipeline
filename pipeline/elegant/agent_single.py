@@ -99,7 +99,7 @@ class AgentBase:
                 torch.save(self.cri.state_dict(), cri_save_path)
         elif (self.act is not None) and os.path.exists(act_save_path):
             load_torch_file(self.act, act_save_path)
-            print("Loaded act:", cwd)
+            print(">> Loaded act:", cwd)
         elif (self.cri is not None) and os.path.exists(cri_save_path):
             load_torch_file(self.cri, cri_save_path)
             print("Loaded cri:", cwd)

@@ -17,7 +17,7 @@ from pipeline.elegant.env_predict_single import StockTradingEnvPredict, FeatureE
 from pipeline.elegant.run_single import *
 
 
-def update_stock_data(date_append_to_raw_df='', tic_code=''):
+def update_stock_data(tic_code=''):
 
     # 下载、更新 股票数据
     StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE,
@@ -61,18 +61,22 @@ def update_stock_data(date_append_to_raw_df='', tic_code=''):
 
 if __name__ == '__main__':
 
+    # 要预测的那一天
+    config.SINGLE_A_STOCK_CODE = ['sh.600667', ]
+
     # psql对象
     psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                          password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-    config.OUTPUT_DATE = '2021-05-28'
+    config.OUTPUT_DATE = '2021-05-31'
 
     # 前10后10，前10后x，前x后10
     config.PREDICT_PERIOD = '前10后10'
 
     # AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentDuelingDQN(), AgentModSAC(), AgentSharedSAC
     config.AGENT_NAME = 'AgentPPO'
-    config.CWD = f'./{config.AGENT_NAME}/StockTradingEnv-v1'
+    config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
+
     break_step = int(1e5)
 
     if_on_policy = True
@@ -85,20 +89,17 @@ if __name__ == '__main__':
     # end_vali_date = get_datetime_from_date_str('2021-04-16')
     config.IF_SHOW_PREDICT_INFO = True
 
-    # 要预测的那一天
-    config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
-
     config.START_DATE = "2002-05-01"
     # config.START_EVAL_DATE = "2021-04-16"
     # config.END_DATE = '2021-05-14'
-    config.START_EVAL_DATE = "2021-05-10"
-    config.END_DATE = "2021-06-04"
+    config.START_EVAL_DATE = "2021-05-17"
+    config.END_DATE = "2021-06-11"
 
     # 创建预测结果表
     StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
 
     # 更新股票数据
-    update_stock_data(date_append_to_raw_df=config.OUTPUT_DATE, tic_code=config.SINGLE_A_STOCK_CODE[0])
+    update_stock_data(tic_code=config.SINGLE_A_STOCK_CODE[0])
 
     # 预测的截止日期
     begin_vali_date = get_datetime_from_date_str(config.START_EVAL_DATE)
@@ -121,7 +122,8 @@ if __name__ == '__main__':
         config.VALI_DAYS_FLAG = str(vali_days)
 
         # weights 文件目录
-        model_folder_path = f'./{config.AGENT_NAME}/single_{config.VALI_DAYS_FLAG}'
+        model_folder_path = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}' \
+                            f'/single_{config.VALI_DAYS_FLAG}'
 
         # 如果存在目录则预测
         if os.path.exists(model_folder_path):
@@ -294,10 +296,11 @@ if __name__ == '__main__':
 
             # ----
             # work_days，周期数，用于存储和提取训练好的模型
-            model_file_path = f'./{config.AGENT_NAME}/single_{config.VALI_DAYS_FLAG}/actor.pth'
+            model_file_path = f'{model_folder_path}/actor.pth'
+
             # 如果model存在，则加载
             if os.path.exists(model_file_path):
-                agent.save_load_model(f'./{config.AGENT_NAME}/single_{config.VALI_DAYS_FLAG}', if_save=False)
+                agent.save_load_model(model_folder_path, if_save=False)
 
                 # if_on_policy = getattr(agent, 'if_on_policy', False)
                 #

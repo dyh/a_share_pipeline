@@ -1,5 +1,7 @@
 import sys
 
+from pipeline.utils.datetime import get_today_date
+
 if 'pipeline' not in sys.path:
     sys.path.append('../../')
 
@@ -20,13 +22,13 @@ if __name__ == '__main__':
 
     # --------------------------------------------------------------
     # 要预测的股票
-    config.BATCH_A_STOCK_CODE = ['sh.600036', ]
+    config.BATCH_A_STOCK_CODE = ['sh.600667', ]
 
     # 默认初始数据日期，对预测无影响
     config.START_DATE = "2002-05-01"
 
     # 要预测的日期
-    config.END_DATE = "2021-05-24"
+    config.END_DATE = get_today_date()
 
     # --------------------------------------------------------------
     # config.BATCH_A_STOCK_CODE = ['sh.600036', 'sh.600295', ]

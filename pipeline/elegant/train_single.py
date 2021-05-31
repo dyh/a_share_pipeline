@@ -11,8 +11,6 @@ if 'ElegantRL_master' not in sys.path:
 
 import shutil
 
-from pipeline.sqlite import SQLite
-from pipeline.stock_data import StockData
 from pipeline.utils.datetime import get_datetime_from_date_str, time_point, get_begin_vali_date_list, get_next_day
 from pipeline.elegant.run_single import *
 from pipeline.elegant.agent_single import *
@@ -20,25 +18,30 @@ from pipeline.elegant.env_train_single import StockTradingEnv
 from pipeline.elegant.env_predict_single import StockTradingEnvPredict, FeatureEngineer
 
 if __name__ == '__main__':
+    # 开始训练的日期，在程序启动之后，不要改变。
+    config.SINGLE_A_STOCK_CODE = ['sh.600667', ]
+
+    # 初始现金
+    initial_capital = 20000
+
+    # 单次 购买/卖出 最大股数
+    max_stock = 3000
+
     # AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentDuelingDQN(), AgentModSAC(), AgentSharedSAC
     # 选择agent
     config.AGENT_NAME = 'AgentPPO'
-    config.CWD = f'./{config.AGENT_NAME}/StockTradingEnv-v1'
-    # break_step = int(2e5)
+    config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
+    # break_step = int(1e5)
     break_step = int(3e6)
 
     if_on_policy = True
     if_use_gae = True
 
-    # 开始训练的日期，在程序启动之后，不要改变。
-    config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
-
     config.IF_SHOW_PREDICT_INFO = False
 
     config.START_DATE = "2002-05-01"
-    config.START_EVAL_DATE = "2021-03-12"
-    config.END_DATE = "2021-04-15"
-    # config.END_DATE = "2021-05-23"
+    config.START_EVAL_DATE = "2021-04-19"
+    config.END_DATE = "2021-05-14"
 
     # 4月16日向前，20,30,40,50,60,72,90周期
 
@@ -55,11 +58,6 @@ if __name__ == '__main__':
     # begin_vali_date = get_next_day(end_vali_date, next_flag=-28)
     # list_begin_vali_date = [(20, begin_vali_date), ]
 
-    # 初始现金
-    initial_capital = 20000
-
-    # 单次 购买/卖出 最大股数
-    max_stock = 1000
 
     # # 下载、更新 股票数据
     # StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE,
@@ -96,7 +94,8 @@ if __name__ == '__main__':
         # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
         config.VALI_DAYS_FLAG = str(work_days)
 
-        model_folder_path = f'./{config.AGENT_NAME}/single_{config.VALI_DAYS_FLAG}'
+        model_folder_path = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}' \
+                            f'/single_{config.VALI_DAYS_FLAG}'
 
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
@@ -232,15 +231,14 @@ if __name__ == '__main__':
         train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.
 
         # 保存训练后的模型
-        # cwd: ./AgentPPO/StockTradingEnv-v1_0
-        model_file_path = f'./{config.AGENT_NAME}/single_{config.VALI_DAYS_FLAG}/actor.pth'
-        shutil.copyfile(f'{config.CWD}/actor.pth', model_file_path)
+        shutil.copyfile(f'./{config.AGENT_NAME}/StockTradingEnv-v1/actor.pth', f'{model_folder_path}/actor.pth')
 
         # 保存训练曲线图
         # plot_learning_curve.jpg
         timepoint_temp = time_point()
-        plot_learning_curve_file_path = f'./{config.AGENT_NAME}/single_{config.VALI_DAYS_FLAG}/plot_{timepoint_temp}.jpg'
-        shutil.copyfile(f'{config.CWD}/plot_learning_curve.jpg', plot_learning_curve_file_path)
+        plot_learning_curve_file_path = f'{model_folder_path}/plot_{timepoint_temp}.jpg'
+        shutil.copyfile(f'./{config.AGENT_NAME}/StockTradingEnv-v1/plot_learning_curve.jpg',
+                        plot_learning_curve_file_path)
 
         # sleep 60 秒
         print('sleep 60 秒')
