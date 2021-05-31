@@ -145,3 +145,4 @@ dmypy.json
 /pipeline/elegant/AgentPPO/
 /pipeline/elegant/datasets/
 /pipeline/elegant/bak/
+/pipeline/elegant/AgentSAC/

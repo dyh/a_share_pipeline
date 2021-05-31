@@ -20,26 +20,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9e89b71b-f959-4196-bdad-c897441ae9b7" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_600036_bak/single_20/plot_20210530_065723.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_600036_bak/single_30/plot_20210530_041115.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_600036_bak/single_40/plot_20210530_012536.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_600036_bak/single_50/plot_20210529_223941.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_600036_bak/single_60/plot_20210529_195355.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_600036_bak/single_72/plot_20210529_170814.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_600036_bak/single_90/plot_20210529_142229.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_20/plot_20210521_015407.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_30/plot_20210521_043930.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_40/plot_20210521_072451.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_50/plot_20210522_184409.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_60/plot_20210522_132239.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_72/plot_20210522_080151.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/AgentSAC/single_90/plot_20210522_024047.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/agent_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/agent_single.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/daily_update_stockdb_batch.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/daily_update_stockdb_batch.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/predict_single_both_date_fixed.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/predict_single_both_date_fixed.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/run_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/run_single.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/train_single.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -279,6 +261,7 @@
       <workItem from="1622362246067" duration="8078000" />
       <workItem from="1622391035831" duration="157000" />
       <workItem from="1622424414037" duration="319000" />
+      <workItem from="1622427234175" duration="57000" />
     </task>
     <servers />
   </component>
