@@ -60,8 +60,9 @@ def update_stock_data(tic_code=''):
 
 if __name__ == '__main__':
 
+    # for tic_item in ['sh.600036', 'sh.600667']:
     # 循环
-    for tic_item in ['sh.600667', 'sh.600036']:
+    for tic_item in ['sh.600036',]:
 
         # 要预测的那一天
         config.SINGLE_A_STOCK_CODE = [tic_item, ]
@@ -70,13 +71,15 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-06-01'
+        config.OUTPUT_DATE = '2021-06-03'
 
         # 前10后10，前10后x，前x后10
         config.PREDICT_PERIOD = '前10后10'
 
-        # AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentDuelingDQN(), AgentModSAC(), AgentSharedSAC
-        for agent_item in ['AgentPPO', 'AgentSAC']:
+        # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
+        # AgentDoubleDQN 单进程好用?
+        # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
+        for agent_item in ['AgentPPO', 'AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentModSAC']:
 
             config.AGENT_NAME = agent_item
             config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'

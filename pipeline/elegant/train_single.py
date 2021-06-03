@@ -1,5 +1,6 @@
 import sys
 
+
 if 'pipeline' not in sys.path:
     sys.path.append('../../')
 
@@ -11,6 +12,8 @@ if 'ElegantRL_master' not in sys.path:
 
 import shutil
 
+from pipeline.elegant.predict_single_both_date_fixed import update_stock_data
+
 from pipeline.utils.datetime import get_datetime_from_date_str, time_point, get_begin_vali_date_list, get_next_day
 from pipeline.elegant.run_single import *
 from pipeline.elegant.agent_single import *
@@ -19,7 +22,7 @@ from pipeline.elegant.env_predict_single import StockTradingEnvPredict, FeatureE
 
 if __name__ == '__main__':
     # 开始训练的日期，在程序启动之后，不要改变。
-    config.SINGLE_A_STOCK_CODE = ['sh.600667', ]
+    config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
 
     # 初始现金
     initial_capital = 20000
@@ -27,9 +30,11 @@ if __name__ == '__main__':
     # 单次 购买/卖出 最大股数
     max_stock = 3000
 
-    # AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentDuelingDQN(), AgentModSAC(), AgentSharedSAC
+    # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
+    # AgentDoubleDQN 单进程好用?
+    # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
     # 选择agent
-    config.AGENT_NAME = 'AgentSAC'
+    config.AGENT_NAME = 'AgentTD3'
     config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
     break_step = int(50000)
     # break_step = int(3e6)
@@ -43,6 +48,9 @@ if __name__ == '__main__':
     config.START_EVAL_DATE = "2021-04-19"
     config.END_DATE = "2021-05-14"
 
+    # 更新股票数据
+    update_stock_data(tic_code=config.SINGLE_A_STOCK_CODE[0])
+
     # 4月16日向前，20,30,40,50,60,72,90周期
 
     # 预测的截止日期
@@ -53,38 +61,6 @@ if __name__ == '__main__':
 
     # 倒序，由大到小
     list_begin_vali_date.reverse()
-
-    # 只训练20周期的
-    # begin_vali_date = get_next_day(end_vali_date, next_flag=-28)
-    # list_begin_vali_date = [(20, begin_vali_date), ]
-
-
-    # # 下载、更新 股票数据
-    # StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE,
-    #                                     dbname=config.STOCK_DB_PATH, adjustflag='2')
-    #
-    # # do fe
-    # # 缓存 raw 数据 为 df 。
-    # raw_df = StockData.load_stock_raw_data_from_sqlite(list_batch_code=config.SINGLE_A_STOCK_CODE,
-    #                                                    date_begin=config.START_DATE, date_end=config.END_DATE,
-    #                                                    db_path=config.STOCK_DB_PATH)
-    #
-    # # raw_df -> fe
-    # fe_origin_table_name = "fe_origin"
-    #
-    # # 创建fe表
-    # StockData.create_fe_table(db_path=config.STOCK_DB_PATH, table_name=fe_origin_table_name)
-    #
-    # fe = FeatureEngineer(use_turbulence=False,
-    #                      user_defined_feature=False,
-    #                      use_technical_indicator=True,
-    #                      tech_indicator_list=config.TECHNICAL_INDICATORS_LIST, )
-    #
-    # fe_df = fe.preprocess_data(raw_df)
-    #
-    # # 将 fe_df 存入数据库
-    # # 先清空，再 insert
-    # StockData.clear_and_insert_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name)
 
     # 循环 list_begin_vali_date
     for begin_vali_item in list_begin_vali_date:
@@ -138,8 +114,10 @@ if __name__ == '__main__':
         elif config.AGENT_NAME == 'AgentSharedSAC':
             args.agent = AgentSharedSAC()
             pass
+        elif config.AGENT_NAME == 'AgentDoubleDQN':
+            args.agent = AgentDoubleDQN()
+            pass
 
-        # args.agent.if_use_gae = True
         args.agent.if_use_gae = if_use_gae
         args.agent.lambda_entropy = 0.04
         args.gpu_id = 0

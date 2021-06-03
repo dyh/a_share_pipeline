@@ -68,6 +68,7 @@ class StockTradingEnv:
         return state
 
     def step(self, actions):
+
         actions = (actions * self.max_stock).astype(int)
 
         self.day += 1
