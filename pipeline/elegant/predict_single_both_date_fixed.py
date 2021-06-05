@@ -335,7 +335,7 @@ if __name__ == '__main__':
 
                             # 获取要预测的日期，保存到数据库中
                             for item in env.list_buy_or_sell_output:
-                                tic, date, action, hold, day = item
+                                tic, date, action, hold, day, episode_return = item
                                 if str(date) == config.OUTPUT_DATE:
                                     # 找到要预测的那一天，存储到psql
                                     StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
@@ -343,7 +343,7 @@ if __name__ == '__main__':
                                                                             pred_period_name=config.PREDICT_PERIOD,
                                                                             tic=tic, date=date, action=action,
                                                                             hold=hold,
-                                                                            day=day)
+                                                                            day=day, episode_return=episode_return)
                                     pass
                                 pass
                             pass
