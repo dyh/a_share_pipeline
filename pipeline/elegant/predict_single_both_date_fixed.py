@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     # for tic_item in ['sh.600036', 'sh.600667']:
     # 循环
-    for tic_item in ['sh.600036',]:
+    for tic_item in ['sh.600036', ]:
 
         # 要预测的那一天
         config.SINGLE_A_STOCK_CODE = [tic_item, ]
@@ -71,7 +71,7 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-06-03'
+        config.OUTPUT_DATE = '2021-06-07'
 
         # 前10后10，前10后x，前x后10
         config.PREDICT_PERIOD = '前10后10'
@@ -341,7 +341,8 @@ if __name__ == '__main__':
                                     StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
                                                                             vali_period_value=config.VALI_DAYS_FLAG,
                                                                             pred_period_name=config.PREDICT_PERIOD,
-                                                                            tic=tic, date=date, action=action, hold=hold,
+                                                                            tic=tic, date=date, action=action,
+                                                                            hold=hold,
                                                                             day=day)
                                     pass
                                 pass

@@ -34,7 +34,7 @@ if __name__ == '__main__':
     # AgentDoubleDQN 单进程好用?
     # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
     # 选择agent
-    config.AGENT_NAME = 'AgentTD3'
+    config.AGENT_NAME = 'AgentDDPG'
     config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
     break_step = int(50000)
     # break_step = int(3e6)

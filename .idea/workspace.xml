@@ -20,10 +20,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9e89b71b-f959-4196-bdad-c897441ae9b7" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ElegantRL_master" beforeDir="false" afterPath="$PROJECT_DIR$/ElegantRL_master" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline/elegant/env_train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/env_train_single.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pipeline/elegant/predict_single_both_date_fixed.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/predict_single_both_date_fixed.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pipeline/elegant/train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/elegant/train_single.py" afterDir="false" />
     </list>
@@ -42,7 +39,7 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="JupyterTrust" id="ef0a1435-10ed-4f75-8f8b-3beffadd5b4f" />
+  <component name="JupyterTrust" id="bcaa64d4-abc5-4895-805e-447ff88134d0" />
   <component name="ProjectId" id="1sewuRk7nz1zo0tExbbzD8fZ1nX" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -65,7 +62,7 @@
       <recent name="$PROJECT_DIR$/pipeline" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.train_single">
+  <component name="RunManager" selected="Python.predict_single_both_date_fixed">
     <configuration name="daily_update_stockdb_batch" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="a_share_pipeline" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -208,8 +205,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.train_single" />
         <item itemvalue="Python.predict_single_both_date_fixed" />
+        <item itemvalue="Python.train_single" />
         <item itemvalue="Python.daily_update_stockdb_batch" />
         <item itemvalue="Python.predict_single_end_date_fixed" />
         <item itemvalue="Python.predict_single_begin_date_fixed" />
@@ -279,6 +276,8 @@
       <workItem from="1622682596288" duration="9000" />
       <workItem from="1622715056573" duration="923000" />
       <workItem from="1622725040637" duration="3083000" />
+      <workItem from="1622767864189" duration="721000" />
+      <workItem from="1622855658166" duration="823000" />
     </task>
     <servers />
   </component>
@@ -317,33 +316,33 @@
     </state>
     <state x="1029" y="490" width="424" height="484" key="FileChooserDialogImpl/0.27.2493.1413@0.27.2493.1413" timestamp="1622475807890" />
     <state x="3617" y="472" width="424" height="484" key="FileChooserDialogImpl/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622603734491" />
-    <state width="2439" height="173" key="GridCell.Tab.0.bottom" timestamp="1622728123625">
+    <state width="2439" height="370" key="GridCell.Tab.0.bottom" timestamp="1622857106682">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="361" key="GridCell.Tab.0.bottom/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874567" />
-    <state width="2439" height="173" key="GridCell.Tab.0.bottom/0.27.2493.1413@0.27.2493.1413" timestamp="1622728123625" />
-    <state width="2506" height="308" key="GridCell.Tab.0.bottom/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622424732685" />
+    <state width="2439" height="370" key="GridCell.Tab.0.bottom/0.27.2493.1413@0.27.2493.1413" timestamp="1622857106682" />
+    <state width="2506" height="722" key="GridCell.Tab.0.bottom/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622768585206" />
     <state width="2439" height="229" key="GridCell.Tab.0.bottom/0.27.5120.1413@0.27.5120.1413" timestamp="1622594926913" />
-    <state width="2439" height="173" key="GridCell.Tab.0.center" timestamp="1622728123624">
+    <state width="2439" height="370" key="GridCell.Tab.0.center" timestamp="1622857106682">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="361" key="GridCell.Tab.0.center/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874567" />
-    <state width="2439" height="173" key="GridCell.Tab.0.center/0.27.2493.1413@0.27.2493.1413" timestamp="1622728123624" />
-    <state width="2506" height="308" key="GridCell.Tab.0.center/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622424732685" />
+    <state width="2439" height="370" key="GridCell.Tab.0.center/0.27.2493.1413@0.27.2493.1413" timestamp="1622857106682" />
+    <state width="2506" height="722" key="GridCell.Tab.0.center/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622768585206" />
     <state width="2439" height="229" key="GridCell.Tab.0.center/0.27.5120.1413@0.27.5120.1413" timestamp="1622594926912" />
-    <state width="2439" height="173" key="GridCell.Tab.0.left" timestamp="1622728123624">
+    <state width="2439" height="370" key="GridCell.Tab.0.left" timestamp="1622857106681">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="361" key="GridCell.Tab.0.left/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874567" />
-    <state width="2439" height="173" key="GridCell.Tab.0.left/0.27.2493.1413@0.27.2493.1413" timestamp="1622728123624" />
-    <state width="2506" height="308" key="GridCell.Tab.0.left/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622424732685" />
+    <state width="2439" height="370" key="GridCell.Tab.0.left/0.27.2493.1413@0.27.2493.1413" timestamp="1622857106681" />
+    <state width="2506" height="722" key="GridCell.Tab.0.left/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622768585206" />
     <state width="2439" height="229" key="GridCell.Tab.0.left/0.27.5120.1413@0.27.5120.1413" timestamp="1622594926912" />
-    <state width="2439" height="173" key="GridCell.Tab.0.right" timestamp="1622728123625">
+    <state width="2439" height="370" key="GridCell.Tab.0.right" timestamp="1622857106682">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="361" key="GridCell.Tab.0.right/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874567" />
-    <state width="2439" height="173" key="GridCell.Tab.0.right/0.27.2493.1413@0.27.2493.1413" timestamp="1622728123625" />
-    <state width="2506" height="308" key="GridCell.Tab.0.right/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622424732685" />
+    <state width="2439" height="370" key="GridCell.Tab.0.right/0.27.2493.1413@0.27.2493.1413" timestamp="1622857106682" />
+    <state width="2506" height="722" key="GridCell.Tab.0.right/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622768585206" />
     <state width="2439" height="229" key="GridCell.Tab.0.right/0.27.5120.1413@0.27.5120.1413" timestamp="1622594926913" />
     <state width="2439" height="283" key="GridCell.Tab.1.bottom" timestamp="1622727509799">
       <screen x="0" y="27" width="2493" height="1413" />
@@ -437,6 +436,6 @@
     <SUITE FILE_PATH="coverage/a_share_pipeline$predict_single_begin_date_fixed.coverage" NAME="predict_single_begin_date_fixed Coverage Results" MODIFIED="1621582568140" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
     <SUITE FILE_PATH="coverage/a_share_pipeline$config.coverage" NAME="config Coverage Results" MODIFIED="1621251296716" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
     <SUITE FILE_PATH="coverage/a_share_pipeline$test1.coverage" NAME="test1 Coverage Results" MODIFIED="1621246982782" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
-    <SUITE FILE_PATH="coverage/a_share_pipeline$predict_single_both_date_fixed.coverage" NAME="predict_single_both_date_fixed Coverage Results" MODIFIED="1622645814956" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
+    <SUITE FILE_PATH="coverage/a_share_pipeline$predict_single_both_date_fixed.coverage" NAME="predict_single_both_date_fixed Coverage Results" MODIFIED="1622855763876" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
   </component>
 </project>
