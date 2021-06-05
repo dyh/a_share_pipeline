@@ -1019,6 +1019,7 @@ class StockData(object):
         :param dbname: 数据库文件地址
         :param adjustflag: 2前复权
         """
+
         # 连接数据库
         sqlite = SQLite(dbname=dbname)
 

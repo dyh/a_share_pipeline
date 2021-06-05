@@ -18,6 +18,11 @@ from pipeline.elegant.run_single import *
 
 
 def update_stock_data(tic_code=''):
+    # 创建目录
+    if not os.path.exists("./" + config.DATA_SAVE_DIR):
+        os.makedirs("./" + config.DATA_SAVE_DIR)
+    pass
+
     # 下载、更新 股票数据
     StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE,
                                         dbname=config.STOCK_DB_PATH, adjustflag='2')
@@ -74,7 +79,7 @@ if __name__ == '__main__':
         config.OUTPUT_DATE = '2021-06-07'
 
         # 前10后10，前10后x，前x后10
-        config.PREDICT_PERIOD = '前10后10'
+        config.PREDICT_PERIOD = '20'
 
         # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
         # AgentDoubleDQN 单进程好用?
