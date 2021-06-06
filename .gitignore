@@ -134,6 +134,7 @@ dmypy.json
 *.npz
 *.df
 *.csv
+*.db
 
 /pipeline/informer/checkpoints/
 /pipeline/informer/temp_dataset/
@@ -152,3 +153,5 @@ dmypy.json
 /pipeline/elegant/AgentModSAC/
 /pipeline/elegant/AgentDoubleDQN/
 /pipeline/elegant/AgentSharedSAC/
+/weights/
+/stock_db/
