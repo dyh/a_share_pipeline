@@ -56,12 +56,7 @@ class StockTradingEnvPredict:
         # self.amount = self.initial_capital * rd.uniform(0.95, 1.05) - (self.stocks * price).sum()
 
         # ----
-        stock_dim = self.price_ary.shape[1]
-        self.initial_stocks = np.zeros(stock_dim, dtype=np.float32)
-        # 默认持有100股
-        self.initial_stocks[0] = 100.0
-        # self.stocks = self.initial_stocks + rd.randint(0, 64, size=self.initial_stocks.shape)
-        self.stocks = self.initial_stocks
+        self.stocks = self.initial_stocks.copy()
         self.amount = self.initial_capital - (self.stocks * price).sum()
         # self.amount = self.initial_capital
         # ----

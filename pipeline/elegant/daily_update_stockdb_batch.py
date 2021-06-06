@@ -1,6 +1,6 @@
 import sys
 
-from pipeline.utils.datetime import get_today_date
+from pipeline.utils.date_time import get_today_date
 
 if 'pipeline' not in sys.path:
     sys.path.append('../../')

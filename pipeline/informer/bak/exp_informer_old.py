@@ -22,7 +22,7 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
-import pipeline.utils.datetime
+import pipeline.utils.date_time
 
 
 class Exp_Informer(Exp_Basic):
@@ -331,7 +331,7 @@ class Exp_Informer(Exp_Basic):
         plt.legend()
 
         # 保存文件的时间点
-        time_point = pipeline.utils.datetime.time_point()
+        time_point = pipeline.utils.date_time.time_point()
         plt.savefig(f'{folder_path}/test_{time_point}.png')
 
         return
@@ -405,7 +405,7 @@ class Exp_Informer(Exp_Basic):
         plt.legend()
 
         # 保存文件的时间点
-        time_point = pipeline.utils.datetime.time_point()
+        time_point = pipeline.utils.date_time.time_point()
         plt.savefig(f'{folder_path}/predict_{time_point}.png')
 
         df = {"GroundTruth": trues_inverse_transform[0, :, -1], "Prediction": preds_inverse_transform[0, :, -1]}

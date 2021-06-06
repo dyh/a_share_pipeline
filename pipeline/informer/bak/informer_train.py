@@ -20,7 +20,7 @@ from Informer2020_main.utils.tools import dotdict
 from Informer2020_main.models.model import Informer
 from pipeline.informer.exp_informer import Exp_Informer
 from pipeline.informer.data_loader import Dataset_ETT_hour, Dataset_ETT_minute
-import pipeline.utils.datetime
+import pipeline.utils.date_time
 
 
 # freq = [t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly]
@@ -31,7 +31,7 @@ def train(freq='h', features='S', patience=5, use_technical_indicator=False,
     stock_code = 'sh.600036'
     date_start = '2002-05-01'
     # date_end = '2021-03-19'
-    date_end = pipeline.utils.datetime.get_today_date()
+    date_end = pipeline.utils.date_time.get_today_date()
 
     if download_data is True:
         sd = StockData(output_dir='./pipeline_informer/temp_dataset', date_start=date_start, date_end=date_end)
@@ -40,7 +40,7 @@ def train(freq='h', features='S', patience=5, use_technical_indicator=False,
     pass
 
     # 保存文件的时间点
-    time_point = pipeline.utils.datetime.time_point()
+    time_point = pipeline.utils.date_time.time_point()
 
     args = dotdict()
 

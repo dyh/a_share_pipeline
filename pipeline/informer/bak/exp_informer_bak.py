@@ -16,7 +16,7 @@ import pandas as pd
 
 import os
 import time
-import pipeline.utils.datetime
+import pipeline.utils.date_time
 import matplotlib.pyplot as plt
 
 import warnings
@@ -113,7 +113,7 @@ class Exp_Informer(Exp_Basic):
 
     def vali(self, vali_data, vali_loader, criterion, setting):
         # 保存文件的时间点
-        time_point = pipeline.utils.datetime.time_point()
+        time_point = pipeline.utils.date_time.time_point()
 
         self.model.eval()
 

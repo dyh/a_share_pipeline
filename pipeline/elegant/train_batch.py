@@ -11,7 +11,7 @@ if 'ElegantRL_master' not in sys.path:
 
 import shutil
 
-from pipeline.utils.datetime import get_datetime_from_date_str, time_point, get_begin_vali_date_list
+from pipeline.utils.date_time import get_datetime_from_date_str, time_point, get_begin_vali_date_list
 from pipeline.elegant.run_batch import *
 from ElegantRL_master.elegantrl.agent import AgentPPO
 from pipeline.elegant.env_train_batch import StockTradingEnv

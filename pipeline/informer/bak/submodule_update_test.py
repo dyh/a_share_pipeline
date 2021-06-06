@@ -9,7 +9,7 @@ if 'FinRL_Library_master' not in sys.path:
 import torch
 import argparse
 from pipeline.informer.exp_informer import Exp_Informer
-import pipeline.utils.datetime
+import pipeline.utils.date_time
 
 
 def modify_args(args):
@@ -169,7 +169,7 @@ def train():
 # 在 submodule 更新之后，测试项目是否能正常运行
 if __name__ == '__main__':
     # 保存文件的时间点
-    time_point = pipeline.utils.datetime.time_point()
+    time_point = pipeline.utils.date_time.time_point()
 
     # train 90%
     # vali 10%

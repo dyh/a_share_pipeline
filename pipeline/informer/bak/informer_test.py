@@ -19,7 +19,7 @@ from Informer2020_main.utils.tools import dotdict
 from Informer2020_main.models.model import Informer
 from pipeline.informer.exp_informer import Exp_Informer
 from pipeline.informer.data_loader import Dataset_ETT_hour
-import pipeline.utils.datetime
+import pipeline.utils.date_time
 
 if __name__ == "__main__":
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # sd.get_informer_data(stock_code=stock_code, fields=sd.fields_minutes, frequency='15', adjustflag='3')
 
     # 保存文件的时间点
-    time_point = pipeline.utils.datetime.time_point()
+    time_point = pipeline.utils.date_time.time_point()
 
     args = dotdict()
 

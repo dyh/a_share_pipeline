@@ -10,7 +10,7 @@ if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../ElegantRL_master')
 
 from ElegantRL_master.elegantrl.agent import AgentPPO
-from pipeline.utils.datetime import get_datetime_from_date_str, get_begin_vali_date_list
+from pipeline.utils.date_time import get_datetime_from_date_str, get_begin_vali_date_list
 from pipeline.elegant.env_predict_batch import StockTradingEnvPredict
 from pipeline.elegant.run_batch import *
 

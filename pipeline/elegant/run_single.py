@@ -8,7 +8,7 @@ from copy import deepcopy
 from ElegantRL_master.elegantrl.replay import ReplayBuffer, ReplayBufferMP
 from ElegantRL_master.elegantrl.env import PreprocessEnv
 from pipeline.elegant import config
-from pipeline.utils.datetime import time_point
+from pipeline.utils.date_time import time_point
 
 """[ElegantRL](https://github.com/AI4Finance-LLC/ElegantRL)"""
 

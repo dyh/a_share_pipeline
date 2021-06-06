@@ -7,7 +7,7 @@ if 'FinRL_Library_master' not in sys.path:
     sys.path.append('../../FinRL_Library_master')
 
 from pipeline.stock_data import StockData
-import pipeline.utils.datetime
+import pipeline.utils.date_time
 
 if __name__ == '__main__':
     # 下载数据
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     stock_code = 'sh.600036'
     date_start = '2002-05-01'
     # date_end = '2021-03-19'
-    date_end = pipeline.utils.datetime.get_today_date()
+    date_end = pipeline.utils.date_time.get_today_date()
 
     if download_data is True:
         stock = StockData(output_dir=output_dir, date_start=date_start, date_end=date_end)

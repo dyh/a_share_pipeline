@@ -12,7 +12,7 @@ if 'ElegantRL_master' not in sys.path:
 from pipeline.utils.psqldb import Psqldb
 from pipeline.stock_data import StockData
 from pipeline.elegant.agent_single import *
-from pipeline.utils.datetime import *
+from pipeline.utils.date_time import *
 from pipeline.elegant.env_predict_single import StockTradingEnvPredict, FeatureEngineer
 from pipeline.elegant.run_single import *
 
@@ -65,6 +65,13 @@ def update_stock_data(tic_code=''):
 
 if __name__ == '__main__':
 
+    # 输出开始预测的时间
+    print('开始时间点', time_point())
+
+    initial_capital = 100000
+
+    max_stock = 3000
+
     # for tic_item in ['sh.600036', 'sh.600667']:
     # 循环
     for tic_item in ['sh.600036', ]:
@@ -84,6 +91,7 @@ if __name__ == '__main__':
         # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
         # AgentDoubleDQN 单进程好用?
         # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
+        # for agent_item in ['AgentModSAC', ]:
         for agent_item in ['AgentPPO', 'AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentModSAC']:
 
             config.AGENT_NAME = agent_item
@@ -120,14 +128,10 @@ if __name__ == '__main__':
             # 获取7个日期list
             list_end_vali_date = get_end_vali_date_list(begin_vali_date)
 
-            initial_capital = 20000
 
             # 循环 vali_date_list 训练7次
             for end_vali_item in list_end_vali_date:
                 # torch.cuda.empty_cache()
-
-                # 从100到1k
-                max_stock = 3000
 
                 vali_days, _ = end_vali_item
 
@@ -188,7 +192,7 @@ if __name__ == '__main__':
                     # max_stock = 100
                     # initial_capital = 100000
                     initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
-                    initial_stocks[0] = 100.0
+                    initial_stocks[0] = 1000.0
 
                     buy_cost_pct = 0.0003
                     sell_cost_pct = 0.0003
@@ -367,4 +371,7 @@ if __name__ == '__main__':
         psql_object.close()
 
         pass
+
+    # 输出结束预测的时间
+    print('结束时间点', time_point())
     pass

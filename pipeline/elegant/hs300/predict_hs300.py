@@ -9,7 +9,7 @@ if 'FinRL_Library_master' not in sys.path:
 if 'ElegantRL_master' not in sys.path:
     sys.path.append('../../../ElegantRL_master')
 
-from pipeline.utils.datetime import get_datetime_from_date_str, get_begin_vali_date_list
+from pipeline.utils.date_time import get_datetime_from_date_str, get_begin_vali_date_list
 
 from pipeline.stock_data import StockData
 from pipeline.elegant.hs300.env_predict_hs300 import StockTradingEnvPredict

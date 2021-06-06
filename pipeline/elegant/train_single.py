@@ -14,7 +14,7 @@ import shutil
 
 from pipeline.elegant.predict_single_both_date_fixed import update_stock_data
 
-from pipeline.utils.datetime import get_datetime_from_date_str, time_point, get_begin_vali_date_list, get_next_day
+from pipeline.utils.date_time import get_datetime_from_date_str, time_point, get_begin_vali_date_list, get_next_day
 from pipeline.elegant.run_single import *
 from pipeline.elegant.agent_single import *
 from pipeline.elegant.env_train_single import StockTradingEnv
@@ -25,19 +25,26 @@ if __name__ == '__main__':
     config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
 
     # 初始现金
-    initial_capital = 20000
+    initial_capital = 100000
 
     # 单次 购买/卖出 最大股数
     max_stock = 3000
 
+    initial_stocks_train = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
+    initial_stocks_vali = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
+
+    # 默认持有1000股
+    initial_stocks_train[0] = 1000.0
+    initial_stocks_vali[0] = 1000.0
+    
     # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
     # AgentDoubleDQN 单进程好用?
     # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
     # 选择agent
-    config.AGENT_NAME = 'AgentDDPG'
+    config.AGENT_NAME = 'AgentModSAC'
     config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
-    break_step = int(50000)
-    # break_step = int(3e6)
+    # break_step = int(50000)
+    break_step = int(3e6)
 
     if_on_policy = True
     if_use_gae = True
@@ -83,6 +90,7 @@ if __name__ == '__main__':
         print('\r\n')
         print('-' * 40)
         print('config.AGENT_NAME', config.AGENT_NAME)
+        print('break_step', break_step)
         print('# 训练-预测周期', config.START_DATE, '-', config.START_EVAL_DATE, '-', config.END_DATE)
         print('# work_days', work_days)
         print('# model_folder_path', model_folder_path)
@@ -130,12 +138,6 @@ if __name__ == '__main__':
         # max_stock = 1e2
         # initial_capital = 100000
         # initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
-        initial_stocks_train = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
-        initial_stocks_vali = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
-
-        # 默认持有100股
-        initial_stocks_train[0] = 100.0
-        initial_stocks_vali[0] = 100.0
 
         print('# initial_stocks_train', initial_stocks_train)
         print('# initial_stocks_vali', initial_stocks_vali)

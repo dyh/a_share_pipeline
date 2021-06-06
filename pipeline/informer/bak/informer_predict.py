@@ -20,28 +20,28 @@ from torch.utils.data import DataLoader
 from Informer2020_main.utils.tools import dotdict
 from Informer2020_main.models.model import Informer
 from pipeline.informer.data_loader import Dataset_SHARE_hour_test, Dataset_SHARE_minute
-import pipeline.utils.datetime
+import pipeline.utils.date_time
 
 
 def predict(freq='h', features='S', patience=7, use_technical_indicator=False,
             download_data=False, add_predict_data=False):
     # 保存文件的时间点
-    time_point = pipeline.utils.datetime.time_point()
+    time_point = pipeline.utils.date_time.time_point()
 
     # 设置要预测的天数
     predict_days = 60
 
     stock_code = 'sh.600036'
     # date_start = '2002-05-01'
-    date_end = pipeline.utils.datetime.get_today_date()
+    date_end = pipeline.utils.date_time.get_today_date()
     # date_end = '2021-03-26'
 
     # 下载2天的数据
-    datetime_date_end = pipeline.utils.datetime.get_datetime_from_date_str(date_end)
+    datetime_date_end = pipeline.utils.date_time.get_datetime_from_date_str(date_end)
 
     date_start = datetime_date_end
     for i in range(60):
-        date_start = pipeline.utils.datetime.get_next_work_day(date_start, next_flag=-1)
+        date_start = pipeline.utils.date_time.get_next_work_day(date_start, next_flag=-1)
         pass
 
     date_start = str(date_start).split(' ')[0]
@@ -74,10 +74,10 @@ def predict(freq='h', features='S', patience=7, use_technical_indicator=False,
         for i in range(predict_days):
 
             if date_predict_temp is None:
-                date_predict_temp = pipeline.utils.datetime.get_datetime_from_date_str(date_end)
+                date_predict_temp = pipeline.utils.date_time.get_datetime_from_date_str(date_end)
             pass
 
-            next_date_predict_temp = pipeline.utils.datetime.get_next_work_day(date_predict_temp, next_flag=+1)
+            next_date_predict_temp = pipeline.utils.date_time.get_next_work_day(date_predict_temp, next_flag=+1)
 
             # 每15分钟的K线，一天有16条数据
             for index in range(len(sd.list_time_point_15minutes)):
