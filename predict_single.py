@@ -26,7 +26,7 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-06-07'
+        config.OUTPUT_DATE = '2021-06-08'
 
         # 前10后10，前10后x，前x后10
         config.PREDICT_PERIOD = '20'
@@ -81,7 +81,9 @@ if __name__ == '__main__':
                 config.VALI_DAYS_FLAG = str(vali_days)
 
                 # weights 文件目录
-                model_folder_path = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}' \
+                # model_folder_path = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}' \
+                #                     f'/single_{config.VALI_DAYS_FLAG}'
+                model_folder_path = f'./{config.WEIGHTS_PATH}/single/{config.AGENT_NAME}/{config.SINGLE_A_STOCK_CODE[0]}' \
                                     f'/single_{config.VALI_DAYS_FLAG}'
 
                 # 如果存在目录则预测
@@ -142,7 +144,7 @@ if __name__ == '__main__':
                     start_eval_date = config.START_EVAL_DATE
                     end_eval_date = config.END_DATE
 
-                    args.env = StockTradingEnvPredict(cwd='./datasets', gamma=gamma, max_stock=max_stock,
+                    args.env = StockTradingEnvPredict(cwd='', gamma=gamma, max_stock=max_stock,
                                                       initial_capital=initial_capital,
                                                       buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
                                                       start_date=start_date,
@@ -152,7 +154,7 @@ if __name__ == '__main__':
                                                       initial_stocks=initial_stocks,
                                                       if_eval=True)
 
-                    args.env_eval = StockTradingEnvPredict(cwd='./datasets', gamma=gamma, max_stock=max_stock,
+                    args.env_eval = StockTradingEnvPredict(cwd='', gamma=gamma, max_stock=max_stock,
                                                            initial_capital=initial_capital,
                                                            buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
                                                            start_date=start_date,
@@ -298,9 +300,7 @@ if __name__ == '__main__':
                                     pass
                                 pass
                             pass
-
                             # episode_return = getattr(env, 'episode_return', episode_return)
-
                         pass
                     else:
                         print('未找到模型文件', model_file_path)

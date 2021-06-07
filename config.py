@@ -1,7 +1,3 @@
-# 路径
-# CWD = './AgentPPO/StockTradingEnv-v1'
-# CWD = ''
-
 # 代理名称
 AGENT_NAME = ''
 
@@ -19,34 +15,29 @@ IF_SHOW_PREDICT_INFO = True
 VALI_DAYS_FLAG = ''
 
 ## time_fmt = '%Y-%m-%d'
-START_DATE = ""
-START_EVAL_DATE = ""
-END_DATE = ""
+START_DATE = ''
+START_EVAL_DATE = ''
+END_DATE = ''
 # 要输出的日期
 OUTPUT_DATE = ''
 
-DATA_SAVE_DIR = f"stock_db"
-
-# TRAINED_MODEL_DIR = f"trained_models"
-# TENSORBOARD_LOG_DIR = f"tensorboard_log"
-# RESULTS_DIR = f"results"
-# LOGGER_DIR = f"logger_log"
+DATA_SAVE_DIR = f'stock_db'
 
 # pth路径
 WEIGHTS_PATH = 'weights'
 
 # batch股票数据库地址
-STOCK_DB_PATH = "./" + DATA_SAVE_DIR + '/stock.db'
+STOCK_DB_PATH = './' + DATA_SAVE_DIR + '/stock.db'
 
 # ----
 # PostgreSQL
-PSQL_HOST = "192.168.192.1"
-PSQL_PORT = "5432"
-PSQL_DATABASE = "a_share"
-PSQL_USER = "dyh"
-PSQL_PASSWORD = "9898BdlLsdfsHsbgp"
+PSQL_HOST = '192.168.192.1'
+PSQL_PORT = '5432'
+PSQL_DATABASE = 'a_share'
+PSQL_USER = 'dyh'
+PSQL_PASSWORD = '9898BdlLsdfsHsbgp'
 # ----
 
 ## stockstats technical indicator column names
 ## check https://pypi.org/project/stockstats/ for different names
-TECHNICAL_INDICATORS_LIST = ["macd", "boll_ub", "boll_lb", "rsi_30", "cci_30", "dx_30", "close_30_sma", "close_60_sma"]
+TECHNICAL_INDICATORS_LIST = ['macd', 'boll_ub', 'boll_lb', 'rsi_30', 'cci_30', 'dx_30', 'close_30_sma', 'close_60_sma']

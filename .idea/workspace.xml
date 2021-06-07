@@ -20,92 +20,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9e89b71b-f959-4196-bdad-c897441ae9b7" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentDDPG/sh.600036/single_20/plot_20210605_174930.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentDDPG/sh.600036/single_30/plot_20210605_164143.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentDDPG/sh.600036/single_40/plot_20210605_153337.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentDDPG/sh.600036/single_50/plot_20210605_142615.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentDDPG/sh.600036/single_60/plot_20210605_131845.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentDDPG/sh.600036/single_72/plot_20210605_121113.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentDDPG/sh.600036/single_90/plot_20210605_110326.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_20/plot_20210605_030620.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_20/plot_20210606_014806.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_20/plot_20210606_135306.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_30/plot_20210605_022620.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_30/plot_20210606_010809.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_30/plot_20210606_131518.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_40/plot_20210605_014617.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_40/plot_20210606_002811.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_40/plot_20210606_123800.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_50/plot_20210605_010611.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_50/plot_20210605_234812.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_50/plot_20210606_115940.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_60/plot_20210605_002559.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_60/plot_20210605_230806.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_60/plot_20210606_112131.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_72/plot_20210604_234551.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_72/plot_20210605_222758.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_72/plot_20210606_104728.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_90/plot_20210604_230539.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_90/plot_20210605_214745.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentModSAC/sh.600036/single_90/plot_20210606_100948.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_20/plot_20210523_052923.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_20/plot_20210529_055511.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_30/plot_20210523_045946.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_30/plot_20210529_052542.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_40/plot_20210523_043003.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_40/plot_20210529_045609.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_50/plot_20210523_040021.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_50/plot_20210529_042633.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_60/plot_20210523_033031.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_60/plot_20210529_035649.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_72/plot_20210523_030033.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_72/plot_20210529_032705.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_90/plot_20210523_023030.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600036/single_90/plot_20210529_025713.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_20/plot_20210530_221834.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_20/plot_20210531_042414.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_30/plot_20210530_214548.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_30/plot_20210531_034923.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_40/plot_20210530_211217.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_40/plot_20210531_031426.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_50/plot_20210530_203946.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_50/plot_20210531_023918.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_60/plot_20210530_201027.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_60/plot_20210531_020401.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_72/plot_20210530_193733.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_72/plot_20210531_012850.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_90/plot_20210530_190821.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentPPO/sh.600667/single_90/plot_20210531_005340.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600036/single_20/plot_20210530_065723.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600036/single_30/plot_20210530_041115.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600036/single_40/plot_20210530_012536.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600036/single_50/plot_20210529_223941.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600036/single_60/plot_20210529_195355.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600036/single_72/plot_20210529_170814.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600036/single_90/plot_20210529_142229.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_20/plot_20210601_052707.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_20/plot_20210602_043333.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_30/plot_20210601_043934.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_30/plot_20210602_030259.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_40/plot_20210601_035214.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_40/plot_20210602_013240.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_50/plot_20210601_030444.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_50/plot_20210602_000205.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_60/plot_20210601_021717.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_60/plot_20210601_223141.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_72/plot_20210601_012952.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_72/plot_20210601_210105.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_90/plot_20210601_004216.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentSAC/sh.600667/single_90/plot_20210601_193011.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentTD3/sh.600036/single_20/plot_20210604_053628.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentTD3/sh.600036/single_30/plot_20210604_043024.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentTD3/sh.600036/single_40/plot_20210604_032431.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentTD3/sh.600036/single_50/plot_20210604_021826.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentTD3/sh.600036/single_60/plot_20210604_011215.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentTD3/sh.600036/single_72/plot_20210604_000624.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/weights/single/AgentTD3/sh.600036/single_90/plot_20210603_230020.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env_predict_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/env_predict_single.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/predict_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/predict_single.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stock_db/stock.db" beforeDir="false" afterPath="$PROJECT_DIR$/stock_db/stock.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/train.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_single.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,7 +46,7 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="JupyterTrust" id="4e924298-59a6-4583-b2cb-a8c7b8fb2aa4" />
+  <component name="JupyterTrust" id="64279009-ed3d-4003-8308-f89c0e48b455" />
   <component name="ProjectId" id="1sewuRk7nz1zo0tExbbzD8fZ1nX" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -148,7 +72,7 @@
       <recent name="$PROJECT_DIR$/pipeline" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.train_single">
+  <component name="RunManager" selected="Python.predict_single">
     <configuration name="env_train_single" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="a_share_pipeline" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -171,7 +95,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="predict_single" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="predict_single" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="a_share_pipeline" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -224,7 +148,6 @@
       <list>
         <item itemvalue="Python.train_single" />
         <item itemvalue="Python.env_train_single" />
-        <item itemvalue="Python.predict_single" />
       </list>
     </recent_temporary>
   </component>
@@ -306,7 +229,9 @@
       <workItem from="1622972726493" duration="13000" />
       <workItem from="1622973049758" duration="2319000" />
       <workItem from="1622975714645" duration="265000" />
-      <workItem from="1622984807975" duration="8870000" />
+      <workItem from="1622984807975" duration="9061000" />
+      <workItem from="1623031142975" duration="5000" />
+      <workItem from="1623077743644" duration="2556000" />
     </task>
     <servers />
   </component>
@@ -349,60 +274,60 @@
     </state>
     <state x="1029" y="490" width="424" height="484" key="FileChooserDialogImpl/0.27.2493.1413@0.27.2493.1413" timestamp="1622475807890" />
     <state x="3617" y="472" width="424" height="484" key="FileChooserDialogImpl/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622603734491" />
-    <state width="2439" height="352" key="GridCell.Tab.0.bottom" timestamp="1622998475449">
+    <state width="2439" height="643" key="GridCell.Tab.0.bottom" timestamp="1623079149738">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="361" key="GridCell.Tab.0.bottom/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874567" />
-    <state width="2439" height="352" key="GridCell.Tab.0.bottom/0.27.2493.1413@0.27.2493.1413" timestamp="1622998475449" />
+    <state width="2439" height="643" key="GridCell.Tab.0.bottom/0.27.2493.1413@0.27.2493.1413" timestamp="1623079149738" />
     <state width="2506" height="722" key="GridCell.Tab.0.bottom/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622768585206" />
     <state width="2439" height="229" key="GridCell.Tab.0.bottom/0.27.5120.1413@0.27.5120.1413" timestamp="1622594926913" />
-    <state width="2439" height="352" key="GridCell.Tab.0.center" timestamp="1622998475449">
+    <state width="2439" height="643" key="GridCell.Tab.0.center" timestamp="1623079149736">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="361" key="GridCell.Tab.0.center/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874567" />
-    <state width="2439" height="352" key="GridCell.Tab.0.center/0.27.2493.1413@0.27.2493.1413" timestamp="1622998475449" />
+    <state width="2439" height="643" key="GridCell.Tab.0.center/0.27.2493.1413@0.27.2493.1413" timestamp="1623079149736" />
     <state width="2506" height="722" key="GridCell.Tab.0.center/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622768585206" />
     <state width="2439" height="229" key="GridCell.Tab.0.center/0.27.5120.1413@0.27.5120.1413" timestamp="1622594926912" />
-    <state width="2439" height="352" key="GridCell.Tab.0.left" timestamp="1622998475448">
+    <state width="2439" height="643" key="GridCell.Tab.0.left" timestamp="1623079149735">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="361" key="GridCell.Tab.0.left/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874567" />
-    <state width="2439" height="352" key="GridCell.Tab.0.left/0.27.2493.1413@0.27.2493.1413" timestamp="1622998475448" />
+    <state width="2439" height="643" key="GridCell.Tab.0.left/0.27.2493.1413@0.27.2493.1413" timestamp="1623079149735" />
     <state width="2506" height="722" key="GridCell.Tab.0.left/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622768585206" />
     <state width="2439" height="229" key="GridCell.Tab.0.left/0.27.5120.1413@0.27.5120.1413" timestamp="1622594926912" />
-    <state width="2439" height="352" key="GridCell.Tab.0.right" timestamp="1622998475449">
+    <state width="2439" height="643" key="GridCell.Tab.0.right" timestamp="1623079149737">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="361" key="GridCell.Tab.0.right/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874567" />
-    <state width="2439" height="352" key="GridCell.Tab.0.right/0.27.2493.1413@0.27.2493.1413" timestamp="1622998475449" />
+    <state width="2439" height="643" key="GridCell.Tab.0.right/0.27.2493.1413@0.27.2493.1413" timestamp="1623079149737" />
     <state width="2506" height="722" key="GridCell.Tab.0.right/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622768585206" />
     <state width="2439" height="229" key="GridCell.Tab.0.right/0.27.5120.1413@0.27.5120.1413" timestamp="1622594926913" />
-    <state width="2439" height="321" key="GridCell.Tab.1.bottom" timestamp="1622996303446">
+    <state width="2439" height="171" key="GridCell.Tab.1.bottom" timestamp="1623077941879">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="290" key="GridCell.Tab.1.bottom/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874565" />
-    <state width="2439" height="321" key="GridCell.Tab.1.bottom/0.27.2493.1413@0.27.2493.1413" timestamp="1622996303446" />
+    <state width="2439" height="171" key="GridCell.Tab.1.bottom/0.27.2493.1413@0.27.2493.1413" timestamp="1623077941879" />
     <state width="2506" height="367" key="GridCell.Tab.1.bottom/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622084218936" />
     <state width="2506" height="205" key="GridCell.Tab.1.bottom/0.27.5120.1413@0.27.5120.1413" timestamp="1621908512788" />
-    <state width="2439" height="321" key="GridCell.Tab.1.center" timestamp="1622996303445">
+    <state width="2439" height="171" key="GridCell.Tab.1.center" timestamp="1623077941879">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="290" key="GridCell.Tab.1.center/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874565" />
-    <state width="2439" height="321" key="GridCell.Tab.1.center/0.27.2493.1413@0.27.2493.1413" timestamp="1622996303445" />
+    <state width="2439" height="171" key="GridCell.Tab.1.center/0.27.2493.1413@0.27.2493.1413" timestamp="1623077941879" />
     <state width="2506" height="367" key="GridCell.Tab.1.center/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622084218935" />
     <state width="2506" height="205" key="GridCell.Tab.1.center/0.27.5120.1413@0.27.5120.1413" timestamp="1621908512788" />
-    <state width="2439" height="321" key="GridCell.Tab.1.left" timestamp="1622996303445">
+    <state width="2439" height="171" key="GridCell.Tab.1.left" timestamp="1623077941879">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="290" key="GridCell.Tab.1.left/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874565" />
-    <state width="2439" height="321" key="GridCell.Tab.1.left/0.27.2493.1413@0.27.2493.1413" timestamp="1622996303445" />
+    <state width="2439" height="171" key="GridCell.Tab.1.left/0.27.2493.1413@0.27.2493.1413" timestamp="1623077941879" />
     <state width="2506" height="367" key="GridCell.Tab.1.left/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622084218935" />
     <state width="2506" height="205" key="GridCell.Tab.1.left/0.27.5120.1413@0.27.5120.1413" timestamp="1621908512788" />
-    <state width="2439" height="321" key="GridCell.Tab.1.right" timestamp="1622996303445">
+    <state width="2439" height="171" key="GridCell.Tab.1.right" timestamp="1623077941879">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="290" key="GridCell.Tab.1.right/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874565" />
-    <state width="2439" height="321" key="GridCell.Tab.1.right/0.27.2493.1413@0.27.2493.1413" timestamp="1622996303445" />
+    <state width="2439" height="171" key="GridCell.Tab.1.right/0.27.2493.1413@0.27.2493.1413" timestamp="1623077941879" />
     <state width="2506" height="367" key="GridCell.Tab.1.right/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622084218935" />
     <state width="2506" height="205" key="GridCell.Tab.1.right/0.27.5120.1413@0.27.5120.1413" timestamp="1621908512788" />
     <state x="633" y="369" key="SettingsEditor" timestamp="1622975730960">
@@ -426,6 +351,22 @@
     </state>
     <state x="909" y="347" width="672" height="678" key="search.everywhere.popup/0.27.2493.1413@0.27.2493.1413" timestamp="1621776613223" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/predict_single.py</url>
+          <line>19</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/predict_single.py</url>
+          <line>25</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/a_share_pipeline$train_single.coverage" NAME="train_single Coverage Results" MODIFIED="1622998449895" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/a_share_pipeline$daily_update_stockdb_batch.coverage" NAME="daily_update_stockdb_batch Coverage Results" MODIFIED="1622370567785" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
@@ -434,7 +375,7 @@
     <SUITE FILE_PATH="coverage/a_share_pipeline$predict_single_begin_date_fixed.coverage" NAME="predict_single_begin_date_fixed Coverage Results" MODIFIED="1621582568140" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
     <SUITE FILE_PATH="coverage/a_share_pipeline$config.coverage" NAME="config Coverage Results" MODIFIED="1621251296716" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
     <SUITE FILE_PATH="coverage/a_share_pipeline$test1.coverage" NAME="test1 Coverage Results" MODIFIED="1621246982782" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
-    <SUITE FILE_PATH="coverage/a_share_pipeline$predict_single.coverage" NAME="predict_single Coverage Results" MODIFIED="1622997572760" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/a_share_pipeline$predict_single.coverage" NAME="predict_single Coverage Results" MODIFIED="1623077967707" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/a_share_pipeline$env_train_single.coverage" NAME="env_train_single Coverage Results" MODIFIED="1622997638496" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/a_share_pipeline$predict_single_both_date_fixed.coverage" NAME="predict_single_both_date_fixed Coverage Results" MODIFIED="1622993733409" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pipeline/elegant" />
   </component>

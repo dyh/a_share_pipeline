@@ -223,13 +223,6 @@ class StockTradingEnvPredict:
         # reward = (total_asset - self.total_asset) * 2 ** -7  # reward scaling
         self.total_asset = total_asset
 
-        # for index in range(len(self.stocks)):
-        #     tic_temp = tic_ary_temp[index]
-        #     # print(tic_temp, '持股数量', self.stocks)
-        #     self.output_text_cache += f'         > {tic_temp}, 持股数量, {self.stocks[index]} \r\n'
-        #
-        # pass
-
         self.gamma_reward = self.gamma_reward * self.gamma + reward
         done = self.day == self.max_step
         if done:

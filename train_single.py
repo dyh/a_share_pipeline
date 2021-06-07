@@ -72,9 +72,6 @@ if __name__ == '__main__':
         # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
         config.VALI_DAYS_FLAG = str(work_days)
 
-        # model_folder_path = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}' \
-        #                     f'/single_{config.VALI_DAYS_FLAG}'
-
         model_folder_path = f'./{config.WEIGHTS_PATH}/single/{config.AGENT_NAME}/{config.SINGLE_A_STOCK_CODE[0]}' \
                             f'/single_{config.VALI_DAYS_FLAG}'
 
@@ -147,7 +144,7 @@ if __name__ == '__main__':
         end_eval_date = config.END_DATE
 
         # train
-        args.env = StockTradingEnv(cwd='./datasets', gamma=gamma, max_stock=max_stock,
+        args.env = StockTradingEnv(cwd='', gamma=gamma, max_stock=max_stock,
                                    initial_capital=initial_capital,
                                    buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct, start_date=start_date,
                                    end_date=start_eval_date, env_eval_date=end_eval_date, ticker_list=config.SINGLE_A_STOCK_CODE,
@@ -155,7 +152,7 @@ if __name__ == '__main__':
                                    if_eval=False)
 
         # eval
-        args.env_eval = StockTradingEnvPredict(cwd='./datasets', gamma=gamma, max_stock=max_stock,
+        args.env_eval = StockTradingEnvPredict(cwd='', gamma=gamma, max_stock=max_stock,
                                                initial_capital=initial_capital,
                                                buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
                                                start_date=start_date,
