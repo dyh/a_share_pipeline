@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # 开始预测的时间
     time_begin = datetime.now()
 
-    initial_capital = 100000
+    initial_capital = 150000
 
     max_stock = 3000
 
@@ -26,7 +26,7 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-06-08'
+        config.OUTPUT_DATE = '2021-06-10'
 
         # 前10后10，前10后x，前x后10
         config.PREDICT_PERIOD = '20'
@@ -40,7 +40,7 @@ if __name__ == '__main__':
             config.AGENT_NAME = agent_item
             # config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
 
-            break_step = int(1e5)
+            break_step = int(3e6)
 
             if_on_policy = True
             if_use_gae = True
