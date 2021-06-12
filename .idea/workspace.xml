@@ -20,10 +20,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9e89b71b-f959-4196-bdad-c897441ae9b7" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/predict_single_do_not_insert_into_psql.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/predict_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/predict_single.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stock_db/stock.db" beforeDir="false" afterPath="$PROJECT_DIR$/stock_db/stock.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_single.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/predict_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/predict_single_insert_into_psql.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,11 +53,14 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../cv/mask_editor" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/pipeline/utils" />
@@ -66,7 +68,7 @@
       <recent name="$PROJECT_DIR$/pipeline" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.predict_single">
+  <component name="RunManager" selected="Python.predict_single_insert_into_psql">
     <configuration name="env_train_single" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="a_share_pipeline" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -89,7 +91,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="predict_single" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+    <configuration name="predict_single_insert_into_psql" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="a_share_pipeline" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -102,7 +104,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/predict_single.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/predict_single_insert_into_psql.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -134,9 +136,9 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.predict_single" />
       <item itemvalue="Python.env_train_single" />
       <item itemvalue="Python.train_single" />
+      <item itemvalue="Python.predict_single_insert_into_psql" />
     </list>
     <recent_temporary>
       <list>
@@ -241,7 +243,7 @@
       <workItem from="1623372947390" duration="553000" />
       <workItem from="1623378324662" duration="5000" />
       <workItem from="1623400392594" duration="2522000" />
-      <workItem from="1623501332889" duration="543000" />
+      <workItem from="1623501332889" duration="902000" />
     </task>
     <servers />
   </component>
@@ -284,32 +286,32 @@
     </state>
     <state x="1029" y="490" width="424" height="484" key="FileChooserDialogImpl/0.27.2493.1413@0.27.2493.1413" timestamp="1622475807890" />
     <state x="3617" y="472" width="424" height="484" key="FileChooserDialogImpl/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1622603734491" />
-    <state width="1822" height="143" key="GridCell.Tab.0.bottom" timestamp="1623406491739">
-      <screen x="0" y="27" width="5120" height="1413" />
+    <state width="2439" height="208" key="GridCell.Tab.0.bottom" timestamp="1623501862842">
+      <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="361" key="GridCell.Tab.0.bottom/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874567" />
-    <state width="2439" height="396" key="GridCell.Tab.0.bottom/0.27.2493.1413@0.27.2493.1413" timestamp="1623373499586" />
+    <state width="2439" height="208" key="GridCell.Tab.0.bottom/0.27.2493.1413@0.27.2493.1413" timestamp="1623501862842" />
     <state width="2506" height="406" key="GridCell.Tab.0.bottom/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1623320463355" />
     <state width="1822" height="143" key="GridCell.Tab.0.bottom/0.27.5120.1413@0.27.5120.1413" timestamp="1623406491739" />
-    <state width="1822" height="143" key="GridCell.Tab.0.center" timestamp="1623406491739">
-      <screen x="0" y="27" width="5120" height="1413" />
+    <state width="2439" height="208" key="GridCell.Tab.0.center" timestamp="1623501862842">
+      <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="361" key="GridCell.Tab.0.center/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874567" />
-    <state width="2439" height="396" key="GridCell.Tab.0.center/0.27.2493.1413@0.27.2493.1413" timestamp="1623373499586" />
+    <state width="2439" height="208" key="GridCell.Tab.0.center/0.27.2493.1413@0.27.2493.1413" timestamp="1623501862842" />
     <state width="2506" height="406" key="GridCell.Tab.0.center/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1623320463355" />
     <state width="1822" height="143" key="GridCell.Tab.0.center/0.27.5120.1413@0.27.5120.1413" timestamp="1623406491739" />
-    <state width="1822" height="143" key="GridCell.Tab.0.left" timestamp="1623406491739">
-      <screen x="0" y="27" width="5120" height="1413" />
+    <state width="2439" height="208" key="GridCell.Tab.0.left" timestamp="1623501862842">
+      <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="361" key="GridCell.Tab.0.left/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874567" />
-    <state width="2439" height="396" key="GridCell.Tab.0.left/0.27.2493.1413@0.27.2493.1413" timestamp="1623373499586" />
+    <state width="2439" height="208" key="GridCell.Tab.0.left/0.27.2493.1413@0.27.2493.1413" timestamp="1623501862842" />
     <state width="2506" height="406" key="GridCell.Tab.0.left/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1623320463355" />
     <state width="1822" height="143" key="GridCell.Tab.0.left/0.27.5120.1413@0.27.5120.1413" timestamp="1623406491739" />
-    <state width="1822" height="143" key="GridCell.Tab.0.right" timestamp="1623406491739">
-      <screen x="0" y="27" width="5120" height="1413" />
+    <state width="2439" height="208" key="GridCell.Tab.0.right" timestamp="1623501862842">
+      <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="2439" height="361" key="GridCell.Tab.0.right/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622474874567" />
-    <state width="2439" height="396" key="GridCell.Tab.0.right/0.27.2493.1413@0.27.2493.1413" timestamp="1623373499586" />
+    <state width="2439" height="208" key="GridCell.Tab.0.right/0.27.2493.1413@0.27.2493.1413" timestamp="1623501862842" />
     <state width="2506" height="406" key="GridCell.Tab.0.right/0.27.2560.1413/2560.0.2560.1440@2560.0.2560.1440" timestamp="1623320463355" />
     <state width="1822" height="143" key="GridCell.Tab.0.right/0.27.5120.1413@0.27.5120.1413" timestamp="1623406491739" />
     <state width="2439" height="171" key="GridCell.Tab.1.bottom" timestamp="1623081726684">
@@ -350,11 +352,11 @@
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="1246" height="707" key="XDebugger.FullValuePopup/0.27.2493.1413@0.27.2493.1413" timestamp="1621960047393" />
-    <state x="699" y="139" width="1385" height="1105" key="find.popup" timestamp="1623249523943">
+    <state x="699" y="139" width="1385" height="1105" key="find.popup" timestamp="1623502193601">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state x="699" y="139" width="1385" height="1105" key="find.popup/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622473802245" />
-    <state x="699" y="139" width="1385" height="1105" key="find.popup/0.27.2493.1413@0.27.2493.1413" timestamp="1623249523943" />
+    <state x="699" y="139" width="1385" height="1105" key="find.popup/0.27.2493.1413@0.27.2493.1413" timestamp="1623502193601" />
     <state x="1928" y="200" width="2069" height="844" key="find.popup/0.27.5120.1413@0.27.5120.1413" timestamp="1621907613136" />
     <state x="909" y="347" width="672" height="678" key="search.everywhere.popup" timestamp="1621776613223">
       <screen x="0" y="27" width="2493" height="1413" />

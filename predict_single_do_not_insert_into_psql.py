@@ -1,5 +1,4 @@
 from stock_data import StockData
-from utils.psqldb import Psqldb
 from agent_single import *
 from utils.date_time import *
 from env_predict_single import StockTradingEnvPredict, FeatureEngineer
@@ -7,7 +6,7 @@ from run_single import *
 from datetime import datetime
 
 if __name__ == '__main__':
-
+    # 预测，但不保存到 postgresql 数据库
     # 开始预测的时间
     time_begin = datetime.now()
 
@@ -21,10 +20,6 @@ if __name__ == '__main__':
 
         # 要预测的那一天
         config.SINGLE_A_STOCK_CODE = [tic_item, ]
-
-        # psql对象
-        psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
-                             password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
         config.OUTPUT_DATE = '2021-06-15'
 
@@ -281,26 +276,6 @@ if __name__ == '__main__':
                             pass
 
                             print('>>>> env.list_output', env.list_buy_or_sell_output)
-
-                            # 插入数据库
-                            # tic, date, -sell/+buy, hold, 第x天 = env.list_buy_or_sell_output
-                            # agent，vali_days，pred_period = config.AGENT_NAME, config.VALI_DAYS_FLAG, config.PREDICT_PERIOD
-
-                            # 获取要预测的日期，保存到数据库中
-                            for item in env.list_buy_or_sell_output:
-                                tic, date, action, hold, day, episode_return = item
-                                if str(date) == config.OUTPUT_DATE:
-                                    # 找到要预测的那一天，存储到psql
-                                    StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
-                                                                            vali_period_value=config.VALI_DAYS_FLAG,
-                                                                            pred_period_name=config.PREDICT_PERIOD,
-                                                                            tic=tic, date=date, action=action,
-                                                                            hold=hold,
-                                                                            day=day, episode_return=episode_return)
-                                    pass
-                                pass
-                            pass
-                            # episode_return = getattr(env, 'episode_return', episode_return)
                         pass
                     else:
                         print('未找到模型文件', model_file_path)
@@ -309,8 +284,6 @@ if __name__ == '__main__':
 
                 pass
             pass
-
-        psql_object.close()
         pass
 
     # 结束预测的时间
