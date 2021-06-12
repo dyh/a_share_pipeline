@@ -3,10 +3,10 @@ import torch
 import numpy as np
 import numpy.random as rd
 from copy import deepcopy
-from elegantrl.net import QNet, QNetDuel, QNetTwin, QNetTwinDuel
-from elegantrl.net import Actor, ActorSAC, ActorPPO
-from elegantrl.net import Critic, CriticAdv, CriticTwin
-from elegantrl.net import SharedDPG, SharedSPG, SharedPPO
+from ElegantRL_master.elegantrl.net import QNet, QNetDuel, QNetTwin, QNetTwinDuel
+from ElegantRL_master.elegantrl.net import Actor, ActorSAC, ActorPPO
+from ElegantRL_master.elegantrl.net import Critic, CriticAdv, CriticTwin
+from ElegantRL_master.elegantrl.net import SharedDPG, SharedSPG, SharedPPO
 
 """[ElegantRL](https://github.com/AI4Finance-LLC/ElegantRL)"""
 

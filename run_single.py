@@ -7,7 +7,7 @@ import numpy.random as rd
 from copy import deepcopy
 from ElegantRL_master.elegantrl.replay import ReplayBuffer, ReplayBufferMP
 from ElegantRL_master.elegantrl.env import PreprocessEnv
-from pipeline.elegant import config
+import config
 
 """[ElegantRL](https://github.com/AI4Finance-LLC/ElegantRL)"""
 
@@ -15,6 +15,7 @@ from pipeline.elegant import config
 class Arguments:
     def __init__(self, agent=None, env=None, gpu_id=None, if_on_policy=False):
         self.agent = agent  # Deep Reinforcement Learning algorithm
+
         self.cwd = None  # current work directory. cwd is None means set it automatically
         self.env = env  # the environment for training
         self.env_eval = None  # the environment for evaluating
@@ -69,8 +70,15 @@ class Arguments:
 
         '''set cwd automatically'''
         if self.cwd is None:
+            # ----
             agent_name = self.agent.__class__.__name__
-            self.cwd = f'./{agent_name}/{self.env.env_name}_{self.gpu_id}'
+            # self.cwd = f'./{agent_name}/{self.env.env_name}_{self.gpu_id}'
+            # self.cwd = f'./{agent_name}/{self.env.env_name}'
+            self.cwd = f'./{config.WEIGHTS_PATH}/{self.env.env_name}'
+
+            # model_folder_path = f'./{config.WEIGHTS_PATH}/single/{config.AGENT_NAME}/{config.SINGLE_A_STOCK_CODE[0]}' \
+            #       f'/single_{config.VALI_DAYS_FLAG}'
+            # ----
 
         if if_main:
             print(f'| GPU id: {self.gpu_id}, cwd: {self.cwd}')
@@ -137,11 +145,15 @@ def train_and_evaluate(args):
     agent.init(net_dim, state_dim, action_dim, if_per)
 
     # ----
-    # work_days，周期数，用于存储和提取训练好的模型
-    model_file_path = f'./AgentPPO/hs300_{config.VALI_DAYS_FLAG}/actor.pth'
+    # 目录 path
+    model_folder_path = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}' \
+                        f'/single_{config.VALI_DAYS_FLAG}'
+    # 文件 path
+    model_file_path = f'{model_folder_path}/actor.pth'
+
     # 如果model存在，则加载
     if os.path.exists(model_file_path):
-        agent.save_load_model(f'./AgentPPO/hs300_{config.VALI_DAYS_FLAG}', if_save=False)
+        agent.save_load_model(model_folder_path, if_save=False)
     pass
     # ----
 
@@ -237,11 +249,18 @@ def mp_train(args, pipe1_eva, pipe1_exp_list):
     agent.init(net_dim, state_dim, action_dim, if_per)
 
     # ----
-    # work_days，周期数，用于存储和提取训练好的模型
-    model_file_path = f'./AgentPPO/hs300_{config.VALI_DAYS_FLAG}/actor.pth'
+    # 目录 path
+    model_folder_path = f'./{config.WEIGHTS_PATH}/single/{config.AGENT_NAME}/{config.SINGLE_A_STOCK_CODE[0]}' \
+                        f'/single_{config.VALI_DAYS_FLAG}'
+
+    # f'./{config.WEIGHTS_PATH}/single/{config.AGENT_NAME}/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
+
+    # 文件 path
+    model_file_path = f'{model_folder_path}/actor.pth'
+
     # 如果model存在，则加载
     if os.path.exists(model_file_path):
-        agent.save_load_model(f'./AgentPPO/hs300_{config.VALI_DAYS_FLAG}', if_save=False)
+        agent.save_load_model(model_folder_path, if_save=False)
     pass
     # ----
 
@@ -354,11 +373,19 @@ def mp_explore(args, pipe2_exp, worker_id):
     agent.init(net_dim, state_dim, action_dim, if_per)
 
     # ----
-    # work_days，周期数，用于存储和提取训练好的模型
-    model_file_path = f'./AgentPPO/hs300_{config.VALI_DAYS_FLAG}/actor.pth'
+    # 目录 path
+    # model_folder_path = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}' \
+    #                     f'/single_{config.VALI_DAYS_FLAG}'
+
+    model_folder_path = f'./{config.WEIGHTS_PATH}/single/{config.AGENT_NAME}/{config.SINGLE_A_STOCK_CODE[0]}' \
+                        f'/single_{config.VALI_DAYS_FLAG}'
+
+    # 文件 path
+    model_file_path = f'{model_folder_path}/actor.pth'
+
     # 如果model存在，则加载
     if os.path.exists(model_file_path):
-        agent.save_load_model(f'./AgentPPO/hs300_{config.VALI_DAYS_FLAG}', if_save=False)
+        agent.save_load_model(model_folder_path, if_save=False)
     pass
     # ----
 

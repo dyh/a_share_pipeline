@@ -1,11 +1,9 @@
-import os
 import pandas as pd
 import numpy as np
 import numpy.random as rd
 import torch
 
-from pipeline.elegant import config
-from pipeline.stock_data import StockData, fields_prep
+import config
 
 
 class StockTradingEnv:
@@ -116,8 +114,6 @@ class StockTradingEnv:
             reward = self.gamma_reward
             self.episode_return = total_asset / self.initial_total_asset
 
-        # print('reward', reward)
-
         return state, reward, done, dict()
 
     def load_data(self, cwd='./envs/FinRL', if_eval=None,
@@ -125,6 +121,7 @@ class StockTradingEnv:
                   start_date='2008-03-19', end_date='2016-01-01', env_eval_date='2021-01-01'):
 
         # 从数据库中读取fe fillzero的数据
+        from stock_data import StockData
         processed_df = StockData.get_fe_fillzero_from_sqlite(begin_date=start_date, end_date=env_eval_date,
                                                              list_stock_code=config.SINGLE_A_STOCK_CODE,
                                                              table_name='fe_origin')
@@ -164,6 +161,7 @@ class StockTradingEnv:
         tech_ary = list()
         price_ary = list()
 
+        from stock_data import fields_prep
         columns_list = fields_prep.split(',')
 
         for day in range(len(df.index.unique())):
@@ -249,8 +247,8 @@ def check_stock_trading_env():
     print(f"| Random action: episode return {env.episode_return:.3f}")
 
     '''draw_cumulative_return'''
-    from elegantrl.agent import AgentPPO
-    from elegantrl.run import Arguments
+    from agent_single import AgentPPO
+    from run_single import Arguments
     args = Arguments(if_on_policy=True)
     args.agent = AgentPPO()
     args.env = StockTradingEnv(if_eval=True)

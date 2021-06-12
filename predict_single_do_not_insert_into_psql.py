@@ -1,74 +1,16 @@
-import sys
-
-if 'pipeline' not in sys.path:
-    sys.path.append('../../')
-
-if 'FinRL_Library_master' not in sys.path:
-    sys.path.append('../../FinRL_Library_master')
-
-if 'ElegantRL_master' not in sys.path:
-    sys.path.append('../../ElegantRL_master')
-
-from pipeline.utils.psqldb import Psqldb
-from pipeline.stock_data import StockData
-from pipeline.elegant.agent_single import *
-from pipeline.utils.date_time import *
-from pipeline.elegant.env_predict_single import StockTradingEnvPredict, FeatureEngineer
-from pipeline.elegant.run_single import *
-
-
-def update_stock_data(tic_code=''):
-    # 创建目录
-    if not os.path.exists("./" + config.DATA_SAVE_DIR):
-        os.makedirs("./" + config.DATA_SAVE_DIR)
-    pass
-
-    # 下载、更新 股票数据
-    StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE,
-                                        dbname=config.STOCK_DB_PATH, adjustflag='2')
-
-    # 缓存 raw 数据 为 df
-    raw_df = StockData.load_stock_raw_data_from_sqlite(list_batch_code=config.SINGLE_A_STOCK_CODE,
-                                                       date_begin=config.START_DATE, date_end=config.END_DATE,
-                                                       db_path=config.STOCK_DB_PATH)
-
-    date1, open1, high1, low1, close1, volume1 = StockData.get_today_stock_data_from_sina_api(
-        tic_code=tic_code.replace('.', ''))
-
-    # 查询raw_df里是否有 date 日期的数据，如果没有，则添加临时真实数据
-    if raw_df.loc[raw_df["date"] == date1].empty is True:
-        # 为 raw 添加今日行情数据
-        list1 = [(date1, open1, high1, low1, close1, volume1, tic_code), ]
-        raw_df = StockData.append_rows_to_raw_df(raw_df, list1)
-        pass
-
-    # raw_df -> fe
-    fe_origin_table_name = "fe_origin"
-
-    # 创建fe表
-    StockData.create_fe_table(db_path=config.STOCK_DB_PATH, table_name=fe_origin_table_name)
-
-    fe = FeatureEngineer(use_turbulence=False,
-                         user_defined_feature=False,
-                         use_technical_indicator=True,
-                         tech_indicator_list=config.TECHNICAL_INDICATORS_LIST, )
-
-    fe_df = fe.preprocess_data(raw_df)
-
-    # 将 fe_df 存入数据库
-    # 增量fe
-    # StockData.save_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name, dbname=config.STOCK_DB_PATH)
-    StockData.clear_and_insert_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name)
-
-    pass
-
+from stock_data import StockData
+from agent_single import *
+from utils.date_time import *
+from env_predict_single import StockTradingEnvPredict, FeatureEngineer
+from run_single import *
+from datetime import datetime
 
 if __name__ == '__main__':
+    # 预测，但不保存到 postgresql 数据库
+    # 开始预测的时间
+    time_begin = datetime.now()
 
-    # 输出开始预测的时间
-    print('开始时间点', time_point())
-
-    initial_capital = 100000
+    initial_capital = 150000
 
     max_stock = 3000
 
@@ -79,11 +21,7 @@ if __name__ == '__main__':
         # 要预测的那一天
         config.SINGLE_A_STOCK_CODE = [tic_item, ]
 
-        # psql对象
-        psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
-                             password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
-
-        config.OUTPUT_DATE = '2021-06-07'
+        config.OUTPUT_DATE = '2021-06-15'
 
         # 前10后10，前10后x，前x后10
         config.PREDICT_PERIOD = '20'
@@ -92,12 +30,12 @@ if __name__ == '__main__':
         # AgentDoubleDQN 单进程好用?
         # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
         # for agent_item in ['AgentModSAC', ]:
-        for agent_item in ['AgentPPO', 'AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentModSAC']:
+        for agent_item in ['AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentPPO', 'AgentModSAC']:
 
             config.AGENT_NAME = agent_item
-            config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
+            # config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
 
-            break_step = int(1e5)
+            break_step = int(3e6)
 
             if_on_policy = True
             if_use_gae = True
@@ -120,14 +58,13 @@ if __name__ == '__main__':
             StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
 
             # 更新股票数据
-            update_stock_data(tic_code=config.SINGLE_A_STOCK_CODE[0])
+            StockData.update_stock_data(tic_code=config.SINGLE_A_STOCK_CODE[0])
 
             # 预测的截止日期
             begin_vali_date = get_datetime_from_date_str(config.START_EVAL_DATE)
 
             # 获取7个日期list
             list_end_vali_date = get_end_vali_date_list(begin_vali_date)
-
 
             # 循环 vali_date_list 训练7次
             for end_vali_item in list_end_vali_date:
@@ -139,7 +76,9 @@ if __name__ == '__main__':
                 config.VALI_DAYS_FLAG = str(vali_days)
 
                 # weights 文件目录
-                model_folder_path = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}' \
+                # model_folder_path = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}' \
+                #                     f'/single_{config.VALI_DAYS_FLAG}'
+                model_folder_path = f'./{config.WEIGHTS_PATH}/single/{config.AGENT_NAME}/{config.SINGLE_A_STOCK_CODE[0]}' \
                                     f'/single_{config.VALI_DAYS_FLAG}'
 
                 # 如果存在目录则预测
@@ -200,7 +139,7 @@ if __name__ == '__main__':
                     start_eval_date = config.START_EVAL_DATE
                     end_eval_date = config.END_DATE
 
-                    args.env = StockTradingEnvPredict(cwd='./datasets', gamma=gamma, max_stock=max_stock,
+                    args.env = StockTradingEnvPredict(cwd='', gamma=gamma, max_stock=max_stock,
                                                       initial_capital=initial_capital,
                                                       buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
                                                       start_date=start_date,
@@ -210,7 +149,7 @@ if __name__ == '__main__':
                                                       initial_stocks=initial_stocks,
                                                       if_eval=True)
 
-                    args.env_eval = StockTradingEnvPredict(cwd='./datasets', gamma=gamma, max_stock=max_stock,
+                    args.env_eval = StockTradingEnvPredict(cwd='', gamma=gamma, max_stock=max_stock,
                                                            initial_capital=initial_capital,
                                                            buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
                                                            start_date=start_date,
@@ -337,28 +276,6 @@ if __name__ == '__main__':
                             pass
 
                             print('>>>> env.list_output', env.list_buy_or_sell_output)
-
-                            # 插入数据库
-                            # tic, date, -sell/+buy, hold, 第x天 = env.list_buy_or_sell_output
-                            # agent，vali_days，pred_period = config.AGENT_NAME, config.VALI_DAYS_FLAG, config.PREDICT_PERIOD
-
-                            # 获取要预测的日期，保存到数据库中
-                            for item in env.list_buy_or_sell_output:
-                                tic, date, action, hold, day, episode_return = item
-                                if str(date) == config.OUTPUT_DATE:
-                                    # 找到要预测的那一天，存储到psql
-                                    StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
-                                                                            vali_period_value=config.VALI_DAYS_FLAG,
-                                                                            pred_period_name=config.PREDICT_PERIOD,
-                                                                            tic=tic, date=date, action=action,
-                                                                            hold=hold,
-                                                                            day=day, episode_return=episode_return)
-                                    pass
-                                pass
-                            pass
-
-                            # episode_return = getattr(env, 'episode_return', episode_return)
-
                         pass
                     else:
                         print('未找到模型文件', model_file_path)
@@ -367,11 +284,10 @@ if __name__ == '__main__':
 
                 pass
             pass
-
-        psql_object.close()
-
         pass
 
-    # 输出结束预测的时间
-    print('结束时间点', time_point())
+    # 结束预测的时间
+    time_end = datetime.now()
+    duration = (time_end - time_begin).seconds
+    print('检测耗时', duration, '秒')
     pass
