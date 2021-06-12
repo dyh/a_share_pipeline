@@ -137,8 +137,8 @@
     </configuration>
     <list>
       <item itemvalue="Python.env_train_single" />
-      <item itemvalue="Python.train_single" />
       <item itemvalue="Python.predict_single_insert_into_psql" />
+      <item itemvalue="Python.train_single" />
     </list>
     <recent_temporary>
       <list>
