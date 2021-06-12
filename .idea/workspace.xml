@@ -20,9 +20,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9e89b71b-f959-4196-bdad-c897441ae9b7" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/predict_single_do_not_insert_into_psql.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/predict_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/predict_single_insert_into_psql.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,7 +40,7 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="JupyterTrust" id="5a1eed6f-0c9c-4a0a-8dad-10699dd7220f" />
+  <component name="JupyterTrust" id="566732f2-f42d-495c-98be-85dc24a75855" />
   <component name="ProjectId" id="1sewuRk7nz1zo0tExbbzD8fZ1nX" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -68,7 +69,7 @@
       <recent name="$PROJECT_DIR$/pipeline" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.predict_single_insert_into_psql">
+  <component name="RunManager" selected="Python.train_single">
     <configuration name="env_train_single" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="a_share_pipeline" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -113,7 +114,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="train_single" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="train_single" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="a_share_pipeline" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -136,13 +137,12 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.env_train_single" />
-      <item itemvalue="Python.predict_single_insert_into_psql" />
       <item itemvalue="Python.train_single" />
+      <item itemvalue="Python.predict_single_insert_into_psql" />
+      <item itemvalue="Python.env_train_single" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.train_single" />
         <item itemvalue="Python.env_train_single" />
       </list>
     </recent_temporary>
@@ -352,11 +352,11 @@
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state width="1246" height="707" key="XDebugger.FullValuePopup/0.27.2493.1413@0.27.2493.1413" timestamp="1621960047393" />
-    <state x="699" y="139" width="1385" height="1105" key="find.popup" timestamp="1623502193601">
+    <state x="699" y="139" width="1385" height="1105" key="find.popup" timestamp="1623508687804">
       <screen x="0" y="27" width="2493" height="1413" />
     </state>
     <state x="699" y="139" width="1385" height="1105" key="find.popup/0.27.2493.1413/2560.0.2560.1440@0.27.2493.1413" timestamp="1622473802245" />
-    <state x="699" y="139" width="1385" height="1105" key="find.popup/0.27.2493.1413@0.27.2493.1413" timestamp="1623502193601" />
+    <state x="699" y="139" width="1385" height="1105" key="find.popup/0.27.2493.1413@0.27.2493.1413" timestamp="1623508687804" />
     <state x="1928" y="200" width="2069" height="844" key="find.popup/0.27.5120.1413@0.27.5120.1413" timestamp="1621907613136" />
     <state x="909" y="347" width="672" height="678" key="search.everywhere.popup" timestamp="1621776613223">
       <screen x="0" y="27" width="2493" height="1413" />

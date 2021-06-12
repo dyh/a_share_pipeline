@@ -136,6 +136,8 @@ dmypy.json
 *.csv
 *.db
 
+stock.db
+
 /pipeline/informer/checkpoints/
 /pipeline/informer/temp_dataset/
 /pipeline/finrl/datasets_temp/
