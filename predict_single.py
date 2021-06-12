@@ -26,7 +26,7 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-06-10'
+        config.OUTPUT_DATE = '2021-06-15'
 
         # 前10后10，前10后x，前x后10
         config.PREDICT_PERIOD = '20'
@@ -35,7 +35,7 @@ if __name__ == '__main__':
         # AgentDoubleDQN 单进程好用?
         # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
         # for agent_item in ['AgentModSAC', ]:
-        for agent_item in ['AgentPPO', 'AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentModSAC']:
+        for agent_item in ['AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentPPO', 'AgentModSAC']:
 
             config.AGENT_NAME = agent_item
             # config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'

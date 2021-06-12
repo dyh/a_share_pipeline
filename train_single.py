@@ -33,7 +33,7 @@ if __name__ == '__main__':
     initial_stocks_train[0] = 1000.0
     initial_stocks_vali[0] = 1000.0
 
-    break_step = 10000
+    break_step = 50000
     # break_step = int(3e6)
 
     if_on_policy = True
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     # AgentDoubleDQN 单进程好用?
     # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
     # 选择agent
-    for agent_item in ['AgentModSAC', 'AgentTD3', 'AgentSAC', 'AgentPPO', 'AgentDDPG']:
+    for agent_item in ['AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentPPO', 'AgentModSAC']:
 
         config.AGENT_NAME = agent_item
 
@@ -234,8 +234,8 @@ if __name__ == '__main__':
             print('>', config.AGENT_NAME, break_step, 'steps', '训练耗时', duration, '秒')
 
             # sleep 60 秒
-            print('sleep 60 秒')
-            time.sleep(60)
+            print('sleep 20 秒')
+            time.sleep(20)
             pass
         pass
     pass
