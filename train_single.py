@@ -51,8 +51,10 @@ if __name__ == '__main__':
     # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
     # AgentDoubleDQN 单进程好用?
     # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
+
     # 选择agent
-    for agent_item in ['AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentPPO', 'AgentModSAC']:
+    # for agent_item in ['AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentPPO', 'AgentModSAC']:
+    for agent_item in ['AgentDDPG', ]:
 
         config.AGENT_NAME = agent_item
 

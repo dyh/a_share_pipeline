@@ -8,7 +8,6 @@ from datetime import datetime
 
 if __name__ == '__main__':
     # 预测，并保存结果到 postgresql 数据库
-
     # 开始预测的时间
     time_begin = datetime.now()
 
