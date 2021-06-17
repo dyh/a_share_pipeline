@@ -21,7 +21,7 @@ if __name__ == '__main__':
         # 要预测的那一天
         config.SINGLE_A_STOCK_CODE = [tic_item, ]
 
-        config.OUTPUT_DATE = '2021-06-15'
+        config.OUTPUT_DATE = '2021-06-17'
 
         # 前10后10，前10后x，前x后10
         config.PREDICT_PERIOD = '20'
@@ -30,15 +30,16 @@ if __name__ == '__main__':
         # AgentDoubleDQN 单进程好用?
         # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
         # for agent_item in ['AgentModSAC', ]:
-        for agent_item in ['AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentPPO', 'AgentModSAC']:
+        #  'AgentDDPG', 'AgentPPO', 'AgentModSAC', 'AgentSAC'
+        for agent_item in ['AgentTD3', ]:
 
             config.AGENT_NAME = agent_item
             # config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
 
             break_step = int(3e6)
 
-            if_on_policy = True
-            if_use_gae = True
+            if_on_policy = False
+            if_use_gae = False
 
             # 预测的开始日期和结束日期，都固定
 
@@ -50,12 +51,12 @@ if __name__ == '__main__':
             config.START_DATE = "2002-05-01"
 
             # 向左10工作日
-            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -10))
+            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -17))
             # 向右10工作日
-            config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), +9))
+            config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), +3))
 
             # 创建预测结果表
-            StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
+            # StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
 
             # 更新股票数据
             StockData.update_stock_data(tic_code=config.SINGLE_A_STOCK_CODE[0])

@@ -1266,11 +1266,14 @@ class StockData(object):
             tic_code=tic_code.replace('.', ''))
 
         # 查询raw_df里是否有 date 日期的数据，如果没有，则添加临时真实数据
-        if raw_df.loc[raw_df["date"] == date1].empty is True:
-            # 为 raw 添加今日行情数据
-            list1 = [(date1, open1, high1, low1, close1, volume1, tic_code), ]
-            raw_df = StockData.append_rows_to_raw_df(raw_df, list1)
+        if float(open1) > 0:
+            if raw_df.loc[raw_df["date"] == date1].empty is True:
+                # 为 raw 添加今日行情数据
+                list1 = [(date1, open1, high1, low1, close1, volume1, tic_code), ]
+                raw_df = StockData.append_rows_to_raw_df(raw_df, list1)
+                pass
             pass
+        pass
 
         # raw_df -> fe
         fe_origin_table_name = "fe_origin"

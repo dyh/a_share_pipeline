@@ -36,8 +36,8 @@ if __name__ == '__main__':
     break_step = 50000
     # break_step = int(3e6)
 
-    if_on_policy = True
-    if_use_gae = True
+    if_on_policy = False
+    # if_use_gae = True
 
     config.IF_SHOW_PREDICT_INFO = False
 
@@ -54,7 +54,8 @@ if __name__ == '__main__':
 
     # 选择agent
     # for agent_item in ['AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentPPO', 'AgentModSAC']:
-    for agent_item in ['AgentDDPG', ]:
+    # , 'AgentModSAC'
+    for agent_item in ['AgentTD3', ]:
 
         config.AGENT_NAME = agent_item
 
@@ -105,34 +106,45 @@ if __name__ == '__main__':
 
             # Agent
             # args = Arguments(if_on_policy=True)
-            args = Arguments(if_on_policy=if_on_policy)
-
+            # off-policy DRL algorithm: AgentSAC, AgentTD3, AgentDDPG, AgentModSAC
+            # on-policy DRL algorithm: AgentPPO
+            agent_class = None
             if config.AGENT_NAME == 'AgentPPO':
-                args.agent = AgentPPO()
+                agent_class = AgentPPO()
+                if_on_policy = True
                 pass
             elif config.AGENT_NAME == 'AgentSAC':
-                args.agent = AgentSAC()
+                agent_class = AgentSAC()
+                if_on_policy = False
                 pass
             elif config.AGENT_NAME == 'AgentTD3':
-                args.agent = AgentTD3()
+                agent_class = AgentTD3()
+                if_on_policy = False
                 pass
             elif config.AGENT_NAME == 'AgentDDPG':
-                args.agent = AgentDDPG()
+                agent_class = AgentDDPG()
+                if_on_policy = False
                 pass
             elif config.AGENT_NAME == 'AgentModSAC':
-                args.agent = AgentModSAC()
+                agent_class = AgentModSAC()
+                if_on_policy = False
                 pass
             elif config.AGENT_NAME == 'AgentDuelingDQN':
-                args.agent = AgentDuelingDQN()
+                agent_class = AgentDuelingDQN()
+                if_on_policy = False
                 pass
             elif config.AGENT_NAME == 'AgentSharedSAC':
-                args.agent = AgentSharedSAC()
+                agent_class = AgentSharedSAC()
+                if_on_policy = False
                 pass
             elif config.AGENT_NAME == 'AgentDoubleDQN':
-                args.agent = AgentDoubleDQN()
+                agent_class = AgentDoubleDQN()
+                if_on_policy = False
                 pass
 
-            args.agent.if_use_gae = if_use_gae
+            args = Arguments(if_on_policy=if_on_policy)
+            args.agent = agent_class
+            # args.agent.if_use_gae = if_use_gae
             args.agent.lambda_entropy = 0.04
             args.gpu_id = 0
 
