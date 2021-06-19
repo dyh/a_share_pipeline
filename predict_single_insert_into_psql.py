@@ -26,17 +26,19 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-06-17'
+        config.OUTPUT_DATE = '2021-06-21'
 
         # 前10后10，前10后x，前x后10
-        config.PREDICT_PERIOD = '20'
+        config.PREDICT_PERIOD = '42'
 
         # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
         # AgentDoubleDQN 单进程好用?
         # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
         # for agent_item in ['AgentModSAC', ]:
         # , 'AgentModSAC'
-        for agent_item in ['AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentPPO']:
+        # for agent_item in ['AgentTD3', 'AgentPPO']:
+        # for agent_item in ['AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentPPO', 'AgentModSAC']:
+        for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC', 'AgentModSAC']:
 
             config.AGENT_NAME = agent_item
             # config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
@@ -56,7 +58,7 @@ if __name__ == '__main__':
             config.START_DATE = "2002-05-01"
 
             # 向左10工作日
-            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -17))
+            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -39))
             # 向右10工作日
             config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), +3))
 

@@ -16,6 +16,47 @@ from utils.date_time import get_datetime_from_date_str, time_point, get_begin_va
 from env_train_single import StockTradingEnv
 from env_predict_single import StockTradingEnvPredict
 
+
+# 定向训练
+def filter_date(list_begin_vali_date_temp):
+
+    # 获取7个日期list
+    list_filter_date = []
+
+    # 过滤日期，专项预测
+    if config.AGENT_NAME == 'AgentPPO':
+        list_filter_date = [90, 72, ]
+        pass
+    elif config.AGENT_NAME == 'AgentSAC':
+        list_filter_date = [90, 50, ]
+        pass
+    elif config.AGENT_NAME == 'AgentTD3':
+        list_filter_date = [90, 60, ]
+        pass
+    elif config.AGENT_NAME == 'AgentDDPG':
+        list_filter_date = [72, 50, ]
+        pass
+    elif config.AGENT_NAME == 'AgentModSAC':
+        pass
+    elif config.AGENT_NAME == 'AgentDuelingDQN':
+        pass
+    elif config.AGENT_NAME == 'AgentSharedSAC':
+        pass
+    elif config.AGENT_NAME == 'AgentDoubleDQN':
+        pass
+    pass
+
+    list_result = []
+    for work_days1, begin_date1 in list_begin_vali_date_temp:
+        if work_days1 in list_filter_date:
+            list_result.append((work_days1, begin_date1))
+        pass
+    pass
+
+    return list_result
+    pass
+
+
 if __name__ == '__main__':
     # 开始训练的日期，在程序启动之后，不要改变。
     config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
@@ -33,7 +74,8 @@ if __name__ == '__main__':
     initial_stocks_train[0] = 1000.0
     initial_stocks_vali[0] = 1000.0
 
-    break_step = 50000
+    # break_step = 50000
+    # break_step = int(1e6)
     # break_step = int(3e6)
 
     if_on_policy = False
@@ -53,9 +95,8 @@ if __name__ == '__main__':
     # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
 
     # 选择agent
-    # for agent_item in ['AgentSAC', 'AgentTD3', 'AgentDDPG', 'AgentPPO', 'AgentModSAC']:
-    # , 'AgentModSAC'
-    for agent_item in ['AgentTD3', ]:
+    # for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC', 'AgentModSAC']:
+    for agent_item in ['AgentPPO', 'AgentSAC', 'AgentDDPG', 'AgentTD3', ]:
 
         config.AGENT_NAME = agent_item
 
@@ -70,16 +111,19 @@ if __name__ == '__main__':
         # 获取7个日期list
         list_begin_vali_date = get_begin_vali_date_list(end_vali_date)
 
+        # 过滤日期，专项预测
+        list_begin_vali_date = filter_date(list_begin_vali_date)
+
         # 倒序，由大到小
-        list_begin_vali_date.reverse()
+        # list_begin_vali_date.reverse()
 
         # 循环 list_begin_vali_date
-        for begin_vali_item in list_begin_vali_date:
+        for work_days, begin_date in list_begin_vali_date:
 
             # 开始的时间
             time_begin = datetime.now()
 
-            work_days, begin_date = begin_vali_item
+            # work_days, begin_date = begin_vali_item
 
             # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
             config.VALI_DAYS_FLAG = str(work_days)
@@ -97,7 +141,6 @@ if __name__ == '__main__':
             print('\r\n')
             print('-' * 40)
             print('config.AGENT_NAME', config.AGENT_NAME)
-            print('break_step', break_step)
             print('# 训练-预测周期', config.START_DATE, '-', config.START_EVAL_DATE, '-', config.END_DATE)
             print('# work_days', work_days)
             print('# model_folder_path', model_folder_path)
@@ -112,35 +155,47 @@ if __name__ == '__main__':
             if config.AGENT_NAME == 'AgentPPO':
                 agent_class = AgentPPO()
                 if_on_policy = True
+                break_step = int(8e6)
                 pass
             elif config.AGENT_NAME == 'AgentSAC':
                 agent_class = AgentSAC()
                 if_on_policy = False
+                break_step = 50000
                 pass
             elif config.AGENT_NAME == 'AgentTD3':
                 agent_class = AgentTD3()
                 if_on_policy = False
+                break_step = 50000
                 pass
             elif config.AGENT_NAME == 'AgentDDPG':
                 agent_class = AgentDDPG()
                 if_on_policy = False
+                break_step = 50000
                 pass
             elif config.AGENT_NAME == 'AgentModSAC':
                 agent_class = AgentModSAC()
                 if_on_policy = False
+                break_step = 50000
                 pass
             elif config.AGENT_NAME == 'AgentDuelingDQN':
                 agent_class = AgentDuelingDQN()
                 if_on_policy = False
+                break_step = 50000
                 pass
             elif config.AGENT_NAME == 'AgentSharedSAC':
                 agent_class = AgentSharedSAC()
                 if_on_policy = False
+                break_step = 50000
                 pass
             elif config.AGENT_NAME == 'AgentDoubleDQN':
                 agent_class = AgentDoubleDQN()
                 if_on_policy = False
+                break_step = 50000
                 pass
+            else:
+                break_step = 50000
+
+            print('break_step', break_step)
 
             args = Arguments(if_on_policy=if_on_policy)
             args.agent = agent_class
@@ -253,3 +308,4 @@ if __name__ == '__main__':
             pass
         pass
     pass
+
