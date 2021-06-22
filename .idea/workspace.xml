@@ -20,19 +20,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9e89b71b-f959-4196-bdad-c897441ae9b7" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/predict_single_sqlite.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reports/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reports/psql_to_html.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reports/sh.600036.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reports/sqlite_to_html.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reports/template/card_predict_result.template" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reports/template/index.html.template" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/env_predict_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/env_predict_single.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/predict_single_insert_into_psql.py" beforeDir="false" afterPath="$PROJECT_DIR$/predict_single_psql.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stock_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/stock_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_single.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/date_time.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/date_time.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -381,7 +370,7 @@
       <workItem from="1624295344821" duration="80000" />
       <workItem from="1624325319141" duration="67000" />
       <workItem from="1624355841016" duration="4795000" />
-      <workItem from="1624373395507" duration="2059000" />
+      <workItem from="1624373395507" duration="2837000" />
     </task>
     <servers />
   </component>

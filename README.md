@@ -1,6 +1,6 @@
 # A Share Pipeline
 
-- 人工智能A股 Pipeline
+- A股预测 Pipeline
 
 ### 使用框架：
 - https://github.com/AI4Finance-LLC/ElegantRL
@@ -100,5 +100,5 @@
 10. 预测数据 sh.600036
 
     ```
-    $ python predict_single_do_not_insert_into_psql.py
+    $ python predict_single_sqlite.py
     ```
