@@ -30,7 +30,7 @@ def filter_date(list_begin_vali_date_temp):
         list_filter_date = [90, 72, 60, 50, 40, 30, 20]
         pass
     elif config.AGENT_NAME == 'AgentTD3':
-        list_filter_date = [40, 30, 20]
+        list_filter_date = [90, 72, 60, 50, 40, 30, 20]
         pass
     elif config.AGENT_NAME == 'AgentDDPG':
         list_filter_date = [90, 72, 60, 50, 40, 30, 20]
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     # 选择agent
     # for agent_item in ['AgentModSAC', ]:
-    for agent_item in ['AgentTD3', 'AgentPPO', 'AgentDDPG', 'AgentSAC']:
+    for agent_item in ['AgentSAC', 'AgentPPO', 'AgentTD3', 'AgentDDPG']:
 
         config.AGENT_NAME = agent_item
 
