@@ -1,0 +1,36 @@
+
+        <div class="container">
+			<h4 class="text-primary text-center">
+                预测 <%date%>
+			</h4>
+
+			<h4 class="text-primary text-center">
+                <%tic%> 持股 <%most_hold%> %
+                买卖 <%most_action%> %
+            </h4>
+
+            <h4 class="text-success text-center">
+                <a href='<%tic%>.txt' target="_blank">[ 点击查看 <%day%> 天预测交易详情 <%tic%>.txt ]</a>
+			</h4>
+
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+			        <h1 class="panel-title"><%tic%> <%date%></h1>
+			    </div>
+
+				<table class="table">
+					<tr>
+						<th>T-1回报率/低买高卖价差</th>
+						<th>买卖</th>
+						<th>持股</th>
+                        <th>算法</th>
+						<th>验证周期</th>
+						<th>预测周期</th>
+					</tr>
+					<%predict_result_table_tr_td%>
+				</table>
+			</div>
+
+            <img src="https://image.sinajs.cn/newchart/daily/n/<%tic_no_dot%>.gif" alt="日K" width="100%"/>
+
+		</div>

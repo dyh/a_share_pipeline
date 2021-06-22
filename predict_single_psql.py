@@ -1,12 +1,48 @@
 from stock_data import StockData
+from utils.psqldb import Psqldb
 from agent_single import *
 from utils.date_time import *
 from env_predict_single import StockTradingEnvPredict, FeatureEngineer
 from run_single import *
 from datetime import datetime
 
+
+def calc_max_return(price_ary, initial_capital_temp):
+    # ret = 0
+    max_return_temp = 0
+    # max_value = 0
+    min_value = 0
+
+    assert price_ary.shape[0] > 1
+
+    count_price = price_ary.shape[0]
+
+    for index_left in range(0, count_price - 1):
+
+        for index_right in range(index_left+1, count_price):
+
+            assert price_ary[index_left][0] > 0
+
+            assert price_ary[index_right][0] > 0
+
+            temp_value = price_ary[index_right][0] - price_ary[index_left][0]
+
+            if temp_value > max_return_temp:
+                max_return_temp = temp_value
+                # max_value = price_ary[index1][0]
+                min_value = price_ary[index_right][0]
+            pass
+
+        # print(price_ary[index][0])
+        pass
+
+    ret = (initial_capital_temp / min_value * max_return_temp + initial_capital_temp) / initial_capital_temp
+
+    return ret
+
+
 if __name__ == '__main__':
-    # 预测，但不保存到 postgresql 数据库
+    # 预测，并保存结果到 postgresql 数据库
     # 开始预测的时间
     time_begin = datetime.now()
 
@@ -21,17 +57,22 @@ if __name__ == '__main__':
         # 要预测的那一天
         config.SINGLE_A_STOCK_CODE = [tic_item, ]
 
-        config.OUTPUT_DATE = '2021-06-17'
+        # psql对象
+        psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
+                             password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
+
+        config.OUTPUT_DATE = '2021-06-23'
 
         # 前10后10，前10后x，前x后10
-        config.PREDICT_PERIOD = '20'
+        config.PREDICT_PERIOD = '40'
 
         # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
         # AgentDoubleDQN 单进程好用?
         # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
         # for agent_item in ['AgentModSAC', ]:
-        #  'AgentDDPG', 'AgentPPO', 'AgentModSAC', 'AgentSAC'
-        for agent_item in ['AgentTD3', ]:
+        # , 'AgentModSAC'
+        # for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC', 'AgentModSAC']:
+        for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC']:
 
             config.AGENT_NAME = agent_item
             # config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
@@ -39,7 +80,7 @@ if __name__ == '__main__':
             break_step = int(3e6)
 
             if_on_policy = False
-            if_use_gae = False
+            # if_use_gae = False
 
             # 预测的开始日期和结束日期，都固定
 
@@ -51,12 +92,12 @@ if __name__ == '__main__':
             config.START_DATE = "2002-05-01"
 
             # 向左10工作日
-            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -17))
+            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -39))
             # 向右10工作日
             config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), +3))
 
             # 创建预测结果表
-            # StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
+            StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
 
             # 更新股票数据
             StockData.update_stock_data(tic_code=config.SINGLE_A_STOCK_CODE[0])
@@ -94,33 +135,45 @@ if __name__ == '__main__':
                     print('# initial_capital', initial_capital)
                     print('# max_stock', max_stock)
 
-                    # Agent
-                    args = Arguments(if_on_policy=if_on_policy)
-
+                    agent_class = None
                     if config.AGENT_NAME == 'AgentPPO':
-                        args.agent = AgentPPO()
+                        agent_class = AgentPPO()
+                        if_on_policy = True
                         pass
                     elif config.AGENT_NAME == 'AgentSAC':
-                        args.agent = AgentSAC()
+                        agent_class = AgentSAC()
+                        if_on_policy = False
                         pass
                     elif config.AGENT_NAME == 'AgentTD3':
-                        args.agent = AgentTD3()
+                        agent_class = AgentTD3()
+                        if_on_policy = False
                         pass
                     elif config.AGENT_NAME == 'AgentDDPG':
-                        args.agent = AgentDDPG()
+                        agent_class = AgentDDPG()
+                        if_on_policy = False
                         pass
                     elif config.AGENT_NAME == 'AgentModSAC':
-                        args.agent = AgentModSAC()
+                        agent_class = AgentModSAC()
+                        if_on_policy = False
                         pass
                     elif config.AGENT_NAME == 'AgentDuelingDQN':
-                        args.agent = AgentDuelingDQN()
+                        agent_class = AgentDuelingDQN()
+                        if_on_policy = False
                         pass
                     elif config.AGENT_NAME == 'AgentSharedSAC':
-                        args.agent = AgentSharedSAC()
+                        agent_class = AgentSharedSAC()
+                        if_on_policy = False
+                        pass
+                    elif config.AGENT_NAME == 'AgentDoubleDQN':
+                        agent_class = AgentDoubleDQN()
+                        if_on_policy = False
                         pass
 
+                    args = Arguments(if_on_policy=if_on_policy)
+                    args.agent = agent_class
+
                     args.gpu_id = 0
-                    args.agent.if_use_gae = if_use_gae
+                    # args.agent.if_use_gae = if_use_gae
                     args.agent.lambda_entropy = 0.04
 
                     tech_indicator_list = [
@@ -277,6 +330,33 @@ if __name__ == '__main__':
                             pass
 
                             print('>>>> env.list_output', env.list_buy_or_sell_output)
+
+                            # 插入数据库
+                            # tic, date, -sell/+buy, hold, 第x天 = env.list_buy_or_sell_output
+                            # agent，vali_days，pred_period = config.AGENT_NAME, config.VALI_DAYS_FLAG, config.PREDICT_PERIOD
+
+                            # 获取要预测的日期，保存到数据库中
+                            for item in env.list_buy_or_sell_output:
+                                tic, date, action, hold, day, episode_return = item
+                                if str(date) == config.OUTPUT_DATE:
+                                    # 简单计算一次,低买高卖的最大回报
+                                    max_return = calc_max_return(env.price_ary, env.initial_capital)
+
+                                    # 找到要预测的那一天，存储到psql
+                                    StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
+                                                                            vali_period_value=config.VALI_DAYS_FLAG,
+                                                                            pred_period_name=config.PREDICT_PERIOD,
+                                                                            tic=tic, date=date, action=action,
+                                                                            hold=hold,
+                                                                            day=day, episode_return=episode_return,
+                                                                            max_return=max_return)
+
+                                    break
+
+                                    pass
+                                pass
+                            pass
+                            # episode_return = getattr(env, 'episode_return', episode_return)
                         pass
                     else:
                         print('未找到模型文件', model_file_path)
@@ -285,6 +365,8 @@ if __name__ == '__main__':
 
                 pass
             pass
+
+        psql_object.close()
         pass
 
     # 结束预测的时间

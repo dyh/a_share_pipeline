@@ -19,22 +19,21 @@ from env_predict_single import StockTradingEnvPredict
 
 # 定向训练
 def filter_date(list_begin_vali_date_temp):
-
     # 获取7个日期list
     list_filter_date = []
 
     # 过滤日期，专项预测
     if config.AGENT_NAME == 'AgentPPO':
-        list_filter_date = [90, 72, ]
+        list_filter_date = [90, 72, 60, 50, 40, 30, 20]
         pass
     elif config.AGENT_NAME == 'AgentSAC':
-        list_filter_date = [90, 50, ]
+        list_filter_date = [90, 72, 60, 50, 40, 30, 20]
         pass
     elif config.AGENT_NAME == 'AgentTD3':
-        list_filter_date = [90, 60, ]
+        list_filter_date = [40, 30, 20]
         pass
     elif config.AGENT_NAME == 'AgentDDPG':
-        list_filter_date = [72, 50, ]
+        list_filter_date = [90, 72, 60, 50, 40, 30, 20]
         pass
     elif config.AGENT_NAME == 'AgentModSAC':
         pass
@@ -95,15 +94,15 @@ if __name__ == '__main__':
     # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
 
     # 选择agent
-    # for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC', 'AgentModSAC']:
-    for agent_item in ['AgentPPO', 'AgentSAC', 'AgentDDPG', 'AgentTD3', ]:
+    # for agent_item in ['AgentModSAC', ]:
+    for agent_item in ['AgentTD3', 'AgentPPO', 'AgentDDPG', 'AgentSAC']:
 
         config.AGENT_NAME = agent_item
 
         # config.AGENT_NAME = 'AgentDDPG'
         # config.CWD = f'./{config.WEIGHTS_PATH}/single/{config.AGENT_NAME}/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
 
-        # 4月16日向前，20,30,40,50,60,72,90周期
+        # 2021-05-21，20,30,40,50,60,72,90周期
 
         # 预测的截止日期
         end_vali_date = get_datetime_from_date_str(config.END_DATE)
@@ -114,7 +113,9 @@ if __name__ == '__main__':
         # 过滤日期，专项预测
         list_begin_vali_date = filter_date(list_begin_vali_date)
 
-        # 倒序，由大到小
+        print('filter_date', list_begin_vali_date)
+
+        # 倒序，由小到大
         # list_begin_vali_date.reverse()
 
         # 循环 list_begin_vali_date
@@ -308,4 +309,3 @@ if __name__ == '__main__':
             pass
         pass
     pass
-

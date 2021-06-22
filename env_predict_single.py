@@ -42,10 +42,11 @@ class StockTradingEnvPredict:
         self.episode_return = 0.0
 
         # 输出的缓存
-        self.output_text_cache = ''
+        self.output_text_trade_detail = ''
 
         # 输出的list
         self.list_buy_or_sell_output = []
+
         pass
 
     def reset(self):
@@ -72,7 +73,7 @@ class StockTradingEnvPredict:
 
         # ----
         # 清空输出的缓存
-        self.output_text_cache = ''
+        self.output_text_trade_detail = ''
 
         # 输出的list
         self.list_buy_or_sell_output.clear()
@@ -97,7 +98,7 @@ class StockTradingEnvPredict:
         date_ary_temp = self.date_ary[self.day]
         date_temp = date_ary_temp[0]
 
-        self.output_text_cache += f'第 {self.day + 1} 天，{date_temp}\r\n'
+        self.output_text_trade_detail += f'第 {self.day + 1} 天，{date_temp}\r\n'
 
         for index in np.where(actions < 0)[0]:  # sell_index:
             if price[index] > 0:  # Sell only if current asset is > 0
@@ -123,6 +124,7 @@ class StockTradingEnvPredict:
 
                         # tic, date, sell/buy, hold, 第x天
                         episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
+
                         list_item = (tic_temp, date_temp, -1 * sell_num_shares, self.stocks[index], self.day + 1,
                                      episode_return_temp)
                         # 添加到输出list
@@ -135,6 +137,7 @@ class StockTradingEnvPredict:
 
                     # tic, date, sell/buy, hold, 第x天
                     episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
+
                     list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
                     # 添加到输出list
                     self.list_buy_or_sell_output.append(list_item)
@@ -142,7 +145,7 @@ class StockTradingEnvPredict:
                 pass
 
                 price_diff = str(round(price[index] - yesterday_price[index], 6))
-                self.output_text_cache += f'        > {tic_temp}，' \
+                self.output_text_trade_detail += f'        > {tic_temp}，' \
                                           f'卖出：{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
                                           f'涨跌：￥{price_diff} 元，' \
                                           f'现金：{self.amount}，资产：{self.total_asset} \r\n'
@@ -186,6 +189,7 @@ class StockTradingEnvPredict:
 
                     # tic, date, sell/buy, hold, 第x天
                     episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
+
                     list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
                     # 添加到输出list
                     self.list_buy_or_sell_output.append(list_item)
@@ -193,7 +197,7 @@ class StockTradingEnvPredict:
                 pass
 
                 price_diff = str(round(price[index] - yesterday_price[index], 6))
-                self.output_text_cache += f'        > {tic_temp}，' \
+                self.output_text_trade_detail += f'        > {tic_temp}，' \
                                           f'买入：{buy_num_shares} 股, 持股数量：{self.stocks[index]}，' \
                                           f'涨跌：￥{price_diff} 元，' \
                                           f'现金：{self.amount}，资产：{self.total_asset} \r\n'
@@ -206,6 +210,7 @@ class StockTradingEnvPredict:
                 # tic, date, sell/buy, hold, 第x天
                 tic_temp = tic_ary_temp[index]
                 episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
+
                 list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
                 # 添加到输出list
                 self.list_buy_or_sell_output.append(list_item)
@@ -232,7 +237,7 @@ class StockTradingEnvPredict:
             # ----
             if config.IF_SHOW_PREDICT_INFO:
                 # date_temp = date_ary_temp[index]
-                print(self.output_text_cache)
+                print(self.output_text_trade_detail)
                 print(f'第 {self.day + 1} 天，{date_temp}，现金：{self.amount}，'
                       f'股票：{str((self.stocks * price).sum())}，总资产：{self.total_asset}')
 
@@ -314,14 +319,21 @@ class StockTradingEnvPredict:
             price_ary.append(item.close)  # adjusted close price (adjcp)
 
             # ----
-            tic_ary.append(list(item.tic))
-            date_ary.append(list(item.date))
+            # tic_ary.append(list(item.tic))
+            # date_ary.append(list(item.date))
+
+            tic_ary.append(item.tic)
+            date_ary.append(item.date)
+
             # ----
 
             pass
 
         price_ary = np.array(price_ary)
         tech_ary = np.array(tech_ary)
+
+        tic_ary = np.array(tic_ary)
+        date_ary = np.array(date_ary)
 
         print(f'| price_ary.shape: {price_ary.shape}, tech_ary.shape: {tech_ary.shape}')
         return price_ary, tech_ary, tic_ary, date_ary

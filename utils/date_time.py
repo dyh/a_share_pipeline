@@ -117,33 +117,33 @@ def get_begin_vali_date_list(end_vali_date):
 
     list_result = list()
 
-    # 20周期
-    begin_vali_date = get_next_day(end_vali_date, next_flag=-28)
-    list_result.append((20, begin_vali_date))
-
-    # 30周期
-    begin_vali_date = get_next_day(end_vali_date, next_flag=-42)
-    list_result.append((30, begin_vali_date))
-
-    # 40周期
-    begin_vali_date = get_next_day(end_vali_date, next_flag=-56)
-    list_result.append((40, begin_vali_date))
-
-    # 50周期
-    begin_vali_date = get_next_day(end_vali_date, next_flag=-77)
-    list_result.append((50, begin_vali_date))
-
-    # 60周期
-    begin_vali_date = get_next_day(end_vali_date, next_flag=-91)
-    list_result.append((60, begin_vali_date))
+    # 90周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-134)
+    list_result.append((90, begin_vali_date))
 
     # 72周期
     begin_vali_date = get_next_day(end_vali_date, next_flag=-108)
     list_result.append((72, begin_vali_date))
 
-    # 90周期
-    begin_vali_date = get_next_day(end_vali_date, next_flag=-134)
-    list_result.append((90, begin_vali_date))
+    # 60周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-91)
+    list_result.append((60, begin_vali_date))
+
+    # 50周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-77)
+    list_result.append((50, begin_vali_date))
+
+    # 40周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-56)
+    list_result.append((40, begin_vali_date))
+
+    # 30周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-42)
+    list_result.append((30, begin_vali_date))
+
+    # 20周期
+    begin_vali_date = get_next_day(end_vali_date, next_flag=-28)
+    list_result.append((20, begin_vali_date))
 
     return list_result
 
@@ -185,3 +185,20 @@ def get_end_vali_date_list(begin_vali_date):
     list_result.append((90, end_vali_date))
 
     return list_result
+
+
+def get_week_day(string_time_point):
+    week_day_dict = {
+        0: '周一',
+        1: '周二',
+        2: '周三',
+        3: '周四',
+        4: '周五',
+        5: '周六',
+        6: '周日',
+    }
+
+    day_of_week = datetime.datetime.fromtimestamp(
+        time.mktime(time.strptime(string_time_point, "%Y-%m-%d"))).weekday()
+
+    return week_day_dict[day_of_week]

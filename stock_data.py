@@ -11,8 +11,7 @@ from env_train_single import FeatureEngineer
 from utils.psqldb import Psqldb
 from utils.sqlite import SQLite
 from utils.date_time import get_today_date, is_greater, get_datetime_from_date_str, get_next_work_day, \
-    get_next_day
-
+    get_next_day, time_point
 
 # 5分钟K线的时间点
 list_time_point_5minutes = ['09:35:00',
@@ -1178,7 +1177,7 @@ class StockData(object):
 
     @staticmethod
     def update_predict_result_to_psql(psql, agent, vali_period_value, pred_period_name, tic, date,
-                                      action, hold, day, episode_return):
+                                      action, hold, day, episode_return, max_return):
 
         # 为避免重复数据，删除date相同、agent相同、pred_period_name相同的历史数据
         sql_cmd = f'DELETE FROM "public"."{tic}" WHERE "date"=%s AND "agent"=%s AND "vali_period_value"=%s AND "pred_period_name"=%s'
@@ -1191,10 +1190,10 @@ class StockData(object):
         # tic, date, sell/buy, hold, 第x天
 
         sql_cmd = f'INSERT INTO "public"."{tic}" ("date", "agent", "vali_period_value", ' \
-                  f'"pred_period_name", "action", "hold", "day", "episode_return") VALUES (%s,%s,%s,%s,%s,%s,%s,%s)'
+                  f'"pred_period_name", "action", "hold", "day", "episode_return", "max_return") VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)'
 
         sql_values = (str(date), agent, vali_period_value, pred_period_name,
-                      str(action), str(hold), str(day), str(episode_return))
+                      str(action), str(hold), str(day), str(episode_return), str(max_return))
 
         psql.execute_non_query(sql=sql_cmd, values=sql_values)
         psql.commit()
@@ -1212,12 +1211,66 @@ class StockData(object):
                       f'("id" serial8, "date" date NOT NULL, "agent" text NOT NULL, ' \
                       f'"vali_period_value" int4 NOT NULL, "pred_period_name" text NOT NULL, ' \
                       f'"action" decimal NOT NULL, "hold" decimal NOT NULL, "day" int4 NOT NULL, ' \
-                      f'"episode_return" decimal NOT NULL, "create_time" timestamp(6) DEFAULT CURRENT_TIMESTAMP , ' \
+                      f'"episode_return" decimal NOT NULL, "max_return" decimal NOT NULL, ' \
+                      f'"create_time" timestamp(6) DEFAULT CURRENT_TIMESTAMP , ' \
                       f'PRIMARY KEY ("id"));'
             psql.execute_non_query(sql=sql_cmd)
             psql.commit()
             pass
         psql.close()
+        pass
+
+    @staticmethod
+    def update_predict_result_to_sqlite(agent, vali_period_value, pred_period_name, tic, date,
+                                        action, hold, day, episode_return, max_return, trade_detail,
+                                        db_path=config.STOCK_DB_PATH):
+
+        table_name = tic + '_report'
+
+        # 连接数据库
+        sqlite = SQLite(db_path)
+
+        # 为避免重复数据，删除date相同、agent相同、pred_period_name相同的历史数据
+        sql_cmd = f'DELETE FROM "{table_name}" WHERE date="{str(date)}" AND agent="{agent}" AND vali_period_value="{vali_period_value}" AND pred_period_name="{pred_period_name}"'
+        sqlite.execute_non_query(sql=sql_cmd)
+        # 提交
+        sqlite.commit()
+
+        sql_cmd = f'INSERT INTO "{table_name}" ("date", "agent", "vali_period_value", ' \
+                  f'"pred_period_name", "action", "hold", "day", "episode_return", "max_return", "create_time", "trade_detail") VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+
+        sql_values = (str(date), agent, vali_period_value, pred_period_name, str(action),
+                      str(hold), str(day), str(episode_return), str(max_return), str(time_point()), str(trade_detail))
+
+        sqlite.execute_non_query(sql=sql_cmd, values=sql_values)
+
+        # 提交
+        sqlite.commit()
+        sqlite.close()
+        pass
+    pass
+
+    @staticmethod
+    def create_predict_result_table_sqlite(tic='', db_path=config.STOCK_DB_PATH):
+        sqlite = SQLite(db_path)
+
+        table_name = tic + '_report'
+        if_exists = sqlite.table_exists(table_name)
+
+        # 如果没有同名的表，则新建
+        if if_exists is None:
+            sqlite.execute_non_query(sql=f'CREATE TABLE "{table_name}" (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+                                         f'date TEXT NOT NULL, agent TEXT NOT NULL, '
+                                         f'vali_period_value TEXT NOT NULL, pred_period_name TEXT NOT NULL, '
+                                         f'action TEXT NOT NULL, hold TEXT NOT NULL, '
+                                         f'day TEXT NOT NULL, episode_return TEXT NOT NULL, '
+                                         f'max_return TEXT NOT NULL, create_time TEXT NOT NULL, '
+                                         f'trade_detail TEXT NOT NULL);')
+
+            # 提交
+            sqlite.commit()
+            sqlite.close()
+            pass
         pass
 
     @staticmethod
