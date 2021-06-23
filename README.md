@@ -102,3 +102,10 @@
     ```
     $ python predict_single_sqlite.py
     ```
+
+11. 生成报告 sh.600036
+
+    ```
+    $ cd reports
+    $ python sqlite_to_html.py
+    ```

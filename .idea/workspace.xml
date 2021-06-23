@@ -22,11 +22,7 @@
     <list default="true" id="9e89b71b-f959-4196-bdad-c897441ae9b7" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/predict_single_psql.py" beforeDir="false" afterPath="$PROJECT_DIR$/predict_single_psql.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/predict_single_sqlite.py" beforeDir="false" afterPath="$PROJECT_DIR$/predict_single_sqlite.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reports/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/reports/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reports/sh.600036.txt" beforeDir="false" afterPath="$PROJECT_DIR$/reports/sh.600036.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_single.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +39,7 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="JupyterTrust" id="059da831-9f9a-4b84-8955-92646b501b87" />
+  <component name="JupyterTrust" id="ff40ee3b-0ac0-4e7d-8c17-7a5cda604ad4" />
   <component name="ProjectId" id="1sewuRk7nz1zo0tExbbzD8fZ1nX" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -382,6 +378,7 @@
       <workItem from="1624435691580" duration="1669000" />
       <workItem from="1624442734238" duration="52000" />
       <workItem from="1624457509068" duration="1458000" />
+      <workItem from="1624459600134" duration="213000" />
     </task>
     <servers />
   </component>

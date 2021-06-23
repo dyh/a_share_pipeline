@@ -91,6 +91,11 @@ if __name__ == '__main__':
             # 向右10工作日
             config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), +3))
 
+            # 创建sqlite目录
+            if not os.path.exists(config.DATA_SAVE_DIR):
+                os.makedirs(config.DATA_SAVE_DIR)
+                pass
+
             # 创建预测结果表
             StockData.create_predict_result_table_sqlite(tic=config.SINGLE_A_STOCK_CODE[0])
 
