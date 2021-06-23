@@ -1,6 +1,6 @@
 # A Share Pipeline
 
-- A股预测 Pipeline
+- A股决策 Pipeline
 
 ### 使用框架：
 - https://github.com/AI4Finance-LLC/ElegantRL

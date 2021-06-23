@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     # 选择agent
     # for agent_item in ['AgentModSAC', ]:
-    for agent_item in ['AgentSAC', 'AgentPPO', 'AgentTD3', 'AgentDDPG']:
+    for agent_item in ['AgentTD3', 'AgentDDPG', 'AgentSAC', 'AgentPPO']:
 
         config.AGENT_NAME = agent_item
 
@@ -216,8 +216,8 @@ if __name__ == '__main__':
             print('# initial_stocks_train', initial_stocks_train)
             print('# initial_stocks_vali', initial_stocks_vali)
 
-            buy_cost_pct = 0.0003
-            sell_cost_pct = 0.0003
+            buy_cost_pct = 0.003
+            sell_cost_pct = 0.003
             start_date = config.START_DATE
             start_eval_date = config.START_EVAL_DATE
             end_eval_date = config.END_DATE

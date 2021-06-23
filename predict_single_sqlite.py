@@ -56,7 +56,7 @@ if __name__ == '__main__':
         # 要预测的那一天
         config.SINGLE_A_STOCK_CODE = [tic_item, ]
 
-        config.OUTPUT_DATE = '2021-06-23'
+        config.OUTPUT_DATE = '2021-06-24'
 
         # 前10后10，前10后x，前x后10
         config.PREDICT_PERIOD = '40'
@@ -182,8 +182,8 @@ if __name__ == '__main__':
                     initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
                     initial_stocks[0] = 1000.0
 
-                    buy_cost_pct = 0.0003
-                    sell_cost_pct = 0.0003
+                    buy_cost_pct = 0.003
+                    sell_cost_pct = 0.003
                     start_date = config.START_DATE
                     start_eval_date = config.START_EVAL_DATE
                     end_eval_date = config.END_DATE
