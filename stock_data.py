@@ -1177,7 +1177,7 @@ class StockData(object):
 
     @staticmethod
     def update_predict_result_to_psql(psql, agent, vali_period_value, pred_period_name, tic, date,
-                                      action, hold, day, episode_return, max_return):
+                                      action, hold, day, episode_return, max_return, trade_detail):
 
         # 为避免重复数据，删除date相同、agent相同、pred_period_name相同的历史数据
         sql_cmd = f'DELETE FROM "public"."{tic}" WHERE "date"=%s AND "agent"=%s AND "vali_period_value"=%s AND "pred_period_name"=%s'
@@ -1190,10 +1190,10 @@ class StockData(object):
         # tic, date, sell/buy, hold, 第x天
 
         sql_cmd = f'INSERT INTO "public"."{tic}" ("date", "agent", "vali_period_value", ' \
-                  f'"pred_period_name", "action", "hold", "day", "episode_return", "max_return") VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+                  f'"pred_period_name", "action", "hold", "day", "episode_return", "max_return", "trade_detail") VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
 
         sql_values = (str(date), agent, vali_period_value, pred_period_name,
-                      str(action), str(hold), str(day), str(episode_return), str(max_return))
+                      str(action), str(hold), str(day), str(episode_return), str(max_return), str(trade_detail))
 
         psql.execute_non_query(sql=sql_cmd, values=sql_values)
         psql.commit()
@@ -1212,7 +1212,7 @@ class StockData(object):
                       f'"vali_period_value" int4 NOT NULL, "pred_period_name" text NOT NULL, ' \
                       f'"action" decimal NOT NULL, "hold" decimal NOT NULL, "day" int4 NOT NULL, ' \
                       f'"episode_return" decimal NOT NULL, "max_return" decimal NOT NULL, ' \
-                      f'"create_time" timestamp(6) DEFAULT CURRENT_TIMESTAMP , ' \
+                      f'"trade_detail" text NOT NULL, "create_time" timestamp(6) DEFAULT CURRENT_TIMESTAMP , ' \
                       f'PRIMARY KEY ("id"));'
             psql.execute_non_query(sql=sql_cmd)
             psql.commit()

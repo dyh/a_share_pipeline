@@ -2,6 +2,13 @@
 
 - A股决策 Pipeline
 
+### 视频
+
+bilibili
+
+[![bilibili](https://github.com/dyh/a_share_pipeline/blob/main/cover.png?raw=true)](https://www.bilibili.com/video/BV1ph411Y78q/ "bilibili")
+
+
 ### 使用框架：
 - https://github.com/AI4Finance-LLC/ElegantRL
 

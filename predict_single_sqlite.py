@@ -330,8 +330,7 @@ if __name__ == '__main__':
                             pass
 
                             # print('>>>> env.list_output', env.list_buy_or_sell_output)
-
-                            print(env.output_text_trade_detail)
+                            # print(env.output_text_trade_detail)
 
                             # 获取要预测的日期，保存到数据库中
                             for item in env.list_buy_or_sell_output:

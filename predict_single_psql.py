@@ -61,10 +61,10 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-06-24'
+        config.OUTPUT_DATE = '2021-06-25'
 
         # 前10后10，前10后x，前x后10
-        config.PREDICT_PERIOD = '40'
+        config.PREDICT_PERIOD = '39'
 
         # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
         # AgentDoubleDQN 单进程好用?
@@ -329,7 +329,8 @@ if __name__ == '__main__':
                                 pass
                             pass
 
-                            print('>>>> env.list_output', env.list_buy_or_sell_output)
+                            # print('>>>> env.list_output', env.list_buy_or_sell_output)
+                            # print(env.output_text_trade_detail)
 
                             # 插入数据库
                             # tic, date, -sell/+buy, hold, 第x天 = env.list_buy_or_sell_output
@@ -349,7 +350,8 @@ if __name__ == '__main__':
                                                                             tic=tic, date=date, action=action,
                                                                             hold=hold,
                                                                             day=day, episode_return=episode_return,
-                                                                            max_return=max_return)
+                                                                            max_return=max_return,
+                                                                            trade_detail=env.output_text_trade_detail)
 
                                     break
 
