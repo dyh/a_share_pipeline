@@ -224,8 +224,8 @@ class StockTradingEnvPredict:
                            self.tech_ary[self.day],)).astype(np.float32) * 2 ** -5
 
         total_asset = self.amount + (self.stocks * price).sum()
-        reward = (total_asset - self.total_asset) * 2 ** -14  # reward scaling
-        # reward = (total_asset - self.total_asset) * 2 ** -7  # reward scaling
+        # reward = (total_asset - self.total_asset) * 2 ** -14  # reward scaling
+        reward = (total_asset - self.total_asset) * 2 ** -8  # reward scaling
         self.total_asset = total_asset
 
         self.gamma_reward = self.gamma_reward * self.gamma + reward
@@ -240,9 +240,10 @@ class StockTradingEnvPredict:
                 print(self.output_text_trade_detail)
                 print(f'第 {self.day + 1} 天，{date_temp}，现金：{self.amount}，'
                       f'股票：{str((self.stocks * price).sum())}，总资产：{self.total_asset}')
-
                 # print(str(actions))
             # ----
+            print('predict:', str(reward), str(self.episode_return))
+
             pass
 
         # print('reward', reward)

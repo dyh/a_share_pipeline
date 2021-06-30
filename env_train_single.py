@@ -104,8 +104,8 @@ class StockTradingEnv:
                            self.tech_ary[self.day],)).astype(np.float32) * 2 ** -5
 
         total_asset = self.amount + (self.stocks * price).sum()
-        reward = (total_asset - self.total_asset) * 2 ** -14  # reward scaling
-        # reward = (total_asset - self.total_asset) * 2 ** -8  # reward scaling
+        # reward = (total_asset - self.total_asset) * 2 ** -14  # reward scaling
+        reward = (total_asset - self.total_asset) * 2 ** -11  # reward scaling
         self.total_asset = total_asset
 
         self.gamma_reward = self.gamma_reward * self.gamma + reward
@@ -113,6 +113,7 @@ class StockTradingEnv:
         if done:
             reward = self.gamma_reward
             self.episode_return = total_asset / self.initial_total_asset
+            print('train:', str(reward), str(self.episode_return))
 
         return state, reward, done, dict()
 

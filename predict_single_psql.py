@@ -61,7 +61,7 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-06-25'
+        config.OUTPUT_DATE = '2021-07-01'
 
         # 前10后10，前10后x，前x后10
         config.PREDICT_PERIOD = '39'
@@ -213,8 +213,11 @@ if __name__ == '__main__':
                                                            initial_stocks=initial_stocks,
                                                            if_eval=True)
 
-                    args.env.target_reward = 3
-                    args.env_eval.target_reward = 3
+                    # args.env.target_reward = 3
+                    # args.env_eval.target_reward = 3
+
+                    args.env.target_return = 100
+                    args.env_eval.target_return = 100
 
                     # Hyperparameters
                     args.gamma = gamma
@@ -233,8 +236,8 @@ if __name__ == '__main__':
                     # ----
 
                     # ----
-                    # args.batch_size = 2 ** 10
-                    args.batch_size = 2 ** 11
+                    # args.batch_size = 2 ** 11
+                    args.batch_size = 2305
                     # ----
 
                     # ----

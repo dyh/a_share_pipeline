@@ -213,8 +213,11 @@ if __name__ == '__main__':
                                                            initial_stocks=initial_stocks,
                                                            if_eval=True)
 
-                    args.env.target_reward = 3
-                    args.env_eval.target_reward = 3
+                    # args.env.target_reward = 3
+                    # args.env_eval.target_reward = 3
+
+                    args.env.target_return = 100
+                    args.env_eval.target_return = 100
 
                     # Hyperparameters
                     args.gamma = gamma
@@ -233,8 +236,8 @@ if __name__ == '__main__':
                     # ----
 
                     # ----
-                    # args.batch_size = 2 ** 10
-                    args.batch_size = 2 ** 11
+                    # args.batch_size = 2 ** 11
+                    args.batch_size = 2305
                     # ----
 
                     # ----

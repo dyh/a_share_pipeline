@@ -33,7 +33,7 @@ def filter_date(list_begin_vali_date_temp):
         list_filter_date = [90, 72, 60, 50, 40, 30, 20]
         pass
     elif config.AGENT_NAME == 'AgentDDPG':
-        list_filter_date = [40, 30, 20]
+        list_filter_date = [90, 72, 60, 50, 40, 30, 20]
         pass
     elif config.AGENT_NAME == 'AgentModSAC':
         pass
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     # 选择agent
     # for agent_item in ['AgentModSAC', ]:
-    for agent_item in ['AgentDDPG', 'AgentSAC', 'AgentPPO', 'AgentTD3']:
+    for agent_item in ['AgentTD3', 'AgentDDPG', 'AgentSAC', 'AgentPPO']:
 
         config.AGENT_NAME = agent_item
 
@@ -242,11 +242,19 @@ if __name__ == '__main__':
                                                    initial_stocks=initial_stocks_vali,
                                                    if_eval=True)
 
-            args.env.target_reward = 3
-            args.env_eval.target_reward = 3
+            # args.env.target_reward = 3
+            # args.env_eval.target_reward = 3
+
+            args.env.target_return = 100
+            args.env_eval.target_return = 100
 
             # Hyperparameters
+            # TODO ----
             args.gamma = gamma
+
+            # args.gamma = 0.99
+            args.reward_scale = 2 ** 0
+            # TODO ----
             # ----
             # args.break_step = int(5e6)
             # args.break_step = int(2e6)
@@ -262,8 +270,8 @@ if __name__ == '__main__':
             # ----
 
             # ----
-            # args.batch_size = 2 ** 10
-            args.batch_size = 2 ** 11
+            # args.batch_size = 2 ** 11
+            args.batch_size = 2305
             # ----
 
             # ----
