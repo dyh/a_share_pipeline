@@ -21,6 +21,10 @@ if __name__ == '__main__':
 
     np.set_printoptions(suppress=True)
 
+    # print('2 ** -7', 2 ** -7)
+    # print('2 ** -8', 2 ** -8)
+    # print('2 ** -9', 2 ** -9)
+
     # 开始训练的日期，在程序启动之后，不要改变。
     config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
 
@@ -37,17 +41,13 @@ if __name__ == '__main__':
     initial_stocks_train[0] = 1000.0
     initial_stocks_vali[0] = 1000.0
 
-    # break_step = 50000
-    # break_step = int(1e6)
-    # break_step = int(3e6)
-
     if_on_policy = False
     # if_use_gae = True
 
     config.IF_SHOW_PREDICT_INFO = False
 
     config.START_DATE = "2002-05-01"
-    config.START_EVAL_DATE = "2019-04-26"
+    config.START_EVAL_DATE = "2016-04-26"
     config.END_DATE = "2021-05-21"
 
     # 更新股票数据
@@ -57,11 +57,12 @@ if __name__ == '__main__':
     # AgentDoubleDQN 单进程好用?
     # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
     # 选择agent
-    for agent_item in ['AgentDDPG', 'AgentPPO', 'AgentSAC', 'AgentTD3', ]:
+    # for agent_item in ['AgentPPO', 'AgentSAC', 'AgentTD3', 'AgentDDPG', ]:
+    for agent_item in ['AgentModSAC', ]:
 
         config.AGENT_NAME = agent_item
 
-        work_days = 518
+        work_days = '1268'
 
         # 开始的时间
         time_begin = datetime.now()
@@ -93,45 +94,48 @@ if __name__ == '__main__':
         if config.AGENT_NAME == 'AgentPPO':
             agent_class = AgentPPO()
             if_on_policy = True
-            break_step = int(1e6)
+            # TODO 为了调参
+            # if_on_policy = False
+            break_step = int(6e6)
             pass
         elif config.AGENT_NAME == 'AgentSAC':
             agent_class = AgentSAC()
             if_on_policy = False
-            break_step = 10000
+            break_step = 50000
             pass
         elif config.AGENT_NAME == 'AgentTD3':
             agent_class = AgentTD3()
             if_on_policy = False
-            break_step = 10000
+            break_step = 50000
             pass
         elif config.AGENT_NAME == 'AgentDDPG':
             agent_class = AgentDDPG()
             if_on_policy = False
-            break_step = 10000
+            break_step = 50000
             pass
         elif config.AGENT_NAME == 'AgentModSAC':
             agent_class = AgentModSAC()
             if_on_policy = False
-            break_step = 10000
+            break_step = int(1e6)
+
             pass
         elif config.AGENT_NAME == 'AgentDuelingDQN':
             agent_class = AgentDuelingDQN()
             if_on_policy = False
-            break_step = 10000
+            break_step = 50000
             pass
         elif config.AGENT_NAME == 'AgentSharedSAC':
             agent_class = AgentSharedSAC()
             if_on_policy = False
-            break_step = 10000
+            break_step = 50000
             pass
         elif config.AGENT_NAME == 'AgentDoubleDQN':
             agent_class = AgentDoubleDQN()
             if_on_policy = False
-            break_step = 10000
+            break_step = 50000
             pass
         else:
-            break_step = 10000
+            break_step = 50000
 
         print('break_step', break_step)
 
@@ -146,8 +150,6 @@ if __name__ == '__main__':
             'close_30_sma', 'close_60_sma']  # finrl.config.TECHNICAL_INDICATORS_LIST
 
         gamma = 0.99
-        # gamma = 2
-        # gamma = random.uniform(0.99, 1.99)
 
         print('# initial_stocks_train', initial_stocks_train)
         print('# initial_stocks_vali', initial_stocks_vali)
@@ -181,17 +183,34 @@ if __name__ == '__main__':
         # args.env.target_reward = 10
         # args.env_eval.target_reward = 10
 
-        args.env.target_return = 5
-        args.env_eval.target_return = 5
+        args.env.target_return = 10
+        args.env_eval.target_return = 10
+
+        # sac
+        # args.env.reward_scaling = 2 ** -7
+        # args.env_eval.reward_scaling = 2 ** -9
+
+        # td3
+        # args.env.reward_scaling = 2 ** -6
+        # args.env_eval.reward_scaling = 2 ** -9
+
+        # ddpg - OK
+        # args.env.reward_scaling = 2 ** -7
+        # args.env_eval.reward_scaling = 2 ** -8
+
+        # AgentModSAC
+        args.env.reward_scaling = 2 ** -9
+        args.env_eval.reward_scaling = 2 ** -9
+
+        print('train reward_scaling', args.env.reward_scaling)
+        print('eval reward_scaling', args.env_eval.reward_scaling)
 
         # Hyperparameters
         args.gamma = gamma
 
-        print('gamma:', args.gamma)
-
+        # print('gamma:', args.gamma)
         # args.reward_scale = 2 ** 10
-
-        print('reward_scale:', args.reward_scale)
+        # print('reward_scale:', args.reward_scale)
 
         # ----
         # args.break_step = int(5e6)
@@ -208,17 +227,16 @@ if __name__ == '__main__':
         # ----
 
         # ----
-        args.batch_size = 2 ** 11
+        # args.batch_size = 2 ** 10
+        args.batch_size = 2 ** 12
         # args.batch_size = 2305
-        # args.batch_size = random.randint(2**9, 2**13)
         print('batch_size:', args.batch_size)
-
         # ----
 
         # ----
         args.repeat_times = 2 ** 4
         # args.repeat_times = random.randint(2 ** 2, 2 ** 6)
-        print('repeat_times:', args.repeat_times)
+        # print('repeat_times:', args.repeat_times)
         # ----
 
         args.eval_gap = 2 ** 4
@@ -229,9 +247,9 @@ if __name__ == '__main__':
         # args.eval_times1 = random.randint(2 ** 2, 2 ** 6)
         # args.eval_times2 = random.randint(2 ** 2, 2 ** 6)
 
-        print('eval_gap:', args.eval_gap)
-        print('eval_times1:', args.eval_times1)
-        print('eval_times2:', args.eval_times2)
+        # print('eval_gap:', args.eval_gap)
+        # print('eval_times1:', args.eval_times1)
+        # print('eval_times2:', args.eval_times2)
 
         # ----
         # args.if_allow_break = False

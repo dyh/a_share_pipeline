@@ -40,20 +40,19 @@ class StockTradingEnv:
         self.target_return = 3.5
         self.episode_return = 0.0
 
+        # 奖励 比例
+        self.reward_scaling = 0.0
+        pass
+
     def reset(self):
         self.day = 0
         price = self.price_ary[self.day]
 
-        # ----
-        stock_dim = self.price_ary.shape[1]
-        # self.initial_stocks = np.zeros(stock_dim, dtype=np.float32)
-        # 默认持有100股
-        # self.initial_stocks[0] = 100.0
-        # self.stocks = self.initial_stocks + rd.randint(0, 64, size=self.initial_stocks.shape)
-
         # 深拷贝
-        self.stocks = self.initial_stocks.copy()
-        # ----
+        self.stocks = rd.random(size=self.initial_stocks.shape) * self.initial_stocks.copy() // 100 * 100
+        # print('initial_stocks', self.stocks)
+
+        # self.stocks = self.initial_stocks + rd.randint(0, 64, size=self.initial_stocks.shape)
 
         self.amount = self.initial_capital * rd.uniform(0.95, 1.05) - (self.stocks * price).sum()
 
@@ -104,8 +103,11 @@ class StockTradingEnv:
                            self.tech_ary[self.day],)).astype(np.float32) * 2 ** -5
 
         total_asset = self.amount + (self.stocks * price).sum()
-        # reward = (total_asset - self.total_asset) * 2 ** -14  # reward scaling
-        reward = (total_asset - self.total_asset) * 2 ** -11  # reward scaling
+        # reward = (total_asset - self.total_asset) * 2 ** -12  # reward scaling (90-30)
+        # reward = (total_asset - self.total_asset) * 2 ** -7  # reward scaling (1268)
+        reward = (total_asset - self.total_asset) * self.reward_scaling  # reward scaling (1268)
+        # self.reward_scaling
+
         self.total_asset = total_asset
 
         self.gamma_reward = self.gamma_reward * self.gamma + reward
@@ -113,7 +115,15 @@ class StockTradingEnv:
         if done:
             reward = self.gamma_reward
             self.episode_return = total_asset / self.initial_total_asset
-            print('train:', str(reward), str(self.episode_return))
+
+            print('train reward:', str(reward))
+        pass
+
+        # print('train reward:', str(reward))
+
+        if reward >= 256:
+            print('>' * 20, 'train', str(reward), '<' * 20)
+        pass
 
         return state, reward, done, dict()
 

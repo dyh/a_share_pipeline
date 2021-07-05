@@ -1,4 +1,5 @@
 from stock_data import StockData
+from train_single import get_agent_args
 from utils.psqldb import Psqldb
 from agent_single import *
 from utils.date_time import *
@@ -8,9 +9,7 @@ from datetime import datetime
 
 
 def calc_max_return(price_ary, initial_capital_temp):
-    # ret = 0
     max_return_temp = 0
-    # max_value = 0
     min_value = 0
 
     assert price_ary.shape[0] > 1
@@ -19,7 +18,7 @@ def calc_max_return(price_ary, initial_capital_temp):
 
     for index_left in range(0, count_price - 1):
 
-        for index_right in range(index_left+1, count_price):
+        for index_right in range(index_left + 1, count_price):
 
             assert price_ary[index_left][0] > 0
 
@@ -32,8 +31,6 @@ def calc_max_return(price_ary, initial_capital_temp):
                 # max_value = price_ary[index1][0]
                 min_value = price_ary[index_right][0]
             pass
-
-        # print(price_ary[index][0])
         pass
 
     ret = (initial_capital_temp / min_value * max_return_temp + initial_capital_temp) / initial_capital_temp
@@ -61,18 +58,15 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-07-01'
+        config.OUTPUT_DATE = '2021-07-06'
 
         # 前10后10，前10后x，前x后10
-        config.PREDICT_PERIOD = '39'
+        config.PREDICT_PERIOD = '100'
 
         # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
         # AgentDoubleDQN 单进程好用?
         # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
-        # for agent_item in ['AgentModSAC', ]:
-        # , 'AgentModSAC'
-        # for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC', 'AgentModSAC']:
-        for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC']:
+        for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC', 'AgentModSAC']:
 
             config.AGENT_NAME = agent_item
             # config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
@@ -89,11 +83,13 @@ if __name__ == '__main__':
             # end_vali_date = get_datetime_from_date_str('2021-04-16')
             config.IF_SHOW_PREDICT_INFO = True
 
-            config.START_DATE = "2002-05-01"
+            config.START_DATE = "2003-05-01"
 
-            # 向左10工作日
-            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -39))
-            # 向右10工作日
+            # 固定日期
+            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -96))
+            # config.START_EVAL_DATE = "2021-05-22"
+
+            # OUTPUT_DATE 向右3工作日
             config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), +3))
 
             # 创建预测结果表
@@ -103,16 +99,14 @@ if __name__ == '__main__':
             StockData.update_stock_data(tic_code=config.SINGLE_A_STOCK_CODE[0])
 
             # 预测的截止日期
-            begin_vali_date = get_datetime_from_date_str(config.START_EVAL_DATE)
+            end_vali_date = get_datetime_from_date_str(config.END_DATE)
 
-            # 获取7个日期list
-            list_end_vali_date = get_end_vali_date_list(begin_vali_date)
+            # 获取 N 个日期list
+            list_begin_vali_date = get_begin_vali_date_list(end_vali_date)
 
             # 循环 vali_date_list 训练7次
-            for end_vali_item in list_end_vali_date:
+            for vali_days, _ in list_begin_vali_date:
                 # torch.cuda.empty_cache()
-
-                vali_days, _ = end_vali_item
 
                 # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
                 config.VALI_DAYS_FLAG = str(vali_days)
@@ -135,39 +129,8 @@ if __name__ == '__main__':
                     print('# initial_capital', initial_capital)
                     print('# max_stock', max_stock)
 
-                    agent_class = None
-                    if config.AGENT_NAME == 'AgentPPO':
-                        agent_class = AgentPPO()
-                        if_on_policy = True
-                        pass
-                    elif config.AGENT_NAME == 'AgentSAC':
-                        agent_class = AgentSAC()
-                        if_on_policy = False
-                        pass
-                    elif config.AGENT_NAME == 'AgentTD3':
-                        agent_class = AgentTD3()
-                        if_on_policy = False
-                        pass
-                    elif config.AGENT_NAME == 'AgentDDPG':
-                        agent_class = AgentDDPG()
-                        if_on_policy = False
-                        pass
-                    elif config.AGENT_NAME == 'AgentModSAC':
-                        agent_class = AgentModSAC()
-                        if_on_policy = False
-                        pass
-                    elif config.AGENT_NAME == 'AgentDuelingDQN':
-                        agent_class = AgentDuelingDQN()
-                        if_on_policy = False
-                        pass
-                    elif config.AGENT_NAME == 'AgentSharedSAC':
-                        agent_class = AgentSharedSAC()
-                        if_on_policy = False
-                        pass
-                    elif config.AGENT_NAME == 'AgentDoubleDQN':
-                        agent_class = AgentDoubleDQN()
-                        if_on_policy = False
-                        pass
+                    # 获得Agent参数
+                    agent_class, if_on_policy, break_step, train_reward_scaling, eval_reward_scaling = get_agent_args()
 
                     args = Arguments(if_on_policy=if_on_policy)
                     args.agent = agent_class
@@ -213,11 +176,12 @@ if __name__ == '__main__':
                                                            initial_stocks=initial_stocks,
                                                            if_eval=True)
 
-                    # args.env.target_reward = 3
-                    # args.env_eval.target_reward = 3
-
                     args.env.target_return = 100
                     args.env_eval.target_return = 100
+
+                    # 奖励 比例
+                    args.env.reward_scaling = train_reward_scaling
+                    args.env_eval.reward_scaling = eval_reward_scaling
 
                     # Hyperparameters
                     args.gamma = gamma
@@ -236,8 +200,8 @@ if __name__ == '__main__':
                     # ----
 
                     # ----
-                    # args.batch_size = 2 ** 11
-                    args.batch_size = 2305
+                    args.batch_size = 2 ** 12
+                    # args.batch_size = 2305
                     # ----
 
                     # ----
@@ -250,8 +214,8 @@ if __name__ == '__main__':
                     args.eval_times2 = 2 ** 5
 
                     # ----
-                    # args.if_allow_break = False
-                    args.if_allow_break = True
+                    args.if_allow_break = False
+                    # args.if_allow_break = True
                     # ----
 
                     # ----------------------------

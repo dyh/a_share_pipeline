@@ -24,18 +24,19 @@ def filter_date(list_begin_vali_date_temp):
 
     # 过滤日期，专项预测
     if config.AGENT_NAME == 'AgentPPO':
-        list_filter_date = [90, 72, 60, 50, 40, 30, 20]
+        list_filter_date = [50, 100, 150, 200, 300, 500, 1000]
         pass
     elif config.AGENT_NAME == 'AgentSAC':
-        list_filter_date = [90, 72, 60, 50, 40, 30, 20]
+        list_filter_date = [50, 100, 150, 200, 300, 500, 1000]
         pass
     elif config.AGENT_NAME == 'AgentTD3':
-        list_filter_date = [90, 72, 60, 50, 40, 30, 20]
+        list_filter_date = [50, 100, 150, 200, 300, 500, 1000]
         pass
     elif config.AGENT_NAME == 'AgentDDPG':
-        list_filter_date = [90, 72, 60, 50, 40, 30, 20]
+        list_filter_date = [50, 100, 150, 200, 300, 500, 1000]
         pass
     elif config.AGENT_NAME == 'AgentModSAC':
+        list_filter_date = [50, 100, 150, 200, 300, 500, 1000]
         pass
     elif config.AGENT_NAME == 'AgentDuelingDQN':
         pass
@@ -54,6 +55,104 @@ def filter_date(list_begin_vali_date_temp):
 
     return list_result
     pass
+
+
+# 获得agent参数
+def get_agent_args():
+    agent_class1 = None
+    if_on_policy1 = None
+    break_step1 = 0
+    train_reward_scaling1 = 0
+    eval_reward_scaling1 = 0
+
+    if config.AGENT_NAME == 'AgentPPO':
+        agent_class1 = AgentPPO()
+        if_on_policy1 = True
+        break_step1 = int(2e5)
+        train_reward_scaling1 = 2 ** -12
+        eval_reward_scaling1 = 2 ** -5
+        pass
+    elif config.AGENT_NAME == 'AgentSAC':
+        agent_class1 = AgentSAC()
+        if_on_policy1 = False
+        break_step1 = 20000
+
+        if config.VALI_DAYS_FLAG == '50':
+            train_reward_scaling1 = 2 ** -8
+            eval_reward_scaling1 = 2 ** -7
+            pass
+        elif config.VALI_DAYS_FLAG == '100':
+            train_reward_scaling1 = 2 ** -8
+            eval_reward_scaling1 = 2 ** -7
+            pass
+        elif config.VALI_DAYS_FLAG == '150':
+            train_reward_scaling1 = 2 ** -8
+            eval_reward_scaling1 = 2 ** -7
+            pass
+        elif config.VALI_DAYS_FLAG == '200':
+            train_reward_scaling1 = 2 ** -8
+            eval_reward_scaling1 = 2 ** -7
+            pass
+        elif config.VALI_DAYS_FLAG == '300':
+            train_reward_scaling1 = 2 ** -8
+            eval_reward_scaling1 = 2 ** -7
+            pass
+        elif config.VALI_DAYS_FLAG == '500':
+            train_reward_scaling1 = 2 ** -8
+            eval_reward_scaling1 = 2 ** -7
+            pass
+        elif config.VALI_DAYS_FLAG == '1000':
+            train_reward_scaling1 = 2 ** -10
+            eval_reward_scaling1 = 2 ** -8
+            pass
+        pass
+    elif config.AGENT_NAME == 'AgentTD3':
+        agent_class1 = AgentTD3()
+        if_on_policy1 = False
+        break_step1 = 30000
+        # td3
+        train_reward_scaling1 = 2 ** -5
+        eval_reward_scaling1 = 2 ** -6
+        pass
+    elif config.AGENT_NAME == 'AgentDDPG':
+        agent_class1 = AgentDDPG()
+        if_on_policy1 = False
+        break_step1 = 5000
+        # ddpg
+        train_reward_scaling1 = 2 ** -7
+        eval_reward_scaling1 = 2 ** -8
+        pass
+    elif config.AGENT_NAME == 'AgentModSAC':
+        agent_class1 = AgentModSAC()
+        if_on_policy1 = False
+        break_step1 = int(2e5)
+        # AgentModSAC
+        train_reward_scaling1 = 2 ** -10
+        eval_reward_scaling1 = 2 ** -9
+        pass
+    elif config.AGENT_NAME == 'AgentDuelingDQN':
+        agent_class1 = AgentDuelingDQN()
+        if_on_policy1 = False
+        break_step1 = 50000
+        train_reward_scaling1 = 2 ** -9
+        eval_reward_scaling1 = 2 ** -9
+        pass
+    elif config.AGENT_NAME == 'AgentSharedSAC':
+        agent_class1 = AgentSharedSAC()
+        if_on_policy1 = False
+        break_step1 = 50000
+        train_reward_scaling1 = 2 ** -9
+        eval_reward_scaling1 = 2 ** -9
+        pass
+    elif config.AGENT_NAME == 'AgentDoubleDQN':
+        agent_class1 = AgentDoubleDQN()
+        if_on_policy1 = False
+        break_step1 = 50000
+        train_reward_scaling1 = 2 ** -9
+        eval_reward_scaling1 = 2 ** -9
+        pass
+
+    return agent_class1, if_on_policy1, break_step1, train_reward_scaling1, eval_reward_scaling1
 
 
 if __name__ == '__main__':
@@ -82,8 +181,8 @@ if __name__ == '__main__':
 
     config.IF_SHOW_PREDICT_INFO = False
 
-    config.START_DATE = "2002-05-01"
-    config.START_EVAL_DATE = "2021-04-26"
+    config.START_DATE = "2003-05-01"
+    config.START_EVAL_DATE = ""
     config.END_DATE = "2021-05-21"
 
     # 更新股票数据
@@ -94,15 +193,10 @@ if __name__ == '__main__':
     # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
 
     # 选择agent
-    # for agent_item in ['AgentModSAC', ]:
-    for agent_item in ['AgentTD3', 'AgentDDPG', 'AgentSAC', 'AgentPPO']:
+    # for agent_item in ['AgentModSAC', 'AgentPPO', 'AgentTD3', 'AgentDDPG', 'AgentSAC', ]:
+    for agent_item in ['AgentSAC', ]:
 
         config.AGENT_NAME = agent_item
-
-        # config.AGENT_NAME = 'AgentDDPG'
-        # config.CWD = f'./{config.WEIGHTS_PATH}/single/{config.AGENT_NAME}/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
-
-        # 2021-05-21，20,30,40,50,60,72,90周期
 
         # 预测的截止日期
         end_vali_date = get_datetime_from_date_str(config.END_DATE)
@@ -111,9 +205,8 @@ if __name__ == '__main__':
         list_begin_vali_date = get_begin_vali_date_list(end_vali_date)
 
         # 过滤日期，专项预测
-        list_begin_vali_date = filter_date(list_begin_vali_date)
-
-        print('filter_date', list_begin_vali_date)
+        # list_begin_vali_date = filter_date(list_begin_vali_date)
+        # print('filter_date', list_begin_vali_date)
 
         # 倒序，由小到大
         # list_begin_vali_date.reverse()
@@ -148,55 +241,8 @@ if __name__ == '__main__':
             print('# initial_capital', initial_capital)
             print('# max_stock', max_stock)
 
-            # Agent
-            # args = Arguments(if_on_policy=True)
-            # off-policy DRL algorithm: AgentSAC, AgentTD3, AgentDDPG, AgentModSAC
-            # on-policy DRL algorithm: AgentPPO
-            agent_class = None
-            if config.AGENT_NAME == 'AgentPPO':
-                agent_class = AgentPPO()
-                if_on_policy = True
-                break_step = int(8e6)
-                pass
-            elif config.AGENT_NAME == 'AgentSAC':
-                agent_class = AgentSAC()
-                if_on_policy = False
-                break_step = 50000
-                pass
-            elif config.AGENT_NAME == 'AgentTD3':
-                agent_class = AgentTD3()
-                if_on_policy = False
-                break_step = 50000
-                pass
-            elif config.AGENT_NAME == 'AgentDDPG':
-                agent_class = AgentDDPG()
-                if_on_policy = False
-                break_step = 50000
-                pass
-            elif config.AGENT_NAME == 'AgentModSAC':
-                agent_class = AgentModSAC()
-                if_on_policy = False
-                break_step = 50000
-                pass
-            elif config.AGENT_NAME == 'AgentDuelingDQN':
-                agent_class = AgentDuelingDQN()
-                if_on_policy = False
-                break_step = 50000
-                pass
-            elif config.AGENT_NAME == 'AgentSharedSAC':
-                agent_class = AgentSharedSAC()
-                if_on_policy = False
-                break_step = 50000
-                pass
-            elif config.AGENT_NAME == 'AgentDoubleDQN':
-                agent_class = AgentDoubleDQN()
-                if_on_policy = False
-                break_step = 50000
-                pass
-            else:
-                break_step = 50000
-
-            print('break_step', break_step)
+            # 获得Agent参数
+            agent_class, if_on_policy, break_step, train_reward_scaling, eval_reward_scaling = get_agent_args()
 
             args = Arguments(if_on_policy=if_on_policy)
             args.agent = agent_class
@@ -209,9 +255,6 @@ if __name__ == '__main__':
                 'close_30_sma', 'close_60_sma']  # finrl.config.TECHNICAL_INDICATORS_LIST
 
             gamma = 0.99
-            # max_stock = 1e2
-            # initial_capital = 100000
-            # initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
 
             print('# initial_stocks_train', initial_stocks_train)
             print('# initial_stocks_vali', initial_stocks_vali)
@@ -242,37 +285,35 @@ if __name__ == '__main__':
                                                    initial_stocks=initial_stocks_vali,
                                                    if_eval=True)
 
-            # args.env.target_reward = 3
-            # args.env_eval.target_reward = 3
-
             args.env.target_return = 100
             args.env_eval.target_return = 100
 
-            # Hyperparameters
-            # TODO ----
-            args.gamma = gamma
+            # 奖励 比例
+            args.env.reward_scaling = train_reward_scaling
+            args.env_eval.reward_scaling = eval_reward_scaling
 
+            print('train reward_scaling', args.env.reward_scaling)
+            print('eval reward_scaling', args.env_eval.reward_scaling)
+
+            # Hyperparameters
+            args.gamma = gamma
             # args.gamma = 0.99
+
+            # reward_scaling 在 args.env里调整了，这里不动
             args.reward_scale = 2 ** 0
-            # TODO ----
-            # ----
-            # args.break_step = int(5e6)
-            # args.break_step = int(2e6)
+
             args.break_step = break_step
-            # ----
+            print('break_step', args.break_step)
 
             args.net_dim = 2 ** 9
             args.max_step = args.env.max_step
 
-            # ----
             # args.max_memo = args.max_step * 4
             args.max_memo = (args.max_step - 1) * 8
-            # ----
 
-            # ----
-            # args.batch_size = 2 ** 11
-            args.batch_size = 2305
-            # ----
+            args.batch_size = 2 ** 12
+            # args.batch_size = 2305
+            print('batch_size', args.batch_size)
 
             # ----
             # args.repeat_times = 2 ** 3
@@ -283,10 +324,7 @@ if __name__ == '__main__':
             args.eval_times1 = 2 ** 3
             args.eval_times2 = 2 ** 5
 
-            # ----
-            # args.if_allow_break = False
-            args.if_allow_break = True
-            # ----
+            args.if_allow_break = False
 
             args.rollout_num = 2  # the number of rollout workers (larger is not always faster)
 

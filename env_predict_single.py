@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import numpy.random as rd
 
 import config
 from stock_data import StockData, fields_prep
@@ -47,6 +48,9 @@ class StockTradingEnvPredict:
         # 输出的list
         self.list_buy_or_sell_output = []
 
+        # 奖励 比例
+        self.reward_scaling = 0.0
+
         pass
 
     def reset(self):
@@ -57,9 +61,13 @@ class StockTradingEnvPredict:
         # self.amount = self.initial_capital * rd.uniform(0.95, 1.05) - (self.stocks * price).sum()
 
         # ----
-        self.stocks = self.initial_stocks.copy()
+        # self.stocks = self.initial_stocks.copy()
+        self.stocks = rd.random(size=self.initial_stocks.shape) * self.initial_stocks.copy() // 100 * 100
+        # print('initial_stocks', self.stocks)
+
         self.amount = self.initial_capital - (self.stocks * price).sum()
-        # self.amount = self.initial_capital
+        # self.amount = self.initial_capital * rd.uniform(0.95, 1.00) - (self.stocks * price).sum()
+
         # ----
 
         self.total_asset = self.amount + (self.stocks * price).sum()
@@ -146,9 +154,9 @@ class StockTradingEnvPredict:
 
                 price_diff = str(round(price[index] - yesterday_price[index], 6))
                 self.output_text_trade_detail += f'        > {tic_temp}，' \
-                                          f'卖出：{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
-                                          f'涨跌：￥{price_diff} 元，' \
-                                          f'现金：{self.amount}，资产：{self.total_asset} \r\n'
+                                                 f'卖出：{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
+                                                 f'涨跌：￥{price_diff} 元，' \
+                                                 f'现金：{self.amount}，资产：{self.total_asset} \r\n'
             pass
         pass
 
@@ -198,9 +206,9 @@ class StockTradingEnvPredict:
 
                 price_diff = str(round(price[index] - yesterday_price[index], 6))
                 self.output_text_trade_detail += f'        > {tic_temp}，' \
-                                          f'买入：{buy_num_shares} 股, 持股数量：{self.stocks[index]}，' \
-                                          f'涨跌：￥{price_diff} 元，' \
-                                          f'现金：{self.amount}，资产：{self.total_asset} \r\n'
+                                                 f'买入：{buy_num_shares} 股, 持股数量：{self.stocks[index]}，' \
+                                                 f'涨跌：￥{price_diff} 元，' \
+                                                 f'现金：{self.amount}，资产：{self.total_asset} \r\n'
 
             pass
         pass
@@ -224,8 +232,11 @@ class StockTradingEnvPredict:
                            self.tech_ary[self.day],)).astype(np.float32) * 2 ** -5
 
         total_asset = self.amount + (self.stocks * price).sum()
-        # reward = (total_asset - self.total_asset) * 2 ** -14  # reward scaling
-        reward = (total_asset - self.total_asset) * 2 ** -8  # reward scaling
+        # reward = (total_asset - self.total_asset) * 2 ** -7  # reward scaling  (90-30)
+        # reward = (total_asset - self.total_asset) * 2 ** -6  # reward scaling  (1268)
+        reward = (total_asset - self.total_asset) * self.reward_scaling  # reward scaling  (1268)
+        # self.reward_scaling
+
         self.total_asset = total_asset
 
         self.gamma_reward = self.gamma_reward * self.gamma + reward
@@ -233,6 +244,8 @@ class StockTradingEnvPredict:
         if done:
             reward = self.gamma_reward
             self.episode_return = total_asset / self.initial_total_asset
+
+            print('predict reward:', str(reward))
 
             # ----
             if config.IF_SHOW_PREDICT_INFO:
@@ -242,11 +255,13 @@ class StockTradingEnvPredict:
                       f'股票：{str((self.stocks * price).sum())}，总资产：{self.total_asset}')
                 # print(str(actions))
             # ----
-            print('predict:', str(reward), str(self.episode_return))
+        pass
 
-            pass
+        # print('predict reward:', str(reward))
 
-        # print('reward', reward)
+        if reward >= 256:
+            print('>' * 20, 'predict', str(reward), '<' * 20)
+        pass
 
         return state, reward, done, dict()
 

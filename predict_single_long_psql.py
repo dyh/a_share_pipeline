@@ -61,20 +61,20 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-07-01'
+        config.OUTPUT_DATE = '2021-07-05'
 
         # 前10后10，前10后x，前x后10
-        config.PREDICT_PERIOD = '39'
+        config.PREDICT_PERIOD = '42'
 
-        work_days = '518'
+        work_days = '1268'
 
         # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
         # AgentDoubleDQN 单进程好用?
         # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
         # for agent_item in ['AgentModSAC', ]:
         # , 'AgentModSAC'
-        # for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC', 'AgentModSAC']:
-        for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC']:
+        # for agent_item in ['AgentTD3', ]:
+        for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC', 'AgentModSAC']:
 
             config.AGENT_NAME = agent_item
             # config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
@@ -209,6 +209,9 @@ if __name__ == '__main__':
                 args.env.target_return = 100
                 args.env_eval.target_return = 100
 
+                args.env.reward_scaling = 2 ** -7
+                args.env_eval.reward_scaling = 2 ** -8
+
                 # Hyperparameters
                 args.gamma = gamma
                 # ----
@@ -226,8 +229,8 @@ if __name__ == '__main__':
                 # ----
 
                 # ----
-                # args.batch_size = 2 ** 11
-                args.batch_size = 2305
+                args.batch_size = 2 ** 12
+                # args.batch_size = 2305
                 # ----
 
                 # ----
