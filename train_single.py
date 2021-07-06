@@ -12,7 +12,8 @@ from agent_single import AgentPPO, AgentSAC, AgentTD3, AgentDDPG, AgentModSAC, A
 
 from run_single import Arguments, train_and_evaluate_mp
 
-from utils.date_time import get_datetime_from_date_str, time_point, get_begin_vali_date_list
+from utils.date_time import get_datetime_from_date_str, time_point, get_begin_vali_date_list, get_next_work_day, \
+    get_today_date
 from env_train_single import StockTradingEnv
 from env_predict_single import StockTradingEnvPredict
 
@@ -68,94 +69,95 @@ def get_agent_args():
     if config.AGENT_NAME == 'AgentPPO':
         agent_class1 = AgentPPO()
         if_on_policy1 = True
-        break_step1 = int(2e5)
+        break_step1 = int(1e6)
         train_reward_scaling1 = 2 ** -12
         eval_reward_scaling1 = 2 ** -5
         pass
     elif config.AGENT_NAME == 'AgentSAC':
         agent_class1 = AgentSAC()
         if_on_policy1 = False
-        break_step1 = 20000
+        break_step1 = 10000
 
-        if config.VALI_DAYS_FLAG == '50':
+        if int(config.VALI_DAYS_FLAG) < 50:
             train_reward_scaling1 = 2 ** -8
             eval_reward_scaling1 = 2 ** -7
             pass
-        elif config.VALI_DAYS_FLAG == '100':
-            train_reward_scaling1 = 2 ** -8
+        elif 50 <= int(config.VALI_DAYS_FLAG) < 90:
+            train_reward_scaling1 = 2 ** -9
             eval_reward_scaling1 = 2 ** -7
             pass
-        elif config.VALI_DAYS_FLAG == '150':
-            train_reward_scaling1 = 2 ** -8
-            eval_reward_scaling1 = 2 ** -7
-            pass
-        elif config.VALI_DAYS_FLAG == '200':
-            train_reward_scaling1 = 2 ** -8
-            eval_reward_scaling1 = 2 ** -7
-            pass
-        elif config.VALI_DAYS_FLAG == '300':
-            train_reward_scaling1 = 2 ** -8
-            eval_reward_scaling1 = 2 ** -7
-            pass
-        elif config.VALI_DAYS_FLAG == '500':
-            train_reward_scaling1 = 2 ** -8
-            eval_reward_scaling1 = 2 ** -7
-            pass
-        elif config.VALI_DAYS_FLAG == '1000':
-            train_reward_scaling1 = 2 ** -10
+        elif 90 <= int(config.VALI_DAYS_FLAG) < 1000:
+            train_reward_scaling1 = 2 ** -9
             eval_reward_scaling1 = 2 ** -8
             pass
+        elif int(config.VALI_DAYS_FLAG) >= 1000:
+            train_reward_scaling1 = 2 ** -10
+            eval_reward_scaling1 = 2 ** -9
+            pass
         pass
+
     elif config.AGENT_NAME == 'AgentTD3':
         agent_class1 = AgentTD3()
         if_on_policy1 = False
-        break_step1 = 30000
+        break_step1 = 10000
         # td3
+        # train_reward_scaling1 = 2 ** -5
+        # eval_reward_scaling1 = 2 ** -6
         train_reward_scaling1 = 2 ** -5
-        eval_reward_scaling1 = 2 ** -6
+        eval_reward_scaling1 = 2 ** -4
         pass
     elif config.AGENT_NAME == 'AgentDDPG':
         agent_class1 = AgentDDPG()
         if_on_policy1 = False
-        break_step1 = 5000
+        break_step1 = 10000
         # ddpg
-        train_reward_scaling1 = 2 ** -7
-        eval_reward_scaling1 = 2 ** -8
+        # train_reward_scaling1 = 2 ** -8
+        # eval_reward_scaling1 = 2 ** -5
+
+        train_reward_scaling1 = 2 ** -6
+        eval_reward_scaling1 = 2 ** -3
         pass
     elif config.AGENT_NAME == 'AgentModSAC':
         agent_class1 = AgentModSAC()
         if_on_policy1 = False
-        break_step1 = int(2e5)
+        break_step1 = int(1e6)
         # AgentModSAC
-        train_reward_scaling1 = 2 ** -10
-        eval_reward_scaling1 = 2 ** -9
+        # train_reward_scaling1 = 2 ** -10
+        # eval_reward_scaling1 = 2 ** -9
+
+        train_reward_scaling1 = 2 ** -11
+        eval_reward_scaling1 = 2 ** -8
         pass
     elif config.AGENT_NAME == 'AgentDuelingDQN':
         agent_class1 = AgentDuelingDQN()
         if_on_policy1 = False
-        break_step1 = 50000
-        train_reward_scaling1 = 2 ** -9
-        eval_reward_scaling1 = 2 ** -9
+        break_step1 = 10000
+        train_reward_scaling1 = 2 ** -8
+        eval_reward_scaling1 = 2 ** -7
         pass
     elif config.AGENT_NAME == 'AgentSharedSAC':
         agent_class1 = AgentSharedSAC()
         if_on_policy1 = False
-        break_step1 = 50000
-        train_reward_scaling1 = 2 ** -9
-        eval_reward_scaling1 = 2 ** -9
+        break_step1 = 10000
+        train_reward_scaling1 = 2 ** -8
+        eval_reward_scaling1 = 2 ** -7
         pass
     elif config.AGENT_NAME == 'AgentDoubleDQN':
         agent_class1 = AgentDoubleDQN()
         if_on_policy1 = False
-        break_step1 = 50000
-        train_reward_scaling1 = 2 ** -9
-        eval_reward_scaling1 = 2 ** -9
+        break_step1 = 10000
+        train_reward_scaling1 = 2 ** -8
+        eval_reward_scaling1 = 2 ** -7
         pass
+    pass
 
     return agent_class1, if_on_policy1, break_step1, train_reward_scaling1, eval_reward_scaling1
 
 
 if __name__ == '__main__':
+
+    predict_work_days = 100
+
     # 开始训练的日期，在程序启动之后，不要改变。
     config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
 
@@ -183,7 +185,9 @@ if __name__ == '__main__':
 
     config.START_DATE = "2003-05-01"
     config.START_EVAL_DATE = ""
-    config.END_DATE = "2021-05-21"
+
+    # 整体结束日期，今天的日期，减去90工作日
+    config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), -predict_work_days))
 
     # 更新股票数据
     StockData.update_stock_data(tic_code=config.SINGLE_A_STOCK_CODE[0])
@@ -193,8 +197,7 @@ if __name__ == '__main__':
     # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
 
     # 选择agent
-    # for agent_item in ['AgentModSAC', 'AgentPPO', 'AgentTD3', 'AgentDDPG', 'AgentSAC', ]:
-    for agent_item in ['AgentSAC', ]:
+    for agent_item in ['AgentModSAC', 'AgentPPO', 'AgentTD3', 'AgentDDPG', 'AgentSAC', ]:
 
         config.AGENT_NAME = agent_item
 
@@ -285,8 +288,8 @@ if __name__ == '__main__':
                                                    initial_stocks=initial_stocks_vali,
                                                    if_eval=True)
 
-            args.env.target_return = 100
-            args.env_eval.target_return = 100
+            args.env.target_return = 10
+            args.env_eval.target_return = 10
 
             # 奖励 比例
             args.env.reward_scaling = train_reward_scaling

@@ -115,88 +115,11 @@ def get_begin_vali_date_list(end_vali_date):
     :return: list()
     """
 
-    # [50, 100, 150, 200, 300, 500, 1000]
     list_result = list()
 
-    # 20周期
-    work_days = 20
-    begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    list_result.append((work_days, begin_vali_date))
-
-    # 30周期
-    work_days = 30
-    begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    list_result.append((work_days, begin_vali_date))
-
-    # 40周期
-    work_days = 40
-    begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    list_result.append((work_days, begin_vali_date))
-
-    # 50周期
-    work_days = 50
-    begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    list_result.append((work_days, begin_vali_date))
-
-    # 60周期
-    work_days = 60
-    begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    list_result.append((work_days, begin_vali_date))
-
-    # 72周期
-    work_days = 72
-    begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    list_result.append((work_days, begin_vali_date))
-
-    # 90周期
-    work_days = 90
-    begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    list_result.append((work_days, begin_vali_date))
-
-    # 100周期
-    work_days = 100
-    begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    list_result.append((work_days, begin_vali_date))
-
-    # 518周期
-    work_days = 518
-    begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    list_result.append((work_days, begin_vali_date))
-
-    # 1200周期
-    work_days = 1200
-    begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    list_result.append((work_days, begin_vali_date))
-
-    # 1268周期
-    work_days = 1268
-    begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    list_result.append((work_days, begin_vali_date))
-
-    # # 150周期
-    # work_days = 150
-    # begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    # list_result.append((work_days, begin_vali_date))
-    #
-    # # 200周期
-    # work_days = 200
-    # begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    # list_result.append((work_days, begin_vali_date))
-    #
-    # # 300周期
-    # work_days = 300
-    # begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    # list_result.append((work_days, begin_vali_date))
-    #
-    # # 500周期
-    # work_days = 500
-    # begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    # list_result.append((work_days, begin_vali_date))
-    #
-    # # 1000周期
-    # work_days = 1000
-    # begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
-    # list_result.append((work_days, begin_vali_date))
+    for work_days in [20, 30, 40, 50, 60, 72, 90, 100, 150, 200, 300, 500, 518, 1000, 1200, 1268]:
+        begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
+        list_result.append((work_days, begin_vali_date))
 
     return list_result
 

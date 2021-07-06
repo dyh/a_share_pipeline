@@ -58,7 +58,7 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-07-06'
+        config.OUTPUT_DATE = '2021-07-07'
 
         # 前10后10，前10后x，前x后10
         config.PREDICT_PERIOD = '100'
@@ -66,7 +66,7 @@ if __name__ == '__main__':
         # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
         # AgentDoubleDQN 单进程好用?
         # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
-        for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC', 'AgentModSAC']:
+        for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentModSAC''AgentSAC', ]:
 
             config.AGENT_NAME = agent_item
             # config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
