@@ -121,6 +121,8 @@ def get_begin_vali_date_list(end_vali_date):
         begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
         list_result.append((work_days, begin_vali_date))
 
+    # list_result.reverse()
+
     return list_result
 
 

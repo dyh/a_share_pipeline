@@ -70,8 +70,43 @@ def get_agent_args():
         agent_class1 = AgentPPO()
         if_on_policy1 = True
         break_step1 = int(1e6)
-        train_reward_scaling1 = 2 ** -12
-        eval_reward_scaling1 = 2 ** -5
+
+        if 20 <= int(config.VALI_DAYS_FLAG) < 30:
+            train_reward_scaling1 = 2 ** -12
+            eval_reward_scaling1 = 2 ** -6
+            pass
+        elif 30 <= int(config.VALI_DAYS_FLAG) < 40:
+            train_reward_scaling1 = 2 ** -12
+            eval_reward_scaling1 = 2 ** -6
+            pass
+        elif 40 <= int(config.VALI_DAYS_FLAG) < 50:
+            train_reward_scaling1 = 2 ** -12
+            eval_reward_scaling1 = 2 ** -8
+            pass
+        elif 50 <= int(config.VALI_DAYS_FLAG) < 60:
+            train_reward_scaling1 = 2 ** -12
+            eval_reward_scaling1 = 2 ** -8
+            pass
+        elif 60 <= int(config.VALI_DAYS_FLAG) < 90:
+            train_reward_scaling1 = 2 ** -12
+            eval_reward_scaling1 = 2 ** -8
+            pass
+        elif 90 <= int(config.VALI_DAYS_FLAG) < 300:
+            train_reward_scaling1 = 2 ** -12
+            eval_reward_scaling1 = 2 ** -8
+            pass
+        elif 300 <= int(config.VALI_DAYS_FLAG) < 500:
+            train_reward_scaling1 = 2 ** -12
+            eval_reward_scaling1 = 2 ** -19
+            pass
+        elif 500 <= int(config.VALI_DAYS_FLAG):
+            train_reward_scaling1 = 2 ** -12
+            eval_reward_scaling1 = 2 ** -10
+            pass
+        else:
+            train_reward_scaling1 = 2 ** -12
+            eval_reward_scaling1 = 2 ** -8
+            pass
         pass
     elif config.AGENT_NAME == 'AgentSAC':
         agent_class1 = AgentSAC()
@@ -82,52 +117,145 @@ def get_agent_args():
             train_reward_scaling1 = 2 ** -8
             eval_reward_scaling1 = 2 ** -7
             pass
-        elif 50 <= int(config.VALI_DAYS_FLAG) < 90:
+        elif 50 <= int(config.VALI_DAYS_FLAG) < 60:
             train_reward_scaling1 = 2 ** -9
+            eval_reward_scaling1 = 2 ** -7
+            pass
+        elif 60 <= int(config.VALI_DAYS_FLAG) < 90:
+            train_reward_scaling1 = 2 ** -10
             eval_reward_scaling1 = 2 ** -7
             pass
         elif 90 <= int(config.VALI_DAYS_FLAG) < 1000:
             train_reward_scaling1 = 2 ** -9
             eval_reward_scaling1 = 2 ** -8
             pass
-        elif int(config.VALI_DAYS_FLAG) >= 1000:
+        elif 1000 <= int(config.VALI_DAYS_FLAG) < 1268:
             train_reward_scaling1 = 2 ** -10
             eval_reward_scaling1 = 2 ** -9
+            pass
+        elif 1268 <= int(config.VALI_DAYS_FLAG):
+            train_reward_scaling1 = 2 ** -10
+            eval_reward_scaling1 = 2 ** -10
             pass
         pass
 
     elif config.AGENT_NAME == 'AgentTD3':
         agent_class1 = AgentTD3()
         if_on_policy1 = False
-        break_step1 = 10000
-        # td3
-        # train_reward_scaling1 = 2 ** -5
-        # eval_reward_scaling1 = 2 ** -6
-        train_reward_scaling1 = 2 ** -5
-        eval_reward_scaling1 = 2 ** -4
+        break_step1 = 50000
+
+        if 20 <= int(config.VALI_DAYS_FLAG) < 30:
+            train_reward_scaling1 = 2 ** -6
+            eval_reward_scaling1 = 2 ** -5
+            pass
+        elif 30 <= int(config.VALI_DAYS_FLAG) < 60:
+            train_reward_scaling1 = 2 ** -7
+            eval_reward_scaling1 = 2 ** -7
+        elif 60 <= int(config.VALI_DAYS_FLAG) < 72:
+            train_reward_scaling1 = 2 ** -8
+            eval_reward_scaling1 = 2 ** -7
+        elif 72 <= int(config.VALI_DAYS_FLAG) < 90:
+            train_reward_scaling1 = 2 ** -7
+            eval_reward_scaling1 = 2 ** -7
+        elif 90 <= int(config.VALI_DAYS_FLAG) < 100:
+            train_reward_scaling1 = 2 ** -7
+            eval_reward_scaling1 = 2 ** -8
+        elif 100 <= int(config.VALI_DAYS_FLAG) < 150:
+            train_reward_scaling1 = 2 ** -6
+            eval_reward_scaling1 = 2 ** -6
+        elif 150 <= int(config.VALI_DAYS_FLAG) < 200:
+            train_reward_scaling1 = 2 ** -7
+            eval_reward_scaling1 = 2 ** -7
+        elif 200 <= int(config.VALI_DAYS_FLAG) < 300:
+            train_reward_scaling1 = 2 ** -8
+            eval_reward_scaling1 = 2 ** -7
+        elif 300 <= int(config.VALI_DAYS_FLAG) < 500:
+            train_reward_scaling1 = 2 ** -7
+            eval_reward_scaling1 = 2 ** -7
+        elif 500 <= int(config.VALI_DAYS_FLAG) < 518:
+            train_reward_scaling1 = 2 ** -8
+            eval_reward_scaling1 = 2 ** -8
+        elif 518 <= int(config.VALI_DAYS_FLAG) < 1000:
+            train_reward_scaling1 = 2 ** -8
+            eval_reward_scaling1 = 2 ** -8
+        elif 1000 <= int(config.VALI_DAYS_FLAG) < 1200:
+            train_reward_scaling1 = 2 ** -8
+            eval_reward_scaling1 = 2 ** -8
+        elif 1200 <= int(config.VALI_DAYS_FLAG) < 1268:
+            train_reward_scaling1 = 2 ** -7
+            eval_reward_scaling1 = 2 ** -8
+        elif 1268 <= int(config.VALI_DAYS_FLAG):
+            train_reward_scaling1 = 2 ** -9
+            eval_reward_scaling1 = 2 ** -9
+        else:
+            train_reward_scaling1 = 2 ** -7
+            eval_reward_scaling1 = 2 ** -7
+            pass
         pass
     elif config.AGENT_NAME == 'AgentDDPG':
         agent_class1 = AgentDDPG()
         if_on_policy1 = False
         break_step1 = 10000
-        # ddpg
-        # train_reward_scaling1 = 2 ** -8
-        # eval_reward_scaling1 = 2 ** -5
 
-        train_reward_scaling1 = 2 ** -6
-        eval_reward_scaling1 = 2 ** -3
+        if 20 <= int(config.VALI_DAYS_FLAG) < 30:
+            train_reward_scaling1 = 2 ** -10
+            eval_reward_scaling1 = 2 ** -5
+            pass
+        elif 30 <= int(config.VALI_DAYS_FLAG) < 40:
+            train_reward_scaling1 = 2 ** -7
+            eval_reward_scaling1 = 2 ** -6
+            pass
+        elif 40 <= int(config.VALI_DAYS_FLAG) < 50:
+            train_reward_scaling1 = 2 ** -6
+            eval_reward_scaling1 = 2 ** -5
+            pass
+        elif 50 <= int(config.VALI_DAYS_FLAG) < 60:
+            train_reward_scaling1 = 2 ** -7
+            eval_reward_scaling1 = 2 ** -5
+            pass
+        elif 60 <= int(config.VALI_DAYS_FLAG) < 72:
+            train_reward_scaling1 = 2 ** -6
+            eval_reward_scaling1 = 2 ** -5
+            pass
+        elif 72 <= int(config.VALI_DAYS_FLAG) < 90:
+            train_reward_scaling1 = 2 ** -7
+            eval_reward_scaling1 = 2 ** -7
+            pass
+        elif 90 <= int(config.VALI_DAYS_FLAG) < 100:
+            train_reward_scaling1 = 2 ** -10
+            eval_reward_scaling1 = 2 ** -8
+            pass
+        elif 100 <= int(config.VALI_DAYS_FLAG) < 500:
+            train_reward_scaling1 = 2 ** -9
+            eval_reward_scaling1 = 2 ** -8
+            pass
+        elif 500 <= int(config.VALI_DAYS_FLAG):
+            train_reward_scaling1 = 2 ** -9
+            eval_reward_scaling1 = 2 ** -9
+            pass
+        else:
+            train_reward_scaling1 = 2 ** -7
+            eval_reward_scaling1 = 2 ** -6
+            pass
         pass
     elif config.AGENT_NAME == 'AgentModSAC':
         agent_class1 = AgentModSAC()
         if_on_policy1 = False
         break_step1 = int(1e6)
-        # AgentModSAC
-        # train_reward_scaling1 = 2 ** -10
-        # eval_reward_scaling1 = 2 ** -9
 
-        train_reward_scaling1 = 2 ** -11
-        eval_reward_scaling1 = 2 ** -8
-        pass
+        if 20 <= int(config.VALI_DAYS_FLAG) < 30:
+            train_reward_scaling1 = 2 ** -12
+            eval_reward_scaling1 = 2 ** -9
+            pass
+        elif 1000 <= int(config.VALI_DAYS_FLAG):
+            train_reward_scaling1 = 2 ** -11
+            eval_reward_scaling1 = 2 ** -9
+            pass
+        else:
+            train_reward_scaling1 = 2 ** -11
+            eval_reward_scaling1 = 2 ** -8
+            pass
+
     elif config.AGENT_NAME == 'AgentDuelingDQN':
         agent_class1 = AgentDuelingDQN()
         if_on_policy1 = False
@@ -197,7 +325,7 @@ if __name__ == '__main__':
     # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
 
     # 选择agent
-    for agent_item in ['AgentModSAC', 'AgentPPO', 'AgentTD3', 'AgentDDPG', 'AgentSAC', ]:
+    for agent_item in ['AgentTD3', 'AgentDDPG', 'AgentSAC', 'AgentModSAC', 'AgentPPO', ]:
 
         config.AGENT_NAME = agent_item
 
@@ -358,3 +486,64 @@ if __name__ == '__main__':
             pass
         pass
     pass
+
+# TODO
+# ----------------------------------------
+#
+# train_reward 表
+#
+# ----------------------------------------
+#
+# # AgentTD3
+#
+# agent_name					AgentTD3
+#
+# if_on_policy1				False
+#
+# break_step1					50000
+#
+# train_reward_scaling1		2 ** (-7)
+#
+# eval_reward_scaling1		2 ** (-7)
+#
+# 训练的次数					5
+#
+# 训练的时间点					2021-07-10 01：21：01
+#
+# ----------------------------------------
+#
+#
+# 训练之前，根据 Agent 名称 和 VALI_DAYS_FLAG， 读取 train_reward_scaling1 和 eval_reward_scaling1。
+#
+#
+# 训练临时表， temp_train_record ，训练之前，清空。
+#
+# 训练 的时候，如果 train reward 或 predict reward 大于 256，则 记录此值历史记录，以流水帐的形式记录到 temp_train_record 表。
+#
+# 训练结束后，判断 temp_train_record 表，是否有记录，如果有，则 整除 256，将此值，更新到 train_reward 表的 train_reward_scaling1 和 eval_reward_scaling1，减去相应的值 例如 (-7 -2)
+#
+# 循环
+#
+# ----------------------------------------
+#
+# 查找有无此2表，创建此2表：train_reward、temp_train_record 。
+#
+#
+# 训练之前，从 train_reward 表 中找到 训练的次数 最小 的记录。
+#
+# 获取 train_reward_scaling1 和 eval_reward_scaling1 等信息。
+#
+# 清空 temp_train_record 表，
+#
+# 训练 的时候，如果 train reward 或 predict reward 大于 256，则 记录此值到 temp_train_record 表。
+#
+# 训练结束后，拷贝替换 pth 文件。
+#
+# 训练结束后，train_reward 表 中的 训练的次数 +1，训练的时间点 更新。
+#
+# 训练结束后，判断 temp_train_record 表，是否有记录，如果有，则 整除 256，将此值，更新到 train_reward 表的 train_reward_scaling1 和 eval_reward_scaling1，减去相应的值 例如 (-7 -2)
+#
+# 循环
+#
+#
+# ----------------------------------------
