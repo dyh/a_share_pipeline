@@ -21,11 +21,8 @@
   <component name="ChangeListManager">
     <list default="true" id="9e89b71b-f959-4196-bdad-c897441ae9b7" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/env_predict_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/env_predict_single.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/env_train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/env_train_single.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/predict_single_psql.py" beforeDir="false" afterPath="$PROJECT_DIR$/predict_single_psql.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train_helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_helper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_single.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,7 +39,7 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="JupyterTrust" id="069e9c5e-5b64-4445-a2a1-e354e833ba5e" />
+  <component name="JupyterTrust" id="411147b1-4f2b-4d0a-961c-d9a426d36bf5" />
   <component name="ProjectId" id="1sewuRk7nz1zo0tExbbzD8fZ1nX" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -527,6 +524,7 @@
       <workItem from="1625880039696" duration="320000" />
       <workItem from="1625896159891" duration="22739000" />
       <workItem from="1625939562018" duration="21000" />
+      <workItem from="1626007705200" duration="867000" />
     </task>
     <servers />
   </component>
@@ -670,7 +668,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/train_helper.py</url>
-          <line>232</line>
+          <line>239</line>
           <option name="timeStamp" value="36" />
         </line-breakpoint>
       </breakpoints>

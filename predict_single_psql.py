@@ -1,5 +1,6 @@
 from stock_data import StockData
-from train_single import get_agent_args
+# from train_single import get_agent_args
+from train_helper import query_model_hyper_parameters_sqlite
 from utils.psqldb import Psqldb
 from agent_single import *
 from utils.date_time import *
@@ -129,8 +130,49 @@ if __name__ == '__main__':
                     print('# initial_capital', initial_capital)
                     print('# max_stock', max_stock)
 
+                    # 获取超参
+                    model_name = agent_item + '_' + str(vali_days)
+
+                    hyper_parameters_id, hyper_parameters_model_name, if_on_policy, break_step, train_reward_scale, \
+                    eval_reward_scale, training_times, time_point \
+                        = query_model_hyper_parameters_sqlite(model_name=model_name)
+
+                    if if_on_policy == 'True':
+                        if_on_policy = True
+                    else:
+                        if_on_policy = False
+                    pass
+
+                    config.MODEL_HYPER_PARAMETERS = str(hyper_parameters_id)
+
                     # 获得Agent参数
-                    agent_class, if_on_policy, break_step, train_reward_scaling, eval_reward_scaling = get_agent_args()
+                    agent_class = None
+                    train_reward_scaling = 2 ** train_reward_scale
+                    eval_reward_scaling = 2 ** eval_reward_scale
+
+                    # 模型名称
+                    config.AGENT_NAME = str(hyper_parameters_model_name).split('_')[0]
+
+                    if config.AGENT_NAME == 'AgentPPO':
+                        agent_class = AgentPPO()
+                    elif config.AGENT_NAME == 'AgentSAC':
+                        agent_class = AgentSAC()
+                    elif config.AGENT_NAME == 'AgentTD3':
+                        agent_class = AgentTD3()
+                    elif config.AGENT_NAME == 'AgentDDPG':
+                        agent_class = AgentDDPG()
+                    elif config.AGENT_NAME == 'AgentModSAC':
+                        agent_class = AgentModSAC()
+                    elif config.AGENT_NAME == 'AgentDuelingDQN':
+                        agent_class = AgentDuelingDQN()
+                    elif config.AGENT_NAME == 'AgentSharedSAC':
+                        agent_class = AgentSharedSAC()
+                    elif config.AGENT_NAME == 'AgentDoubleDQN':
+                        agent_class = AgentDoubleDQN()
+                    pass
+
+                    # 预测周期
+                    work_days = int(str(hyper_parameters_model_name).split('_')[1])
 
                     args = Arguments(if_on_policy=if_on_policy)
                     args.agent = agent_class
@@ -182,6 +224,8 @@ if __name__ == '__main__':
                     # 奖励 比例
                     args.env.reward_scaling = train_reward_scaling
                     args.env_eval.reward_scaling = eval_reward_scaling
+
+                    print('train/eval reward scaling:', args.env.reward_scaling, args.env_eval.reward_scaling)
 
                     # Hyperparameters
                     args.gamma = gamma

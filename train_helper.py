@@ -89,7 +89,7 @@ def init_model_hyper_parameters_table_sqlite():
     pass
 
 
-def query_model_hyper_parameters_sqlite():
+def query_model_hyper_parameters_sqlite(model_name=None):
     # 根据 model_name 查询模型超参
 
     # 连接数据库
@@ -100,9 +100,16 @@ def query_model_hyper_parameters_sqlite():
 
     sqlite = SQLite(db_path)
 
-    query_sql = f'SELECT id, model_name, if_on_policy, break_step, train_reward_scale, eval_reward_scale, ' \
-                f'training_times, time_point FROM "{table_name}" ' \
-                f' ORDER BY training_times ASC LIMIT 1'
+    if model_name is None:
+        query_sql = f'SELECT id, model_name, if_on_policy, break_step, train_reward_scale, eval_reward_scale, ' \
+                    f'training_times, time_point FROM "{table_name}" ' \
+                    f' ORDER BY training_times ASC LIMIT 1'
+    else:
+        query_sql = f'SELECT id, model_name, if_on_policy, break_step, train_reward_scale, eval_reward_scale, ' \
+                    f'training_times, time_point FROM "{table_name}" WHERE model_name="{model_name}"' \
+                    f' ORDER BY training_times ASC LIMIT 1'
+        pass
+    pass
 
     id1, model_name, if_on_policy, break_step, train_reward_scale, eval_reward_scale, training_times, time_point = \
         sqlite.fetchone(query_sql)
