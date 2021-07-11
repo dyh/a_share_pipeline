@@ -4,6 +4,7 @@ import numpy.random as rd
 
 import config
 from stock_data import StockData, fields_prep
+from train_helper import insert_train_history_record_sqlite
 
 
 class StockTradingEnvPredict:
@@ -257,9 +258,10 @@ class StockTradingEnvPredict:
             # ----
         pass
 
-        # print('predict reward:', str(reward))
+        if reward > 256:
+            insert_train_history_record_sqlite(model_id=config.MODEL_HYPER_PARAMETERS, train_reward_value=0.0,
+                                               eval_reward_value=reward)
 
-        if reward >= 256:
             print('>' * 20, 'predict', str(reward), '<' * 20)
         pass
 

@@ -1,3 +1,6 @@
+# 超参ID
+MODEL_HYPER_PARAMETERS = -1
+
 # 代理名称
 AGENT_NAME = ''
 

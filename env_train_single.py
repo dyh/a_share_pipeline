@@ -4,6 +4,7 @@ import numpy.random as rd
 import torch
 
 import config
+from train_helper import insert_train_history_record_sqlite
 
 
 class StockTradingEnv:
@@ -119,9 +120,11 @@ class StockTradingEnv:
             print('train reward:', str(reward))
         pass
 
-        # print('train reward:', str(reward))
 
-        if reward >= 256:
+        if reward > 256:
+            insert_train_history_record_sqlite(model_id=config.MODEL_HYPER_PARAMETERS, train_reward_value=reward,
+                                               eval_reward_value=0.0)
+
             print('>' * 20, 'train', str(reward), '<' * 20)
         pass
 

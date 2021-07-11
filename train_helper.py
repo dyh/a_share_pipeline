@@ -6,7 +6,7 @@ from utils.sqlite import SQLite
 def init_model_hyper_parameters_table_sqlite():
     # 初始化模型超参表 model_hyper_parameters 和 训练历史记录表 train_history
 
-    time_point = date_time.time_point()
+    time_point = date_time.time_point(time_format='%Y-%m-%d %H:%M:%S')
 
     # 连接数据库
     db_path = config.STOCK_DB_PATH
@@ -25,6 +25,7 @@ def init_model_hyper_parameters_table_sqlite():
                                      f'break_step INTEGER NOT NULL, train_reward_scale INTEGER NOT NULL, '
                                      f'eval_reward_scale INTEGER NOT NULL, training_times INTEGER NOT NULL, '
                                      f'time_point TEXT NOT NULL);')
+
         # 提交
         sqlite.commit()
         pass
@@ -33,7 +34,7 @@ def init_model_hyper_parameters_table_sqlite():
         for agent_item in ['AgentSAC', 'AgentPPO', 'AgentTD3', 'AgentDDPG', 'AgentModSAC', ]:
 
             if agent_item == 'AgentPPO':
-                if_on_policy = ""
+                if_on_policy = "True"
                 break_step = 8e6
             elif agent_item == 'AgentModSAC':
                 if_on_policy = "False"
@@ -56,7 +57,7 @@ def init_model_hyper_parameters_table_sqlite():
                           f'train_reward_scale, eval_reward_scale, training_times,time_point) ' \
                           f'VALUES (?,?,?,?,?,?,?)'
 
-                sql_values = (agent_item + '_' + work_days, if_on_policy, break_step, train_reward_scale,
+                sql_values = (agent_item + '_' + str(work_days), if_on_policy, break_step, train_reward_scale,
                               eval_reward_scale, training_times, time_point)
 
                 sqlite.execute_non_query(sql_cmd, sql_values)
@@ -76,8 +77,8 @@ def init_model_hyper_parameters_table_sqlite():
     if if_exists is None:
         # 如果是初始化，则创建表
         sqlite.execute_non_query(sql=f'CREATE TABLE "{table_name}" (id INTEGER PRIMARY KEY AUTOINCREMENT, '
-                                     f'model_id TEXT NOT NULL, train_reward_value TEXT NOT NULL, '
-                                     f'eval_reward_value TEXT NOT NULL, time_point TEXT NOT NULL);')
+                                     f'model_id TEXT NOT NULL, train_reward_value NUMERIC NOT NULL, '
+                                     f'eval_reward_value NUMERIC NOT NULL, time_point TEXT NOT NULL);')
         # 提交
         sqlite.commit()
         pass
@@ -111,8 +112,9 @@ def query_model_hyper_parameters_sqlite():
     return id1, model_name, if_on_policy, break_step, train_reward_scale, eval_reward_scale, training_times, time_point
 
 
-def update_model_hyper_parameters_table_sqlite(id1, train_reward_scale, eval_reward_scale, training_times):
-    time_point = date_time.time_point()
+def update_model_hyper_parameters_table_sqlite(model_hyper_parameters_id, train_reward_scale, eval_reward_scale,
+                                               training_times):
+    time_point = date_time.time_point(time_format='%Y-%m-%d %H:%M:%S')
 
     # 更新超参表
     # 连接数据库
@@ -123,16 +125,13 @@ def update_model_hyper_parameters_table_sqlite(id1, train_reward_scale, eval_rew
 
     sqlite = SQLite(db_path)
 
-    if_exists = sqlite.table_exists(table_name)
-
-    if if_exists is None:
-        # 如果是初始化，则创建表
-        sqlite.execute_non_query(sql=f'UPDATE "{table_name}" SET train_reward_scale={train_reward_scale}, '
-                                     f'eval_reward_scale={eval_reward_scale}, training_times={training_times}, '
-                                     f'time_point="{time_point}" WHERE id={id1}')
-        # 提交
-        sqlite.commit()
-        pass
+    # 如果是初始化，则创建表
+    sqlite.execute_non_query(sql=f'UPDATE "{table_name}" SET train_reward_scale={train_reward_scale}, '
+                                 f'eval_reward_scale={eval_reward_scale}, training_times={training_times}, '
+                                 f'time_point="{time_point}" WHERE id={model_hyper_parameters_id}')
+    # 提交
+    sqlite.commit()
+    pass
 
     sqlite.close()
     pass
@@ -148,13 +147,9 @@ def clear_train_history_table_sqlite():
 
     sqlite = SQLite(db_path)
 
-    if_exists = sqlite.table_exists(table_name)
-
-    if if_exists is None:
-        sqlite.execute_non_query(sql=f'DELETE FROM "{table_name}";')
-        # 提交
-        sqlite.commit()
-        pass
+    sqlite.execute_non_query(sql=f'DELETE FROM "{table_name}"')
+    # 提交
+    sqlite.commit()
     pass
 
     sqlite.close()
@@ -162,7 +157,7 @@ def clear_train_history_table_sqlite():
 
 
 def insert_train_history_record_sqlite(model_id, train_reward_value, eval_reward_value):
-    time_point = date_time.time_point()
+    time_point = date_time.time_point(time_format='%Y-%m-%d %H:%M:%S')
 
     # 插入训练历史记录
     # 连接数据库
@@ -173,21 +168,71 @@ def insert_train_history_record_sqlite(model_id, train_reward_value, eval_reward
 
     sqlite = SQLite(db_path)
 
-    if_exists = sqlite.table_exists(table_name)
+    sql_cmd = f'INSERT INTO "{table_name}" ' \
+              f'(model_id, train_reward_value, eval_reward_value, time_point) VALUES (?,?,?,?);'
 
-    if if_exists is None:
-        sql_cmd = f'INSERT INTO "{table_name}" ' \
-                  f'(model_id, train_reward_value, eval_reward_value, time_point) VALUES (?,?,?,?);'
+    sql_values = (model_id, train_reward_value, eval_reward_value, time_point)
 
-        sql_values = (model_id, train_reward_value, eval_reward_value, time_point)
+    sqlite.execute_non_query(sql_cmd, sql_values)
 
-        sqlite.execute_non_query(sql_cmd, sql_values)
-
-        # 提交
-        sqlite.commit()
-        pass
+    # 提交
+    sqlite.commit()
     pass
 
     sqlite.close()
+
+    pass
+
+
+def update_model_hyper_parameters_by_reward_history(model_hyper_parameters_id, origin_train_reward_scale,
+                                                    origin_eval_reward_scale, origin_training_times):
+    # 根据reward历史，更新超参表
+    # 插入训练历史记录
+    # 连接数据库
+    db_path = config.STOCK_DB_PATH
+
+    # 表名
+    table_name = 'train_history'
+
+    sqlite = SQLite(db_path)
+
+    query_sql = f'SELECT MAX(train_reward_value), MAX(eval_reward_value) FROM "{table_name}" ' \
+                f' WHERE model_id="{model_hyper_parameters_id}"'
+
+    max_train_reward_value, max_eval_reward_value = sqlite.fetchone(query_sql)
+
+    sqlite.close()
+
+    if max_train_reward_value is None:
+        new_train_reward_scale = origin_train_reward_scale
+        pass
+    else:
+        if max_train_reward_value > 256:
+            new_train_reward_scale = origin_train_reward_scale - (max_train_reward_value // 256)
+            pass
+        else:
+            new_train_reward_scale = origin_train_reward_scale
+            pass
+        pass
+    pass
+
+    if max_eval_reward_value is None:
+        new_eval_reward_scale = origin_eval_reward_scale
+        pass
+    else:
+        if max_eval_reward_value > 256:
+            new_eval_reward_scale = origin_eval_reward_scale - (max_eval_reward_value // 256)
+            pass
+        else:
+            new_eval_reward_scale = origin_eval_reward_scale
+            pass
+        pass
+    pass
+
+    # 更新超参表
+    update_model_hyper_parameters_table_sqlite(model_hyper_parameters_id=model_hyper_parameters_id,
+                                               train_reward_scale=new_train_reward_scale,
+                                               eval_reward_scale=new_eval_reward_scale,
+                                               training_times=origin_training_times + 1)
 
     pass
