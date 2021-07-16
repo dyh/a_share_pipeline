@@ -52,7 +52,8 @@ if __name__ == '__main__':
     config.START_EVAL_DATE = ""
 
     # 整体结束日期，今天的日期，减去90工作日
-    config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), -predict_work_days))
+    # config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), -predict_work_days))
+    config.END_DATE = '2021-07-14'
 
     # 更新股票数据
     StockData.update_stock_data(tic_code=config.SINGLE_A_STOCK_CODE[0])
@@ -60,6 +61,8 @@ if __name__ == '__main__':
     # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
     # AgentDoubleDQN 单进程好用?
     # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
+
+    loop_index = 0
 
     # 循环
     while True:
@@ -199,7 +202,8 @@ if __name__ == '__main__':
         # reward_scaling 在 args.env里调整了，这里不动
         args.reward_scale = 2 ** 0
 
-        args.break_step = break_step
+        # TODO ----
+        args.break_step = int(break_step / 5)
         # args.break_step = 1200
 
         print('break_step', args.break_step)
@@ -245,7 +249,7 @@ if __name__ == '__main__':
 
         # 训练结束后，model_hyper_parameters 表 中的 训练的次数 +1，训练的时间点 更新。
 
-        # 判断 train_history 表，是否有记录，如果有，则整除 256。将此值更新到 model_hyper_parameters 表的 超参，减去相应的值。
+        # 判断 train_history 表，是否有记录，如果有，则整除 256 + 128。将此值更新到 model_hyper_parameters 表的 超参，减去相应的值。
 
         update_model_hyper_parameters_by_reward_history(model_hyper_parameters_id=hyper_parameters_id,
                                                         origin_train_reward_scale=train_reward_scale,
@@ -255,10 +259,14 @@ if __name__ == '__main__':
         # 结束预测的时间
         time_end = datetime.now()
         duration = (time_end - time_begin).seconds
+
         print('>', config.AGENT_NAME, break_step, 'steps', '训练耗时', duration, '秒')
 
-        # sleep 60 秒
-        print('sleep 20 秒')
-        time.sleep(20)
+        # 循环次数
+        loop_index += 1
+        print('>', 'while 循环次数', loop_index, '\r\n')
+
+        print('sleep 10 秒\r\n')
+        time.sleep(10)
 
         pass

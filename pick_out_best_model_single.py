@@ -59,10 +59,7 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-07-19'
-
-        # 前10后10，前10后x，前x后10
-        config.PREDICT_PERIOD = '100'
+        config.OUTPUT_DATE = '2021-07-15'
 
         # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
         # AgentDoubleDQN 单进程好用?
@@ -82,16 +79,12 @@ if __name__ == '__main__':
             # 日期列表
             # 4月16日向前，20,30,40,50,60,72,90周期
             # end_vali_date = get_datetime_from_date_str('2021-04-16')
-            config.IF_SHOW_PREDICT_INFO = True
+            config.IF_SHOW_PREDICT_INFO = False
 
             config.START_DATE = "2003-05-01"
 
-            # 固定日期
-            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -96))
-            # config.START_EVAL_DATE = "2021-05-22"
-
-            # OUTPUT_DATE 向右3工作日
-            config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), +3))
+            # OUTPUT_DATE
+            config.END_DATE = config.OUTPUT_DATE
 
             # 创建预测结果表
             StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
@@ -106,11 +99,14 @@ if __name__ == '__main__':
             list_begin_vali_date = get_begin_vali_date_list(end_vali_date)
 
             # 循环 vali_date_list 训练7次
-            for vali_days, _ in list_begin_vali_date:
-                # torch.cuda.empty_cache()
+            for vali_days_count, begin_vali_date in list_begin_vali_date:
+
+                config.START_EVAL_DATE = str(begin_vali_date)
+
+                config.PREDICT_PERIOD = str(vali_days_count)
 
                 # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
-                config.VALI_DAYS_FLAG = str(vali_days)
+                config.VALI_DAYS_FLAG = str(vali_days_count)
 
                 # weights 文件目录
                 # model_folder_path = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}' \
@@ -125,13 +121,13 @@ if __name__ == '__main__':
                     print('#' * 40)
                     print('config.AGENT_NAME', config.AGENT_NAME)
                     print('# 预测周期', config.START_EVAL_DATE, '-', config.END_DATE)
-                    print('# 模型的 work_days', vali_days)
+                    print('# 模型的 work_days', vali_days_count)
                     print('# model_folder_path', model_folder_path)
                     print('# initial_capital', initial_capital)
                     print('# max_stock', max_stock)
 
                     # 获取超参
-                    model_name = agent_item + '_' + str(vali_days)
+                    model_name = agent_item + '_' + str(vali_days_count)
 
                     hyper_parameters_id, hyper_parameters_model_name, if_on_policy, break_step, train_reward_scale, \
                     eval_reward_scale, training_times, time_point \
@@ -340,13 +336,6 @@ if __name__ == '__main__':
                                 pass
                             pass
 
-                            # print('>>>> env.list_output', env.list_buy_or_sell_output)
-                            # print(env.output_text_trade_detail)
-
-                            # 插入数据库
-                            # tic, date, -sell/+buy, hold, 第x天 = env.list_buy_or_sell_output
-                            # agent，vali_days，pred_period = config.AGENT_NAME, config.VALI_DAYS_FLAG, config.PREDICT_PERIOD
-
                             # 获取要预测的日期，保存到数据库中
                             for item in env.list_buy_or_sell_output:
                                 tic, date, action, hold, day, episode_return = item
@@ -354,15 +343,21 @@ if __name__ == '__main__':
                                     # 简单计算一次,低买高卖的最大回报
                                     max_return = calc_max_return(env.price_ary, env.initial_capital)
 
+                                    if episode_return > 1:
+                                        print('>', str(date), 'episode_return / max_return', episode_return, '/',
+                                              max_return, str(episode_return/max_return),
+                                              str((episode_return-1) / (max_return-1) * 100), '%', str((episode_return-1) / (max_return-1) * 100 / vali_days_count), '/pre day')
+                                    pass
+
                                     # 找到要预测的那一天，存储到psql
-                                    StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
-                                                                            vali_period_value=config.VALI_DAYS_FLAG,
-                                                                            pred_period_name=config.PREDICT_PERIOD,
-                                                                            tic=tic, date=date, action=action,
-                                                                            hold=hold,
-                                                                            day=day, episode_return=episode_return,
-                                                                            max_return=max_return,
-                                                                            trade_detail=env.output_text_trade_detail)
+                                    # StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
+                                    #                                         vali_period_value=config.VALI_DAYS_FLAG,
+                                    #                                         pred_period_name=config.PREDICT_PERIOD,
+                                    #                                         tic=tic, date=date, action=action,
+                                    #                                         hold=hold,
+                                    #                                         day=day, episode_return=episode_return,
+                                    #                                         max_return=max_return,
+                                    #                                         trade_detail=env.output_text_trade_detail)
 
                                     break
 

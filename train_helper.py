@@ -210,12 +210,15 @@ def update_model_hyper_parameters_by_reward_history(model_hyper_parameters_id, o
 
     sqlite.close()
 
+    # reward 阈值
+    reward_threshold = 256 + 128
+
     if max_train_reward_value is None:
         new_train_reward_scale = origin_train_reward_scale
         pass
     else:
-        if max_train_reward_value > 256:
-            new_train_reward_scale = origin_train_reward_scale - (max_train_reward_value // 256)
+        if max_train_reward_value > reward_threshold:
+            new_train_reward_scale = origin_train_reward_scale - (max_train_reward_value // reward_threshold)
             pass
         else:
             new_train_reward_scale = origin_train_reward_scale
@@ -227,8 +230,8 @@ def update_model_hyper_parameters_by_reward_history(model_hyper_parameters_id, o
         new_eval_reward_scale = origin_eval_reward_scale
         pass
     else:
-        if max_eval_reward_value > 256:
-            new_eval_reward_scale = origin_eval_reward_scale - (max_eval_reward_value // 256)
+        if max_eval_reward_value > reward_threshold:
+            new_eval_reward_scale = origin_eval_reward_scale - (max_eval_reward_value // reward_threshold)
             pass
         else:
             new_eval_reward_scale = origin_eval_reward_scale
