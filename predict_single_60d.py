@@ -1,4 +1,6 @@
 from stock_data import StockData
+# from train_single import get_agent_args
+from train_helper import query_model_hyper_parameters_sqlite, query_begin_vali_date_list_by_agent_name
 from utils.psqldb import Psqldb
 from agent_single import *
 from utils.date_time import *
@@ -8,9 +10,7 @@ from datetime import datetime
 
 
 def calc_max_return(price_ary, initial_capital_temp):
-    # ret = 0
     max_return_temp = 0
-    # max_value = 0
     min_value = 0
 
     assert price_ary.shape[0] > 1
@@ -19,7 +19,7 @@ def calc_max_return(price_ary, initial_capital_temp):
 
     for index_left in range(0, count_price - 1):
 
-        for index_right in range(index_left+1, count_price):
+        for index_right in range(index_left + 1, count_price):
 
             assert price_ary[index_left][0] > 0
 
@@ -32,11 +32,12 @@ def calc_max_return(price_ary, initial_capital_temp):
                 # max_value = price_ary[index1][0]
                 min_value = price_ary[index_right][0]
             pass
-
-        # print(price_ary[index][0])
         pass
 
-    ret = (initial_capital_temp / min_value * max_return_temp + initial_capital_temp) / initial_capital_temp
+    if min_value == 0:
+        ret = 0
+    else:
+        ret = (initial_capital_temp / min_value * max_return_temp + initial_capital_temp) / initial_capital_temp
 
     return ret
 
@@ -45,6 +46,8 @@ if __name__ == '__main__':
     # 预测，并保存结果到 postgresql 数据库
     # 开始预测的时间
     time_begin = datetime.now()
+
+    config.OUTPUT_DATE = '2021-07-22'
 
     initial_capital = 150000
 
@@ -61,20 +64,10 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
-        config.OUTPUT_DATE = '2021-07-05'
-
-        # 前10后10，前10后x，前x后10
-        config.PREDICT_PERIOD = '42'
-
-        work_days = '1268'
-
         # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
         # AgentDoubleDQN 单进程好用?
         # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
-        # for agent_item in ['AgentModSAC', ]:
-        # , 'AgentModSAC'
-        # for agent_item in ['AgentTD3', ]:
-        for agent_item in ['AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentSAC', 'AgentModSAC']:
+        for agent_item in ['AgentSAC', 'AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentModSAC', ]:
 
             config.AGENT_NAME = agent_item
             # config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
@@ -91,12 +84,17 @@ if __name__ == '__main__':
             # end_vali_date = get_datetime_from_date_str('2021-04-16')
             config.IF_SHOW_PREDICT_INFO = True
 
-            config.START_DATE = "2002-05-01"
+            config.START_DATE = "2003-05-01"
 
-            # 向左10工作日
-            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -39))
-            # 向右10工作日
-            config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), +3))
+            # 前29后1
+            config.PREDICT_PERIOD = '60'
+
+            # 固定日期
+            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -55))
+            # config.START_EVAL_DATE = "2021-05-22"
+
+            # OUTPUT_DATE 向右3工作日
+            config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), +1))
 
             # 创建预测结果表
             StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
@@ -104,8 +102,22 @@ if __name__ == '__main__':
             # 更新股票数据
             StockData.update_stock_data(tic_code=config.SINGLE_A_STOCK_CODE[0])
 
+            # 预测的截止日期
+            end_vali_date = get_datetime_from_date_str(config.END_DATE)
+
+            # 获取 N 个日期list
+            list_begin_vali_date = query_begin_vali_date_list_by_agent_name(agent_item, end_vali_date)
+
+            # for vali_days_count, begin_vali_date in list_begin_vali_date:
+
+            vali_days_count = 60
+
+            # config.START_EVAL_DATE = str(begin_vali_date)
+
             # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
-            config.VALI_DAYS_FLAG = work_days
+            config.VALI_DAYS_FLAG = str(vali_days_count)
+
+            # config.PREDICT_PERIOD = str(vali_days_count)
 
             # weights 文件目录
             # model_folder_path = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}' \
@@ -120,44 +132,57 @@ if __name__ == '__main__':
                 print('#' * 40)
                 print('config.AGENT_NAME', config.AGENT_NAME)
                 print('# 预测周期', config.START_EVAL_DATE, '-', config.END_DATE)
-                print('# 模型的 work_days', work_days)
+                print('# 模型的 work_days', vali_days_count)
                 print('# model_folder_path', model_folder_path)
                 print('# initial_capital', initial_capital)
                 print('# max_stock', max_stock)
 
+                initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
+                initial_stocks[0] = 2000.0
+
+                # 获取超参
+                model_name = agent_item + '_' + str(vali_days_count)
+
+                hyper_parameters_id, hyper_parameters_model_name, if_on_policy, break_step, train_reward_scale, \
+                eval_reward_scale, training_times, time_point \
+                    = query_model_hyper_parameters_sqlite(model_name=model_name)
+
+                if if_on_policy == 1:
+                    if_on_policy = True
+                else:
+                    if_on_policy = False
+                pass
+
+                config.MODEL_HYPER_PARAMETERS = str(hyper_parameters_id)
+
+                # 获得Agent参数
                 agent_class = None
+                train_reward_scaling = 2 ** train_reward_scale
+                eval_reward_scaling = 2 ** eval_reward_scale
+
+                # 模型名称
+                config.AGENT_NAME = str(hyper_parameters_model_name).split('_')[0]
+
                 if config.AGENT_NAME == 'AgentPPO':
                     agent_class = AgentPPO()
-                    if_on_policy = True
-                    pass
                 elif config.AGENT_NAME == 'AgentSAC':
                     agent_class = AgentSAC()
-                    if_on_policy = False
-                    pass
                 elif config.AGENT_NAME == 'AgentTD3':
                     agent_class = AgentTD3()
-                    if_on_policy = False
-                    pass
                 elif config.AGENT_NAME == 'AgentDDPG':
                     agent_class = AgentDDPG()
-                    if_on_policy = False
-                    pass
                 elif config.AGENT_NAME == 'AgentModSAC':
                     agent_class = AgentModSAC()
-                    if_on_policy = False
-                    pass
                 elif config.AGENT_NAME == 'AgentDuelingDQN':
                     agent_class = AgentDuelingDQN()
-                    if_on_policy = False
-                    pass
                 elif config.AGENT_NAME == 'AgentSharedSAC':
                     agent_class = AgentSharedSAC()
-                    if_on_policy = False
-                    pass
                 elif config.AGENT_NAME == 'AgentDoubleDQN':
                     agent_class = AgentDoubleDQN()
-                    if_on_policy = False
-                    pass
+                pass
+
+                # 预测周期
+                work_days = int(str(hyper_parameters_model_name).split('_')[1])
 
                 args = Arguments(if_on_policy=if_on_policy)
                 args.agent = agent_class
@@ -171,11 +196,6 @@ if __name__ == '__main__':
                     'close_30_sma', 'close_60_sma']  # finrl.config.TECHNICAL_INDICATORS_LIST
 
                 gamma = 0.99
-                # max_stock = 1e2
-                # max_stock = 100
-                # initial_capital = 100000
-                initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
-                initial_stocks[0] = 1000.0
 
                 buy_cost_pct = 0.003
                 sell_cost_pct = 0.003
@@ -203,14 +223,14 @@ if __name__ == '__main__':
                                                        initial_stocks=initial_stocks,
                                                        if_eval=True)
 
-                # args.env.target_reward = 3
-                # args.env_eval.target_reward = 3
-
                 args.env.target_return = 100
                 args.env_eval.target_return = 100
 
-                args.env.reward_scaling = 2 ** -7
-                args.env_eval.reward_scaling = 2 ** -8
+                # 奖励 比例
+                args.env.reward_scaling = train_reward_scaling
+                args.env_eval.reward_scaling = eval_reward_scaling
+
+                print('train/eval reward scaling:', args.env.reward_scaling, args.env_eval.reward_scaling)
 
                 # Hyperparameters
                 args.gamma = gamma
@@ -243,8 +263,8 @@ if __name__ == '__main__':
                 args.eval_times2 = 2 ** 5
 
                 # ----
-                # args.if_allow_break = False
-                args.if_allow_break = True
+                args.if_allow_break = False
+                # args.if_allow_break = True
                 # ----
 
                 # ----------------------------
@@ -325,13 +345,6 @@ if __name__ == '__main__':
                             pass
                         pass
 
-                        # print('>>>> env.list_output', env.list_buy_or_sell_output)
-                        # print(env.output_text_trade_detail)
-
-                        # 插入数据库
-                        # tic, date, -sell/+buy, hold, 第x天 = env.list_buy_or_sell_output
-                        # agent，vali_days，pred_period = config.AGENT_NAME, config.VALI_DAYS_FLAG, config.PREDICT_PERIOD
-
                         # 获取要预测的日期，保存到数据库中
                         for item in env.list_buy_or_sell_output:
                             tic, date, action, hold, day, episode_return = item
@@ -362,7 +375,6 @@ if __name__ == '__main__':
                 # ----
 
             pass
-        pass
 
         psql_object.close()
         pass

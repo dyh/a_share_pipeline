@@ -114,14 +114,13 @@ def get_begin_vali_date_list(end_vali_date):
     获取7个日期列表
     :return: list()
     """
-
     list_result = list()
-
-    for work_days in [20, 30, 40, 50, 60, 72, 90, 100, 150, 200, 300, 500, 518, 1000, 1200, 1268]:
+    # for work_days in [20, 30, 40, 50, 60, 72, 90, 100, 150, 200, 300, 500, 518, 1000, 1200, 1268]:
+    for work_days in [30, 40, 50, 60, 72, 90, 100, 150, 200, 300, 500, 518, 1000, 1200]:
         begin_vali_date = get_next_work_day(end_vali_date, next_flag=-work_days)
         list_result.append((work_days, begin_vali_date))
 
-    # list_result.reverse()
+    list_result.reverse()
 
     return list_result
 

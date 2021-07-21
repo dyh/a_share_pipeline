@@ -1,6 +1,7 @@
+import time
+
 import pandas as pd
 import numpy as np
-import numpy.random as rd
 import torch
 
 import config
@@ -50,12 +51,13 @@ class StockTradingEnv:
         price = self.price_ary[self.day]
 
         # 深拷贝
-        self.stocks = rd.random(size=self.initial_stocks.shape) * self.initial_stocks.copy() // 100 * 100
-        # print('initial_stocks', self.stocks)
+        np.random.seed(round(time.time()))
+        random_float = np.random.uniform(0.0, 1.01, size=self.initial_stocks.shape)
+        self.stocks = random_float * self.initial_stocks.copy() // 100 * 100
 
         # self.stocks = self.initial_stocks + rd.randint(0, 64, size=self.initial_stocks.shape)
 
-        self.amount = self.initial_capital * rd.uniform(0.95, 1.05) - (self.stocks * price).sum()
+        self.amount = self.initial_capital * np.random.uniform(0.95, 1.05) - (self.stocks * price).sum()
 
         self.total_asset = self.amount + (self.stocks * price).sum()
         self.initial_total_asset = self.total_asset
@@ -232,44 +234,6 @@ class StockTradingEnv:
         plt.xlabel('multiple of initial_account')
         plt.savefig(f'{cwd}/cumulative_return.jpg')
         return episode_returns
-
-
-def check_stock_trading_env():
-    if_eval = True  # False
-
-    env = StockTradingEnv(if_eval=if_eval)
-    action_dim = env.action_dim
-
-    state = env.reset()
-    print('state_dim', len(state))
-
-    from time import time
-    timer = time()
-
-    step = 1
-    done = False
-    reward = None
-    while not done:
-        action = rd.rand(action_dim) * 2 - 1
-        next_state, reward, done, _ = env.step(action)
-        # print(';', len(next_state), env.day, reward)
-        step += 1
-
-    print(f"| Random action: step {step}, UsedTime {time() - timer:.3f}")
-    print(f"| Random action: terminal reward {reward:.3f}")
-    print(f"| Random action: episode return {env.episode_return:.3f}")
-
-    '''draw_cumulative_return'''
-    from agent_single import AgentPPO
-    from run_single import Arguments
-    args = Arguments(if_on_policy=True)
-    args.agent = AgentPPO()
-    args.env = StockTradingEnv(if_eval=True)
-    args.if_remove = False
-    args.cwd = './AgentPPO/StockTradingEnv-v1_0'
-    args.init_before_training()
-
-    env.draw_cumulative_return(args, torch)
 
 
 """Copy from FinRL"""
@@ -517,7 +481,3 @@ class FeatureEngineer:
             {"date": df_price_pivot.index, "turbulence": turbulence_index}
         )
         return turbulence_index
-
-
-if __name__ == '__main__':
-    check_stock_trading_env()

@@ -1,6 +1,6 @@
 from stock_data import StockData
 # from train_single import get_agent_args
-from train_helper import query_model_hyper_parameters_sqlite, query_begin_vali_date_list_by_agent_name
+from train_helper import query_model_hyper_parameters_sqlite
 from utils.psqldb import Psqldb
 from agent_single import *
 from utils.date_time import *
@@ -34,10 +34,7 @@ def calc_max_return(price_ary, initial_capital_temp):
             pass
         pass
 
-    if min_value == 0:
-        ret = 0
-    else:
-        ret = (initial_capital_temp / min_value * max_return_temp + initial_capital_temp) / initial_capital_temp
+    ret = (initial_capital_temp / min_value * max_return_temp + initial_capital_temp) / initial_capital_temp
 
     return ret
 
@@ -46,8 +43,6 @@ if __name__ == '__main__':
     # 预测，并保存结果到 postgresql 数据库
     # 开始预测的时间
     time_begin = datetime.now()
-
-    config.OUTPUT_DATE = '2021-07-21'
 
     initial_capital = 150000
 
@@ -64,10 +59,13 @@ if __name__ == '__main__':
         psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                              password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
+        config.OUTPUT_DATE = '2021-07-19'
+
         # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
         # AgentDoubleDQN 单进程好用?
         # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
-        for agent_item in ['AgentSAC', 'AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentModSAC', ]:
+        # for agent_item in ['AgentSAC', 'AgentPPO', 'AgentDDPG', 'AgentTD3', 'AgentModSAC', ]:
+        for agent_item in ['AgentPPO', ]:
 
             config.AGENT_NAME = agent_item
             # config.CWD = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}/StockTradingEnv-v1'
@@ -82,19 +80,12 @@ if __name__ == '__main__':
             # 日期列表
             # 4月16日向前，20,30,40,50,60,72,90周期
             # end_vali_date = get_datetime_from_date_str('2021-04-16')
-            config.IF_SHOW_PREDICT_INFO = True
+            config.IF_SHOW_PREDICT_INFO = False
 
             config.START_DATE = "2003-05-01"
 
-            # 前29后1
-            config.PREDICT_PERIOD = '10'
-
-            # 固定日期
-            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -9))
-            # config.START_EVAL_DATE = "2021-05-22"
-
-            # OUTPUT_DATE 向右3工作日
-            config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), +1))
+            # OUTPUT_DATE
+            config.END_DATE = config.OUTPUT_DATE
 
             # 创建预测结果表
             StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
@@ -106,17 +97,17 @@ if __name__ == '__main__':
             end_vali_date = get_datetime_from_date_str(config.END_DATE)
 
             # 获取 N 个日期list
-            list_begin_vali_date = query_begin_vali_date_list_by_agent_name(agent_item, end_vali_date)
+            list_begin_vali_date = get_begin_vali_date_list(end_vali_date)
 
             # 循环 vali_date_list 训练7次
             for vali_days_count, begin_vali_date in list_begin_vali_date:
 
-                # config.START_EVAL_DATE = str(begin_vali_date)
+                config.START_EVAL_DATE = str(begin_vali_date)
+
+                config.PREDICT_PERIOD = str(vali_days_count)
 
                 # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
                 config.VALI_DAYS_FLAG = str(vali_days_count)
-
-                # config.PREDICT_PERIOD = str(vali_days_count)
 
                 # weights 文件目录
                 # model_folder_path = f'./{config.AGENT_NAME}/single/{config.SINGLE_A_STOCK_CODE[0]}' \
@@ -136,9 +127,6 @@ if __name__ == '__main__':
                     print('# initial_capital', initial_capital)
                     print('# max_stock', max_stock)
 
-                    initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
-                    initial_stocks[0] = 2000.0
-
                     # 获取超参
                     model_name = agent_item + '_' + str(vali_days_count)
 
@@ -146,7 +134,7 @@ if __name__ == '__main__':
                     eval_reward_scale, training_times, time_point \
                         = query_model_hyper_parameters_sqlite(model_name=model_name)
 
-                    if if_on_policy == 1:
+                    if if_on_policy == 'True':
                         if_on_policy = True
                     else:
                         if_on_policy = False
@@ -195,6 +183,11 @@ if __name__ == '__main__':
                         'close_30_sma', 'close_60_sma']  # finrl.config.TECHNICAL_INDICATORS_LIST
 
                     gamma = 0.99
+                    # max_stock = 1e2
+                    # max_stock = 100
+                    # initial_capital = 100000
+                    initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
+                    initial_stocks[0] = 1000.0
 
                     buy_cost_pct = 0.003
                     sell_cost_pct = 0.003
@@ -351,15 +344,24 @@ if __name__ == '__main__':
                                     # 简单计算一次,低买高卖的最大回报
                                     max_return = calc_max_return(env.price_ary, env.initial_capital)
 
+                                    print('>>>>', str(date), 'episode_return / max_return', episode_return, '/',
+                                          max_return, str(episode_return / max_return),
+                                          str((episode_return - 1) / (max_return - 1) * 100), '%',
+                                          str((episode_return - 1) / (max_return - 1) * 100 / vali_days_count),
+                                          '/pre day')
+
+                                    # if episode_return > 1:
+                                    # pass
+
                                     # 找到要预测的那一天，存储到psql
-                                    StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
-                                                                            vali_period_value=config.VALI_DAYS_FLAG,
-                                                                            pred_period_name=config.PREDICT_PERIOD,
-                                                                            tic=tic, date=date, action=action,
-                                                                            hold=hold,
-                                                                            day=day, episode_return=episode_return,
-                                                                            max_return=max_return,
-                                                                            trade_detail=env.output_text_trade_detail)
+                                    # StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
+                                    #                                         vali_period_value=config.VALI_DAYS_FLAG,
+                                    #                                         pred_period_name=config.PREDICT_PERIOD,
+                                    #                                         tic=tic, date=date, action=action,
+                                    #                                         hold=hold,
+                                    #                                         day=day, episode_return=episode_return,
+                                    #                                         max_return=max_return,
+                                    #                                         trade_detail=env.output_text_trade_detail)
 
                                     break
 

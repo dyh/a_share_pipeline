@@ -186,7 +186,7 @@ if __name__ == '__main__':
                     # max_stock = 100
                     # initial_capital = 100000
                     initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
-                    initial_stocks[0] = 1000.0
+                    initial_stocks[0] = 2000.0
 
                     buy_cost_pct = 0.003
                     sell_cost_pct = 0.003

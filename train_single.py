@@ -25,7 +25,6 @@ if __name__ == '__main__':
     # 初始化超参表
     init_model_hyper_parameters_table_sqlite()
 
-    predict_work_days = 100
 
     # 开始训练的日期，在程序启动之后，不要改变
     config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
@@ -40,8 +39,8 @@ if __name__ == '__main__':
     initial_stocks_vali = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
 
     # 默认持有1000股
-    initial_stocks_train[0] = 1000.0
-    initial_stocks_vali[0] = 1000.0
+    initial_stocks_train[0] = 2000.0
+    initial_stocks_vali[0] = 2000.0
 
     if_on_policy = False
     # if_use_gae = True
@@ -51,9 +50,11 @@ if __name__ == '__main__':
     config.START_DATE = "2003-05-01"
     config.START_EVAL_DATE = ""
 
-    # 整体结束日期，今天的日期，减去90工作日
-    # config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), -predict_work_days))
-    config.END_DATE = '2021-07-14'
+    # 整体结束日期，今天的日期，减去60工作日
+    predict_work_days = 60
+
+    config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), -predict_work_days))
+    # config.END_DATE = '2021-07-21'
 
     # 更新股票数据
     StockData.update_stock_data(tic_code=config.SINGLE_A_STOCK_CODE[0])
@@ -202,9 +203,8 @@ if __name__ == '__main__':
         # reward_scaling 在 args.env里调整了，这里不动
         args.reward_scale = 2 ** 0
 
-        # TODO ----
-        args.break_step = int(break_step / 5)
-        # args.break_step = 1200
+        # args.break_step = int(break_step / 5)
+        args.break_step = break_step
 
         print('break_step', args.break_step)
 

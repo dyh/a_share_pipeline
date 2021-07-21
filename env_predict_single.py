@@ -1,6 +1,7 @@
+import time
+
 import pandas as pd
 import numpy as np
-import numpy.random as rd
 
 import config
 from stock_data import StockData, fields_prep
@@ -63,11 +64,15 @@ class StockTradingEnvPredict:
 
         # ----
         # self.stocks = self.initial_stocks.copy()
-        self.stocks = rd.random(size=self.initial_stocks.shape) * self.initial_stocks.copy() // 100 * 100
-        # print('initial_stocks', self.stocks)
+        np.random.seed(round(time.time()))
+        random_float = np.random.uniform(0.0, 1.01, size=self.initial_stocks.shape)
+        self.stocks = random_float * self.initial_stocks.copy() // 100 * 100
 
-        self.amount = self.initial_capital - (self.stocks * price).sum()
-        # self.amount = self.initial_capital * rd.uniform(0.95, 1.00) - (self.stocks * price).sum()
+        # self.stocks = np.random.random(size=self.initial_stocks.shape) * self.initial_stocks.copy() // 100 * 100
+
+        self.amount = self.initial_capital * np.random.uniform(0.95, 1.05) - (self.stocks * price).sum()
+
+        # self.amount = self.initial_capital - (self.stocks * price).sum()
 
         # ----
 
