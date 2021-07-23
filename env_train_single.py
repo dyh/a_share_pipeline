@@ -76,29 +76,53 @@ class StockTradingEnv:
         self.day += 1
         price = self.price_ary[self.day]
 
+        # 所有卖出动作
         for index in np.where(actions < 0)[0]:  # sell_index:
             if price[index] > 0:  # Sell only if current asset is > 0
                 sell_num_shares = min(self.stocks[index], -actions[index])
 
                 if sell_num_shares >= 100:
-                    # 地板除，卖1手整
+                    # 若 action <= -100 地板除，卖1手整
                     sell_num_shares = sell_num_shares // 100 * 100
                     self.stocks[index] -= sell_num_shares
                     self.amount += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
                     pass
+                else:
+                    # 当 sell_num_shares < 100时，判断若 self.stocks[index] >= 100 则放大效果，卖1手
+                    if self.stocks[index] >= 100:
+                        sell_num_shares = 100
+                        self.stocks[index] -= sell_num_shares
+                        self.amount += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
+                        pass
+                    else:
+                        # self.stocks[index] 不足1手时，不动
+                        pass
+                    pass
                 pass
 
+        # 所有买入动作
         for index in np.where(actions > 0)[0]:  # buy_index:
             if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
                 buy_num_shares = min(self.amount // price[index], actions[index])
 
                 if buy_num_shares >= 100:
-                    # 地板除，买1手整
+                    # 若 actions >= +100，地板除，买1手整
                     buy_num_shares = buy_num_shares // 100 * 100
                     self.stocks[index] += buy_num_shares
                     self.amount -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
                     pass
+                else:
+                    # 当 buy_num_shares < 100时，判断若 self.amount // price[index] >= 100，则放大效果，买1手
+                    if (self.amount // price[index]) >= 100:
+                        buy_num_shares = 100
+                        self.stocks[index] += buy_num_shares
+                        self.amount -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
+                    else:
+                        # self.amount // price[index] 不足1手时，不动
+                        pass
+                    pass
                 pass
+            pass
         pass
         state = np.hstack((self.amount * 2 ** -13,
                            price,
@@ -106,10 +130,7 @@ class StockTradingEnv:
                            self.tech_ary[self.day],)).astype(np.float32) * 2 ** -5
 
         total_asset = self.amount + (self.stocks * price).sum()
-        # reward = (total_asset - self.total_asset) * 2 ** -12  # reward scaling (90-30)
-        # reward = (total_asset - self.total_asset) * 2 ** -7  # reward scaling (1268)
-        reward = (total_asset - self.total_asset) * self.reward_scaling  # reward scaling (1268)
-        # self.reward_scaling
+        reward = (total_asset - self.total_asset) * self.reward_scaling
 
         self.total_asset = total_asset
 
@@ -119,14 +140,14 @@ class StockTradingEnv:
             reward = self.gamma_reward
             self.episode_return = total_asset / self.initial_total_asset
 
-            print('train reward:', str(reward))
+            print(config.AGENT_NAME, 'train reward:', str(reward))
         pass
 
         if reward > 256:
             insert_train_history_record_sqlite(model_id=config.MODEL_HYPER_PARAMETERS, train_reward_value=reward,
                                                eval_reward_value=0.0)
 
-            print('>' * 20, 'train', str(reward), '<' * 20)
+            print(config.AGENT_NAME, '>' * 20, 'train', str(reward), '<' * 20)
         pass
 
         return state, reward, done, dict()

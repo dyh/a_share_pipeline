@@ -47,7 +47,8 @@ if __name__ == '__main__':
     # 开始预测的时间
     time_begin = datetime.now()
 
-    config.OUTPUT_DATE = '2021-07-22'
+    # config.OUTPUT_DATE = '2021-07-26'
+    config.OUTPUT_DATE = '2021-04-29'
 
     initial_capital = 150000
 

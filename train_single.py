@@ -25,7 +25,6 @@ if __name__ == '__main__':
     # 初始化超参表
     init_model_hyper_parameters_table_sqlite()
 
-
     # 开始训练的日期，在程序启动之后，不要改变
     config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
 
@@ -203,7 +202,7 @@ if __name__ == '__main__':
         # reward_scaling 在 args.env里调整了，这里不动
         args.reward_scale = 2 ** 0
 
-        # args.break_step = int(break_step / 5)
+        # args.break_step = int(break_step / 30)
         args.break_step = break_step
 
         print('break_step', args.break_step)
@@ -264,6 +263,11 @@ if __name__ == '__main__':
 
         # 循环次数
         loop_index += 1
+
+        # 5个模型都摸一遍，退出
+        if loop_index == 5:
+            break
+
         print('>', 'while 循环次数', loop_index, '\r\n')
 
         print('sleep 10 秒\r\n')
