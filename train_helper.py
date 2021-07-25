@@ -235,7 +235,7 @@ def update_model_hyper_parameters_by_reward_history(model_hyper_parameters_id, o
     sqlite.close()
 
     # reward 阈值
-    reward_threshold = 256 + 158
+    reward_threshold = config.REWARD_THRESHOLD
 
     if max_train_reward_value is None:
         new_train_reward_scale = origin_train_reward_scale

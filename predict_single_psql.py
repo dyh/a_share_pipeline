@@ -4,7 +4,7 @@ from train_helper import query_model_hyper_parameters_sqlite, query_begin_vali_d
 from utils.psqldb import Psqldb
 from agent_single import *
 from utils.date_time import *
-from env_predict_single import StockTradingEnvPredict, FeatureEngineer
+from env_single import StockTradingEnvSingle, FeatureEngineer
 from run_single import *
 from datetime import datetime
 
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     # 开始预测的时间
     time_begin = datetime.now()
 
-    config.OUTPUT_DATE = '2021-07-21'
+    config.OUTPUT_DATE = '2021-07-26'
 
     initial_capital = 150000
 
@@ -87,10 +87,10 @@ if __name__ == '__main__':
             config.START_DATE = "2003-05-01"
 
             # 前29后1
-            config.PREDICT_PERIOD = '10'
+            config.PREDICT_PERIOD = '60'
 
             # 固定日期
-            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -9))
+            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -55))
             # config.START_EVAL_DATE = "2021-05-22"
 
             # OUTPUT_DATE 向右3工作日
@@ -202,25 +202,25 @@ if __name__ == '__main__':
                     start_eval_date = config.START_EVAL_DATE
                     end_eval_date = config.END_DATE
 
-                    args.env = StockTradingEnvPredict(cwd='', gamma=gamma, max_stock=max_stock,
-                                                      initial_capital=initial_capital,
-                                                      buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
-                                                      start_date=start_date,
-                                                      end_date=start_eval_date, env_eval_date=end_eval_date,
-                                                      ticker_list=config.SINGLE_A_STOCK_CODE,
-                                                      tech_indicator_list=tech_indicator_list,
-                                                      initial_stocks=initial_stocks,
-                                                      if_eval=True)
+                    args.env = StockTradingEnvSingle(cwd='', gamma=gamma, max_stock=max_stock,
+                                                     initial_capital=initial_capital,
+                                                     buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
+                                                     start_date=start_date,
+                                                     end_date=start_eval_date, env_eval_date=end_eval_date,
+                                                     ticker_list=config.SINGLE_A_STOCK_CODE,
+                                                     tech_indicator_list=tech_indicator_list,
+                                                     initial_stocks=initial_stocks,
+                                                     if_eval=True)
 
-                    args.env_eval = StockTradingEnvPredict(cwd='', gamma=gamma, max_stock=max_stock,
-                                                           initial_capital=initial_capital,
-                                                           buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
-                                                           start_date=start_date,
-                                                           end_date=start_eval_date, env_eval_date=end_eval_date,
-                                                           ticker_list=config.SINGLE_A_STOCK_CODE,
-                                                           tech_indicator_list=tech_indicator_list,
-                                                           initial_stocks=initial_stocks,
-                                                           if_eval=True)
+                    args.env_eval = StockTradingEnvSingle(cwd='', gamma=gamma, max_stock=max_stock,
+                                                          initial_capital=initial_capital,
+                                                          buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
+                                                          start_date=start_date,
+                                                          end_date=start_eval_date, env_eval_date=end_eval_date,
+                                                          ticker_list=config.SINGLE_A_STOCK_CODE,
+                                                          tech_indicator_list=tech_indicator_list,
+                                                          initial_stocks=initial_stocks,
+                                                          if_eval=True)
 
                     args.env.target_return = 100
                     args.env_eval.target_return = 100
@@ -234,8 +234,6 @@ if __name__ == '__main__':
                     # Hyperparameters
                     args.gamma = gamma
                     # ----
-                    # args.break_step = int(5e6)
-                    # args.break_step = int(3e6)
                     args.break_step = break_step
                     # ----
 

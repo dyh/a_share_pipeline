@@ -4,11 +4,10 @@ import pandas as pd
 import numpy as np
 
 import config
-from stock_data import StockData, fields_prep
 from train_helper import insert_train_history_record_sqlite
 
 
-class StockTradingEnvPredict:
+class StockTradingEnvSingle:
     def __init__(self, cwd='./envs/FinRL', gamma=0.99,
                  max_stock=1e2, initial_capital=1e6, buy_cost_pct=1e-3, sell_cost_pct=1e-3,
                  start_date='2008-03-19', end_date='2016-01-01', env_eval_date='2021-01-01',
@@ -53,56 +52,57 @@ class StockTradingEnvPredict:
         # 奖励 比例
         self.reward_scaling = 0.0
 
+        # 是 eval 还是 train
+        self.if_eval = if_eval
+
         pass
 
     def reset(self):
         self.day = 0
         price = self.price_ary[self.day]
 
-        # self.stocks = self.initial_stocks + rd.randint(0, 64, size=self.initial_stocks.shape)
-        # self.amount = self.initial_capital * rd.uniform(0.95, 1.05) - (self.stocks * price).sum()
-
         # ----
-        # self.stocks = self.initial_stocks.copy()
         np.random.seed(round(time.time()))
         random_float = np.random.uniform(0.0, 1.01, size=self.initial_stocks.shape)
-        self.stocks = random_float * self.initial_stocks.copy() // 100 * 100
 
-        # self.stocks = np.random.random(size=self.initial_stocks.shape) * self.initial_stocks.copy() // 100 * 100
-
-        self.amount = self.initial_capital * np.random.uniform(0.95, 1.05) - (self.stocks * price).sum()
-        # self.amount = self.initial_capital - (self.stocks * price).sum()
-
-        # ----
+        # 如果是正式预测，输出到网页，固定 持股数和现金
+        if config.IF_SHOW_PREDICT_INFO is True:
+            self.stocks = self.initial_stocks.copy()
+            self.amount = self.initial_capital - (self.stocks * price).sum()
+            pass
+        else:
+            # 如果是train过程中的eval
+            self.stocks = random_float * self.initial_stocks.copy() // 100 * 100
+            self.amount = self.initial_capital * np.random.uniform(0.95, 1.05) - (self.stocks * price).sum()
+            pass
+        pass
 
         self.total_asset = self.amount + (self.stocks * price).sum()
         self.initial_total_asset = self.total_asset
         self.gamma_reward = 0.0
 
-        state = np.hstack((self.amount * 2 ** -13,
+        state = np.hstack((self.amount * 2 ** -12,
                            price,
-                           self.stocks,
-                           self.tech_ary[self.day],)).astype(np.float32) * 2 ** -5
+                           self.stocks * 2 ** -4,
+                           self.tech_ary[self.day],)).astype(np.float32) * 2 ** -8
 
-        # ----
         # 清空输出的缓存
         self.output_text_trade_detail = ''
 
         # 输出的list
         self.list_buy_or_sell_output.clear()
         self.list_buy_or_sell_output = []
-        # ----
 
         return state
 
     def step(self, actions):
-        actions = (actions * self.max_stock).astype(int)
+        actions_temp = (actions * self.max_stock).astype(int)
+
+        # ----
+        yesterday_price = self.price_ary[self.day]
+        # ----
 
         self.day += 1
-
-        # ----
-        yesterday_price = self.price_ary[self.day - 1]
-        # ----
 
         price = self.price_ary[self.day]
 
@@ -113,10 +113,10 @@ class StockTradingEnvPredict:
 
         self.output_text_trade_detail += f'第 {self.day + 1} 天，{date_temp}\r\n'
 
-        for index in np.where(actions < 0)[0]:  # sell_index:
+        for index in np.where(actions_temp < 0)[0]:  # sell_index:
             if price[index] > 0:  # Sell only if current asset is > 0
 
-                sell_num_shares = min(self.stocks[index], -actions[index])
+                sell_num_shares = min(self.stocks[index], -actions_temp[index])
 
                 tic_temp = tic_ary_temp[index]
 
@@ -126,13 +126,14 @@ class StockTradingEnvPredict:
                     self.stocks[index] -= sell_num_shares
                     self.amount += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
 
-                    # tic, date, sell/buy, hold, 第x天
-                    episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
+                    if self.if_eval is True:
+                        # tic, date, sell/buy, hold, 第x天
+                        episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
 
-                    list_item = (tic_temp, date_temp, -1 * sell_num_shares, self.stocks[index], self.day + 1,
-                                 episode_return_temp)
-                    # 添加到输出list
-                    self.list_buy_or_sell_output.append(list_item)
+                        list_item = (tic_temp, date_temp, -1 * sell_num_shares, self.stocks[index], self.day + 1,
+                                     episode_return_temp)
+                        # 添加到输出list
+                        self.list_buy_or_sell_output.append(list_item)
                     pass
                 else:
                     # 当sell_num_shares < 100时，判断若 self.stocks[index] >= 100 则放大效果，卖1手
@@ -141,24 +142,26 @@ class StockTradingEnvPredict:
                         self.stocks[index] -= sell_num_shares
                         self.amount += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
 
-                        # tic, date, sell/buy, hold, 第x天
-                        episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
+                        if self.if_eval is True:
+                            # tic, date, sell/buy, hold, 第x天
+                            episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
 
-                        list_item = (tic_temp, date_temp, -1 * sell_num_shares, self.stocks[index], self.day + 1,
-                                     episode_return_temp)
-                        # 添加到输出list
-                        self.list_buy_or_sell_output.append(list_item)
+                            list_item = (tic_temp, date_temp, -1 * sell_num_shares, self.stocks[index], self.day + 1,
+                                         episode_return_temp)
+                            # 添加到输出list
+                            self.list_buy_or_sell_output.append(list_item)
                         pass
                     else:
                         # self.stocks[index] 不足1手时，不动
                         sell_num_shares = 0
 
-                        # tic, date, sell/buy, hold, 第x天
-                        episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
+                        if self.if_eval is True:
+                            # tic, date, sell/buy, hold, 第x天
+                            episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
 
-                        list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
-                        # 添加到输出list
-                        self.list_buy_or_sell_output.append(list_item)
+                            list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
+                            # 添加到输出list
+                            self.list_buy_or_sell_output.append(list_item)
                         pass
                     pass
                 pass
@@ -171,9 +174,9 @@ class StockTradingEnvPredict:
             pass
         pass
 
-        for index in np.where(actions > 0)[0]:  # buy_index:
+        for index in np.where(actions_temp > 0)[0]:  # buy_index:
             if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
-                buy_num_shares = min(self.amount // price[index], actions[index])
+                buy_num_shares = min(self.amount // price[index], actions_temp[index])
 
                 tic_temp = tic_ary_temp[index]
 
@@ -183,22 +186,7 @@ class StockTradingEnvPredict:
                     self.stocks[index] += buy_num_shares
                     self.amount -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
 
-                    # tic, date, sell/buy, hold, 第x天
-                    episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
-
-                    list_item = (tic_temp, date_temp, buy_num_shares, self.stocks[index], self.day + 1,
-                                 episode_return_temp)
-
-                    # 添加到输出list
-                    self.list_buy_or_sell_output.append(list_item)
-                    pass
-                else:
-                    # 当buy_num_shares < 100时，判断若 self.amount // price[index] >= 100，则放大效果，买1手
-                    if (self.amount // price[index]) >= 100:
-                        buy_num_shares = 100
-                        self.stocks[index] += buy_num_shares
-                        self.amount -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
-
+                    if self.if_eval is True:
                         # tic, date, sell/buy, hold, 第x天
                         episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
 
@@ -207,17 +195,35 @@ class StockTradingEnvPredict:
 
                         # 添加到输出list
                         self.list_buy_or_sell_output.append(list_item)
+                    pass
+                else:
+                    # 当buy_num_shares < 100时，判断若 self.amount // price[index] >= 100，则放大效果，买1手
+                    if (self.amount // price[index]) >= 100:
+                        buy_num_shares = 100
+                        self.stocks[index] += buy_num_shares
+                        self.amount -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
+
+                        if self.if_eval is True:
+                            # tic, date, sell/buy, hold, 第x天
+                            episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
+
+                            list_item = (tic_temp, date_temp, buy_num_shares, self.stocks[index], self.day + 1,
+                                         episode_return_temp)
+
+                            # 添加到输出list
+                            self.list_buy_or_sell_output.append(list_item)
                     else:
                         # self.amount // price[index] 不足100时，不动
                         # 未达到1手，不买
                         buy_num_shares = 0
 
-                        # tic, date, sell/buy, hold, 第x天
-                        episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
+                        if self.if_eval is True:
+                            # tic, date, sell/buy, hold, 第x天
+                            episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
 
-                        list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
-                        # 添加到输出list
-                        self.list_buy_or_sell_output.append(list_item)
+                            list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
+                            # 添加到输出list
+                            self.list_buy_or_sell_output.append(list_item)
                         pass
                     pass
                 pass
@@ -231,23 +237,25 @@ class StockTradingEnvPredict:
             pass
         pass
 
-        for index in np.where(actions == 0)[0]:  # sell_index:
-            if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
-                # tic, date, sell/buy, hold, 第x天
-                tic_temp = tic_ary_temp[index]
-                episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
+        if self.if_eval is True:
+            for index in np.where(actions_temp == 0)[0]:  # sell_index:
+                if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
+                    # tic, date, sell/buy, hold, 第x天
+                    tic_temp = tic_ary_temp[index]
+                    episode_return_temp = (self.amount + (self.stocks * price).sum()) / self.initial_total_asset
 
-                list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
-                # 添加到输出list
-                self.list_buy_or_sell_output.append(list_item)
+                    list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
+                    # 添加到输出list
+                    self.list_buy_or_sell_output.append(list_item)
+                    pass
                 pass
             pass
         pass
 
-        state = np.hstack((self.amount * 2 ** -13,
+        state = np.hstack((self.amount * 2 ** -12,
                            price,
-                           self.stocks,
-                           self.tech_ary[self.day],)).astype(np.float32) * 2 ** -5
+                           self.stocks * 2 ** -4,
+                           self.tech_ary[self.day],)).astype(np.float32) * 2 ** -8
 
         total_asset = self.amount + (self.stocks * price).sum()
         reward = (total_asset - self.total_asset) * self.reward_scaling
@@ -256,27 +264,45 @@ class StockTradingEnvPredict:
 
         self.gamma_reward = self.gamma_reward * self.gamma + reward
         done = self.day == self.max_step
+
         if done:
             reward = self.gamma_reward
             self.episode_return = total_asset / self.initial_total_asset
+            # if self.if_eval is True:
+            #     print(config.AGENT_NAME, 'eval DONE reward:', str(reward))
+            #     pass
+            # else:
+            #     print(config.AGENT_NAME, 'train DONE reward:', str(reward))
+            #     pass
+            # pass
 
-            print(config.AGENT_NAME, 'predict reward:', str(reward))
-
-            # ----
             if config.IF_SHOW_PREDICT_INFO:
-                # date_temp = date_ary_temp[index]
                 print(self.output_text_trade_detail)
                 print(f'第 {self.day + 1} 天，{date_temp}，现金：{self.amount}，'
                       f'股票：{str((self.stocks * price).sum())}，总资产：{self.total_asset}')
-                # print(str(actions))
-            # ----
-        pass
+        else:
+            # if self.if_eval is True:
+            #     print(config.AGENT_NAME, 'eval reward', str(reward))
+            # else:
+            #     print(config.AGENT_NAME, 'train reward', str(reward))
+            # pass
 
-        if reward > 256:
-            insert_train_history_record_sqlite(model_id=config.MODEL_HYPER_PARAMETERS, train_reward_value=0.0,
-                                               eval_reward_value=reward)
+            if reward > config.REWARD_THRESHOLD:
+                # 如果是 预测
+                if self.if_eval is True:
+                    insert_train_history_record_sqlite(model_id=config.MODEL_HYPER_PARAMETERS, train_reward_value=0.0,
+                                                       eval_reward_value=reward)
 
-            print(config.AGENT_NAME, '>' * 20, 'predict', str(reward), '<' * 20)
+                    print('>>>>', config.AGENT_NAME, 'eval reward', str(reward))
+                else:
+                    # 如果是 train
+                    insert_train_history_record_sqlite(model_id=config.MODEL_HYPER_PARAMETERS,
+                                                       train_reward_value=reward, eval_reward_value=0.0)
+
+                    print(config.AGENT_NAME, 'train reward', str(reward))
+                pass
+
+            pass
         pass
 
         return state, reward, done, dict()
@@ -286,6 +312,7 @@ class StockTradingEnvPredict:
                   start_date='2008-03-19', end_date='2016-01-01', env_eval_date='2021-01-01'):
 
         # 从数据库中读取fe fillzero的数据
+        from stock_data import StockData
         processed_df = StockData.get_fe_fillzero_from_sqlite(begin_date=start_date, end_date=env_eval_date,
                                                              list_stock_code=config.SINGLE_A_STOCK_CODE,
                                                              table_name='fe_origin')
@@ -335,6 +362,7 @@ class StockTradingEnvPredict:
         tic_ary = list()
         date_ary = list()
 
+        from stock_data import fields_prep
         columns_list = fields_prep.split(',')
 
         for day in range(len(df.index.unique())):

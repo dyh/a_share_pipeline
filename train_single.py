@@ -17,8 +17,8 @@ from utils import date_time
 
 from utils.date_time import get_datetime_from_date_str, get_next_work_day, \
     get_today_date
-from env_train_single import StockTradingEnv
-from env_predict_single import StockTradingEnvPredict
+# from env_train_single import StockTradingEnv
+from env_single import StockTradingEnvSingle
 
 if __name__ == '__main__':
 
@@ -73,8 +73,7 @@ if __name__ == '__main__':
         # 从 model_hyper_parameters 表中，找到 training_times 最小的记录
         # 获取超参
         hyper_parameters_id, hyper_parameters_model_name, if_on_policy, break_step, train_reward_scale, \
-        eval_reward_scale, training_times, time_point \
-            = query_model_hyper_parameters_sqlite()
+        eval_reward_scale, training_times, time_point = query_model_hyper_parameters_sqlite()
 
         if if_on_policy == 'True':
             if_on_policy = True
@@ -166,24 +165,24 @@ if __name__ == '__main__':
         end_eval_date = config.END_DATE
 
         # train
-        args.env = StockTradingEnv(cwd='', gamma=gamma, max_stock=max_stock,
-                                   initial_capital=initial_capital,
-                                   buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct, start_date=start_date,
-                                   end_date=start_eval_date, env_eval_date=end_eval_date,
-                                   ticker_list=config.SINGLE_A_STOCK_CODE,
-                                   tech_indicator_list=tech_indicator_list, initial_stocks=initial_stocks_train,
-                                   if_eval=False)
+        args.env = StockTradingEnvSingle(cwd='', gamma=gamma, max_stock=max_stock,
+                                         initial_capital=initial_capital,
+                                         buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct, start_date=start_date,
+                                         end_date=start_eval_date, env_eval_date=end_eval_date,
+                                         ticker_list=config.SINGLE_A_STOCK_CODE,
+                                         tech_indicator_list=tech_indicator_list, initial_stocks=initial_stocks_train,
+                                         if_eval=False)
 
         # eval
-        args.env_eval = StockTradingEnvPredict(cwd='', gamma=gamma, max_stock=max_stock,
-                                               initial_capital=initial_capital,
-                                               buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
-                                               start_date=start_date,
-                                               end_date=start_eval_date, env_eval_date=end_eval_date,
-                                               ticker_list=config.SINGLE_A_STOCK_CODE,
-                                               tech_indicator_list=tech_indicator_list,
-                                               initial_stocks=initial_stocks_vali,
-                                               if_eval=True)
+        args.env_eval = StockTradingEnvSingle(cwd='', gamma=gamma, max_stock=max_stock,
+                                              initial_capital=initial_capital,
+                                              buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
+                                              start_date=start_date,
+                                              end_date=start_eval_date, env_eval_date=end_eval_date,
+                                              ticker_list=config.SINGLE_A_STOCK_CODE,
+                                              tech_indicator_list=tech_indicator_list,
+                                              initial_stocks=initial_stocks_vali,
+                                              if_eval=True)
 
         args.env.target_return = 10
         args.env_eval.target_return = 10
@@ -236,8 +235,9 @@ if __name__ == '__main__':
         # 保存训练后的模型
         shutil.copyfile(f'./{config.WEIGHTS_PATH}/StockTradingEnv-v1/actor.pth', f'{model_folder_path}/actor.pth')
 
-        model_folder_path = f'./{config.WEIGHTS_PATH}/single/{config.AGENT_NAME}/{config.SINGLE_A_STOCK_CODE[0]}' \
-                            f'/single_{config.VALI_DAYS_FLAG}'
+        # 多留一份
+        shutil.copyfile(f'./{config.WEIGHTS_PATH}/StockTradingEnv-v1/actor.pth',
+                        f'{model_folder_path}/{date_time.time_point(time_format="%Y%m%d_%H%M%S")}.pth')
 
         # 保存训练曲线图
         # plot_learning_curve.jpg
@@ -264,9 +264,9 @@ if __name__ == '__main__':
         # 循环次数
         loop_index += 1
 
-        # 5个模型都摸一遍，退出
-        if loop_index == 5:
-            break
+        # # 5个模型都摸一遍，退出
+        # if loop_index == 5:
+        #     break
 
         print('>', 'while 循环次数', loop_index, '\r\n')
 

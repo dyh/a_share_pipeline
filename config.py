@@ -1,3 +1,7 @@
+
+# update reward 阈值
+REWARD_THRESHOLD = 256 * 1.5
+
 # 超参ID
 MODEL_HYPER_PARAMETERS = -1
 
@@ -11,7 +15,7 @@ PREDICT_PERIOD = ''
 SINGLE_A_STOCK_CODE = []
 
 # 显示预测信息
-IF_SHOW_PREDICT_INFO = True
+IF_SHOW_PREDICT_INFO = False
 
 # 工作日标记，用于加载对应的weights
 # weights的vali周期
