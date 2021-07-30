@@ -166,10 +166,16 @@ class StockTradingEnvSingle:
                     pass
                 pass
 
+                if yesterday_price[index] != 0:
+                    price_diff_percent = str(round((price[index] - yesterday_price[index]) / yesterday_price[index], 4))
+                else:
+                    price_diff_percent = '0.0'
+                pass
+
                 price_diff = str(round(price[index] - yesterday_price[index], 6))
-                self.output_text_trade_detail += f'        > {tic_temp}，' \
+                self.output_text_trade_detail += f'        > {tic_temp}，预测涨跌：{-1 * np.round(actions[index], 4)}，' \
+                                                 f'实际涨跌：{price_diff_percent} ￥{price_diff} 元，' \
                                                  f'卖出：{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
-                                                 f'涨跌：￥{price_diff} 元，' \
                                                  f'现金：{self.amount}，资产：{self.total_asset} \r\n'
             pass
         pass
@@ -228,10 +234,16 @@ class StockTradingEnvSingle:
                     pass
                 pass
 
+                if yesterday_price[index] != 0:
+                    price_diff_percent = str(round((price[index] - yesterday_price[index]) / yesterday_price[index], 4))
+                else:
+                    price_diff_percent = '0.0'
+                pass
+
                 price_diff = str(round(price[index] - yesterday_price[index], 6))
-                self.output_text_trade_detail += f'        > {tic_temp}，' \
+                self.output_text_trade_detail += f'        > {tic_temp}，预测涨跌：{-1 * np.round(actions[index], 4)}，' \
+                                                 f'实际涨跌：{price_diff_percent} ￥{price_diff} 元，' \
                                                  f'买入：{buy_num_shares} 股, 持股数量：{self.stocks[index]}，' \
-                                                 f'涨跌：￥{price_diff} 元，' \
                                                  f'现金：{self.amount}，资产：{self.total_asset} \r\n'
 
             pass

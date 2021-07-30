@@ -23,21 +23,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9e89b71b-f959-4196-bdad-c897441ae9b7" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/env_predict_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/env_single.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/env_train_single.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pick_out_best_model_single.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/predict_single_60d.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/predict_single_psql.py" beforeDir="false" afterPath="$PROJECT_DIR$/predict_single_psql.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/predict_single_sqlite.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/print_max_reward.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/stock_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/stock_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_helper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_single.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_single_1268d_to_30d.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_single_60d.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +40,7 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="JupyterTrust" id="3f303717-2523-48b1-b823-ea2f75ebc817" />
+  <component name="JupyterTrust" id="004515bd-c39e-467b-878f-00163fe00d68" />
   <component name="ProjectId" id="1sewuRk7nz1zo0tExbbzD8fZ1nX" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -607,6 +593,8 @@
       <workItem from="1627196158999" duration="236000" />
       <workItem from="1627209316082" duration="50000" />
       <workItem from="1627225532575" duration="424000" />
+      <workItem from="1627592589721" duration="142000" />
+      <workItem from="1627604538140" duration="508000" />
     </task>
     <servers />
   </component>
