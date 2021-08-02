@@ -757,9 +757,8 @@ class StockData(object):
     #     pass
 
     @staticmethod
-    def get_fe_fillzero_from_sqlite(begin_date, end_date, table_name='fe_fillzero', date_column_name='date',
-                                    code_column_name='tic', dbname=config.STOCK_DB_PATH,
-                                    list_stock_code=config.SINGLE_A_STOCK_CODE):
+    def get_fe_fillzero_from_sqlite(list_stock_code, begin_date, end_date, table_name='fe_fillzero', date_column_name='date',
+                                    code_column_name='tic', dbname=config.STOCK_DB_PATH):
 
         sqlite = SQLite(dbname=dbname)
 
@@ -1202,21 +1201,26 @@ class StockData(object):
     pass
 
     @staticmethod
-    def create_predict_result_table_psql(tic=''):
+    def create_predict_result_table_psql(list_tic):
         psql = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                       password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
-        # 如果不存在此表
-        if psql.table_exists(table_name=tic) is None:
-            sql_cmd = f'CREATE TABLE "public"."{tic}" ' \
-                      f'("id" serial8, "date" date NOT NULL, "agent" text NOT NULL, ' \
-                      f'"vali_period_value" int4 NOT NULL, "pred_period_name" text NOT NULL, ' \
-                      f'"action" decimal NOT NULL, "hold" decimal NOT NULL, "day" int4 NOT NULL, ' \
-                      f'"episode_return" decimal NOT NULL, "max_return" decimal NOT NULL, ' \
-                      f'"trade_detail" text NOT NULL, "create_time" timestamp(6) DEFAULT CURRENT_TIMESTAMP , ' \
-                      f'PRIMARY KEY ("id"));'
-            psql.execute_non_query(sql=sql_cmd)
-            psql.commit()
+
+        for item_tic in list_tic:
+
+            # 如果不存在此表
+            if psql.table_exists(table_name=item_tic) is None:
+                sql_cmd = f'CREATE TABLE "public"."{item_tic}" ' \
+                          f'("id" serial8, "date" date NOT NULL, "agent" text NOT NULL, ' \
+                          f'"vali_period_value" int4 NOT NULL, "pred_period_name" text NOT NULL, ' \
+                          f'"action" decimal NOT NULL, "hold" decimal NOT NULL, "day" int4 NOT NULL, ' \
+                          f'"episode_return" decimal NOT NULL, "max_return" decimal NOT NULL, ' \
+                          f'"trade_detail" text NOT NULL, "create_time" timestamp(6) DEFAULT CURRENT_TIMESTAMP , ' \
+                          f'PRIMARY KEY ("id"));'
+                psql.execute_non_query(sql=sql_cmd)
             pass
+        pass
+
+        psql.commit()
         psql.close()
         pass
 
@@ -1283,7 +1287,7 @@ class StockData(object):
             text1 = list1[1]
             list2 = text1.split(',')
 
-            if len(list2) == 34:
+            if len(list2) >= 33:
                 # if list2[30] == date:
                 open1 = list2[1]
                 high1 = list2[4]
@@ -1300,30 +1304,35 @@ class StockData(object):
     pass
 
     @staticmethod
-    def update_stock_data(tic_code=''):
+    def update_stock_data(list_stock_code, adjustflag='3'):
+        # adjustflag 复权类型: 1 后复权, 2 前复权, 3 不复权
+        # 已支持分钟线、日线、周线、月线前后复权
+
         # 创建目录
         if not os.path.exists("./" + config.DATA_SAVE_DIR):
             os.makedirs("./" + config.DATA_SAVE_DIR)
         pass
 
         # 下载、更新 股票数据
-        StockData.update_batch_stock_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE,
-                                            dbname=config.STOCK_DB_PATH, adjustflag='2')
+        StockData.update_batch_stock_sqlite(list_stock_code=list_stock_code,
+                                            dbname=config.STOCK_DB_PATH, adjustflag=adjustflag)
 
         # 缓存 raw 数据 为 df
-        raw_df = StockData.load_stock_raw_data_from_sqlite(list_batch_code=config.SINGLE_A_STOCK_CODE,
+        raw_df = StockData.load_stock_raw_data_from_sqlite(list_batch_code=list_stock_code,
                                                            date_begin=config.START_DATE, date_end=config.END_DATE,
                                                            db_path=config.STOCK_DB_PATH)
 
-        date1, open1, high1, low1, close1, volume1 = StockData.get_today_stock_data_from_sina_api(
-            tic_code=tic_code.replace('.', ''))
+        for item_stock_code in list_stock_code:
+            date1, open1, high1, low1, close1, volume1 = StockData.get_today_stock_data_from_sina_api(
+                tic_code=item_stock_code.replace('.', ''))
 
-        # 查询raw_df里是否有 date 日期的数据，如果没有，则添加临时真实数据
-        if float(open1) > 0:
-            if raw_df.loc[raw_df["date"] == date1].empty is True:
-                # 为 raw 添加今日行情数据
-                list1 = [(date1, open1, high1, low1, close1, volume1, tic_code), ]
-                raw_df = StockData.append_rows_to_raw_df(raw_df, list1)
+            # 查询raw_df里是否有 date 日期的数据，如果没有，则添加临时真实数据
+            if float(open1) > 0:
+                if raw_df.loc[raw_df["date"] == date1].empty is True:
+                    # 为 raw 添加今日行情数据
+                    list1 = [(date1, open1, high1, low1, close1, volume1, item_stock_code), ]
+                    raw_df = StockData.append_rows_to_raw_df(raw_df, list1)
+                    pass
                 pass
             pass
         pass

@@ -2,7 +2,7 @@ from stock_data import StockData
 # from train_single import get_agent_args
 from train_helper import query_model_hyper_parameters_sqlite, query_begin_vali_date_list_by_agent_name
 from utils.psqldb import Psqldb
-from agent_single import *
+from agent import *
 from utils.date_time import *
 from env_single import StockTradingEnvSingle, FeatureEngineer
 from run_single import *
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     # 开始预测的时间
     time_begin = datetime.now()
 
-    config.OUTPUT_DATE = '2021-07-26'
+    config.OUTPUT_DATE = '2021-08-03'
 
     initial_capital = 150000
 
@@ -90,17 +90,17 @@ if __name__ == '__main__':
             config.PREDICT_PERIOD = '60'
 
             # 固定日期
-            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -55))
+            config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -10))
             # config.START_EVAL_DATE = "2021-05-22"
 
             # OUTPUT_DATE 向右3工作日
             config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), +1))
 
             # 创建预测结果表
-            StockData.create_predict_result_table_psql(tic=config.SINGLE_A_STOCK_CODE[0])
+            StockData.create_predict_result_table_psql(list_tic=config.SINGLE_A_STOCK_CODE)
 
             # 更新股票数据
-            StockData.update_stock_data(tic_code=config.SINGLE_A_STOCK_CODE[0])
+            StockData.update_stock_data(list_stock_code=config.SINGLE_A_STOCK_CODE)
 
             # 预测的截止日期
             end_vali_date = get_datetime_from_date_str(config.END_DATE)
@@ -137,7 +137,7 @@ if __name__ == '__main__':
                     print('# max_stock', max_stock)
 
                     initial_stocks = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
-                    initial_stocks[0] = 2000.0
+                    initial_stocks[0] = 100.0
 
                     # 获取超参
                     model_name = agent_item + '_' + str(vali_days_count)

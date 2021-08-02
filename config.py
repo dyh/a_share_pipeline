@@ -1,4 +1,7 @@
 
+# 多只股票代码List
+BATCH_A_STOCK_CODE = []
+
 # update reward 阈值
 REWARD_THRESHOLD = 256 * 1.5
 

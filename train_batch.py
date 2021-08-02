@@ -10,7 +10,7 @@ from stock_data import StockData
 from agent import AgentPPO, AgentSAC, AgentTD3, AgentDDPG, AgentModSAC, AgentDuelingDQN, AgentSharedSAC, \
     AgentDoubleDQN
 
-from run_single import Arguments, train_and_evaluate_mp, train_and_evaluate
+from run_batch import Arguments, train_and_evaluate_mp, train_and_evaluate
 from train_helper import init_model_hyper_parameters_table_sqlite, query_model_hyper_parameters_sqlite, \
     update_model_hyper_parameters_by_reward_history, clear_train_history_table_sqlite
 from utils import date_time
@@ -18,7 +18,7 @@ from utils import date_time
 from utils.date_time import get_datetime_from_date_str, get_next_work_day, \
     get_today_date
 # from env_train_single import StockTradingEnv
-from env_single import StockTradingEnvSingle
+from env_batch import StockTradingEnvBatch
 
 if __name__ == '__main__':
 
@@ -26,23 +26,23 @@ if __name__ == '__main__':
     init_model_hyper_parameters_table_sqlite()
 
     # 开始训练的日期，在程序启动之后，不要改变
-    config.SINGLE_A_STOCK_CODE = ['sh.600036', ]
+    config.BATCH_A_STOCK_CODE = ['sz.000028', 'sh.600585', 'sz.000538', 'sh.600036']
 
-    # 初始现金
-    initial_capital = 150000
+    # 初始现金，每只股票15万元
+    initial_capital = 150000 * len(config.BATCH_A_STOCK_CODE)
 
     # 单次 购买/卖出 最大股数
-    max_stock = 3000
+    # TODO 根据每只最近收盘价，得到多只股票平均价，计算 单次购买/卖出 最大股数
+    max_stock = 2000
 
-    initial_stocks_train = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
-    initial_stocks_vali = np.zeros(len(config.SINGLE_A_STOCK_CODE), dtype=np.float32)
+    initial_stocks_train = np.ones(len(config.BATCH_A_STOCK_CODE), dtype=np.float32)
+    initial_stocks_vali = np.ones(len(config.BATCH_A_STOCK_CODE), dtype=np.float32)
 
     # 默认持有0-3000股
-    initial_stocks_train[0] = 3000.0
-    initial_stocks_vali[0] = 3000.0
+    initial_stocks_train = 2000.0 * initial_stocks_train
+    initial_stocks_vali = 2000.0 * initial_stocks_vali
 
-    if_on_policy = False
-    # if_use_gae = True
+    # if_on_policy = False
 
     config.IF_SHOW_PREDICT_INFO = False
 
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     # config.END_DATE = '2021-07-21'
 
     # 更新股票数据
-    StockData.update_stock_data(list_stock_code=config.SINGLE_A_STOCK_CODE)
+    StockData.update_stock_data(list_stock_code=config.BATCH_A_STOCK_CODE, adjustflag='3')
 
     # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
     # AgentDoubleDQN 单进程好用?
@@ -121,8 +121,8 @@ if __name__ == '__main__':
         # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
         config.VALI_DAYS_FLAG = str(work_days)
 
-        model_folder_path = f'./{config.WEIGHTS_PATH}/single/{config.AGENT_NAME}/{config.SINGLE_A_STOCK_CODE[0]}' \
-                            f'/single_{config.VALI_DAYS_FLAG}'
+        model_folder_path = f'./{config.WEIGHTS_PATH}/batch/{config.AGENT_NAME}/{config.BATCH_A_STOCK_CODE[0]}' \
+                            f'/batch_{config.VALI_DAYS_FLAG}'
 
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
@@ -162,24 +162,24 @@ if __name__ == '__main__':
         end_eval_date = config.END_DATE
 
         # train
-        args.env = StockTradingEnvSingle(cwd='', gamma=gamma, max_stock=max_stock,
-                                         initial_capital=initial_capital,
-                                         buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct, start_date=start_date,
-                                         end_date=start_eval_date, env_eval_date=end_eval_date,
-                                         ticker_list=config.SINGLE_A_STOCK_CODE,
-                                         tech_indicator_list=tech_indicator_list, initial_stocks=initial_stocks_train,
-                                         if_eval=False)
+        args.env = StockTradingEnvBatch(cwd='', gamma=gamma, max_stock=max_stock,
+                                        initial_capital=initial_capital,
+                                        buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct, start_date=start_date,
+                                        end_date=start_eval_date, env_eval_date=end_eval_date,
+                                        ticker_list=config.BATCH_A_STOCK_CODE,
+                                        tech_indicator_list=tech_indicator_list, initial_stocks=initial_stocks_train,
+                                        if_eval=False)
 
         # eval
-        args.env_eval = StockTradingEnvSingle(cwd='', gamma=gamma, max_stock=max_stock,
-                                              initial_capital=initial_capital,
-                                              buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
-                                              start_date=start_date,
-                                              end_date=start_eval_date, env_eval_date=end_eval_date,
-                                              ticker_list=config.SINGLE_A_STOCK_CODE,
-                                              tech_indicator_list=tech_indicator_list,
-                                              initial_stocks=initial_stocks_vali,
-                                              if_eval=True)
+        args.env_eval = StockTradingEnvBatch(cwd='', gamma=gamma, max_stock=max_stock,
+                                             initial_capital=initial_capital,
+                                             buy_cost_pct=buy_cost_pct, sell_cost_pct=sell_cost_pct,
+                                             start_date=start_date,
+                                             end_date=start_eval_date, env_eval_date=end_eval_date,
+                                             ticker_list=config.BATCH_A_STOCK_CODE,
+                                             tech_indicator_list=tech_indicator_list,
+                                             initial_stocks=initial_stocks_vali,
+                                             if_eval=True)
 
         args.env.target_return = 10
         args.env_eval.target_return = 10
@@ -226,8 +226,8 @@ if __name__ == '__main__':
 
         args.rollout_num = 2  # the number of rollout workers (larger is not always faster)
 
-        # train_and_evaluate(args)
-        train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.
+        train_and_evaluate(args)
+        # train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.
 
         # 保存训练后的模型
         shutil.copyfile(f'./{config.WEIGHTS_PATH}/StockTradingEnv-v1/actor.pth', f'{model_folder_path}/actor.pth')
