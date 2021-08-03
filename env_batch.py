@@ -46,20 +46,21 @@ class StockTradingEnvBatch:
         # 输出的缓存
         self.output_text_trade_detail = ''
 
-        # 输出的list
-        self.list_buy_or_sell_output = []
-
         # 奖励 比例
         self.reward_scaling = 0.0
 
         # 是 eval 还是 train
         self.if_eval = if_eval
 
+        # 为每一只股票分配 独立 的输出的list
+        self.list_buy_or_sell_output = []
+
         # 为每一只股票分配 独立 的现金
         self.amount_ary = []
         # 初始化变量
         for index in range(self.action_dim):
             self.amount_ary.append(0)
+            self.list_buy_or_sell_output.append([])
             pass
         pass
 
@@ -83,9 +84,12 @@ class StockTradingEnvBatch:
             self.amount = self.initial_capital * np.random.uniform(0.95, 1.05) - (self.stocks * price).sum()
         pass
 
-        # 平均分 现金
         for index in range(self.action_dim):
+            # 平均分 现金
             self.amount_ary[index] = self.amount / self.action_dim
+
+            # 独立的输出的list
+            self.list_buy_or_sell_output[index] = []
         pass
 
         self.total_asset = self.amount + (self.stocks * price).sum()
@@ -101,13 +105,13 @@ class StockTradingEnvBatch:
         self.output_text_trade_detail = ''
 
         # 输出的list
-        self.list_buy_or_sell_output.clear()
-        self.list_buy_or_sell_output = []
+        # self.list_buy_or_sell_output.clear()
+        # self.list_buy_or_sell_output = []
 
         return state
 
     def step(self, actions):
-        actions_int_type = (actions * self.max_stock).astype(int)
+        int_type_actions = (actions * self.max_stock).astype(int)
 
         # ----
         yesterday_price = self.price_ary[self.day]
@@ -124,10 +128,10 @@ class StockTradingEnvBatch:
 
         self.output_text_trade_detail += f'第 {self.day + 1} 天，{date_temp}\r\n'
 
-        for index in np.where(actions_int_type < 0)[0]:  # sell_index:
+        for index in np.where(int_type_actions < 0)[0]:  # sell_index:
             if price[index] > 0:  # Sell only if current asset is > 0
 
-                sell_num_shares = min(self.stocks[index], -actions_int_type[index])
+                sell_num_shares = min(self.stocks[index], -int_type_actions[index])
 
                 tic_temp = tic_ary_temp[index]
 
@@ -147,7 +151,7 @@ class StockTradingEnvBatch:
                         list_item = (tic_temp, date_temp, -1 * sell_num_shares, self.stocks[index], self.day + 1,
                                      episode_return_temp)
                         # 添加到输出list
-                        self.list_buy_or_sell_output.append(list_item)
+                        self.list_buy_or_sell_output[index].append(list_item)
                     pass
                 else:
                     # 当sell_num_shares < 100时，判断若 self.stocks[index] >= 100 则放大效果，卖1手
@@ -165,7 +169,7 @@ class StockTradingEnvBatch:
                             list_item = (tic_temp, date_temp, -1 * sell_num_shares, self.stocks[index], self.day + 1,
                                          episode_return_temp)
                             # 添加到输出list
-                            self.list_buy_or_sell_output.append(list_item)
+                            self.list_buy_or_sell_output[index].append(list_item)
                         pass
                     else:
                         # self.stocks[index] 不足1手时，不动
@@ -177,7 +181,7 @@ class StockTradingEnvBatch:
 
                             list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
                             # 添加到输出list
-                            self.list_buy_or_sell_output.append(list_item)
+                            self.list_buy_or_sell_output[index].append(list_item)
                         pass
                     pass
                 pass
@@ -196,10 +200,10 @@ class StockTradingEnvBatch:
             pass
         pass
 
-        for index in np.where(actions_int_type > 0)[0]:  # buy_index:
+        for index in np.where(int_type_actions > 0)[0]:  # buy_index:
             if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
                 # 为每只股票单独分配现金， self.amount 除以 股票只数, stock_dim
-                buy_num_shares = min(self.amount_ary[index] // price[index], actions_int_type[index])
+                buy_num_shares = min(self.amount_ary[index] // price[index], int_type_actions[index])
 
                 tic_temp = tic_ary_temp[index]
 
@@ -219,7 +223,7 @@ class StockTradingEnvBatch:
                                      episode_return_temp)
 
                         # 添加到输出list
-                        self.list_buy_or_sell_output.append(list_item)
+                        self.list_buy_or_sell_output[index].append(list_item)
                     pass
                 else:
                     # 当buy_num_shares < 100时，判断若 self.amount // price[index] >= 100，则放大效果，买1手
@@ -238,7 +242,7 @@ class StockTradingEnvBatch:
                                          episode_return_temp)
 
                             # 添加到输出list
-                            self.list_buy_or_sell_output.append(list_item)
+                            self.list_buy_or_sell_output[index].append(list_item)
                     else:
                         # self.amount // price[index] 不足100时，不动
                         # 未达到1手，不买
@@ -250,7 +254,7 @@ class StockTradingEnvBatch:
 
                             list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
                             # 添加到输出list
-                            self.list_buy_or_sell_output.append(list_item)
+                            self.list_buy_or_sell_output[index].append(list_item)
                         pass
                     pass
                 pass
@@ -271,7 +275,7 @@ class StockTradingEnvBatch:
         pass
 
         if config.IF_SHOW_PREDICT_INFO is True:
-            for index in np.where(actions_int_type == 0)[0]:  # sell_index:
+            for index in np.where(int_type_actions == 0)[0]:  # action=0
                 if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
                     # tic, date, sell/buy, hold, 第x天
                     tic_temp = tic_ary_temp[index]
@@ -279,7 +283,7 @@ class StockTradingEnvBatch:
 
                     list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
                     # 添加到输出list
-                    self.list_buy_or_sell_output.append(list_item)
+                    self.list_buy_or_sell_output[index].append(list_item)
                     pass
                 pass
             pass
@@ -335,7 +339,7 @@ class StockTradingEnvBatch:
         # 从数据库中读取fe fillzero的数据
         from stock_data import StockData
         processed_df = StockData.get_fe_fillzero_from_sqlite(begin_date=start_date, end_date=env_eval_date,
-                                                             list_stock_code=ticker_list, table_name='fe_origin')
+                                                             list_stock_code=ticker_list, table_name='fe_fillzero')
 
         def data_split_train(df, start, end):
             data = df[(df.date >= start) & (df.date < end)]

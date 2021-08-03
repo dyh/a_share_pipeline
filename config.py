@@ -1,6 +1,7 @@
 
 # 多只股票代码List
-BATCH_A_STOCK_CODE = []
+BATCH_A_STOCK_CODE = ['sz.000028', 'sh.600585', 'sz.000538', 'sh.600036', 'sh.601336', 'sh.601318',
+                      'sh.603661', 'sz.300695', 'sh.603899']
 
 # update reward 阈值
 REWARD_THRESHOLD = 256 * 1.5

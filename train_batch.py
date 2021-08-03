@@ -25,8 +25,9 @@ if __name__ == '__main__':
     # 初始化超参表
     init_model_hyper_parameters_table_sqlite()
 
-    # 开始训练的日期，在程序启动之后，不要改变
-    config.BATCH_A_STOCK_CODE = ['sz.000028', 'sh.600585', 'sz.000538', 'sh.600036']
+    # 2003年组，用 sz.000028 作为代号
+    # 股票的顺序，不要改变
+    # config.BATCH_A_STOCK_CODE = ['sz.000028', 'sh.600585', 'sz.000538', 'sh.600036']
 
     # 初始现金，每只股票15万元
     initial_capital = 150000 * len(config.BATCH_A_STOCK_CODE)
@@ -121,8 +122,8 @@ if __name__ == '__main__':
         # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
         config.VALI_DAYS_FLAG = str(work_days)
 
-        model_folder_path = f'./{config.WEIGHTS_PATH}/batch/{config.AGENT_NAME}/{config.BATCH_A_STOCK_CODE[0]}' \
-                            f'/batch_{config.VALI_DAYS_FLAG}'
+        model_folder_path = f'./{config.WEIGHTS_PATH}/batch/{config.AGENT_NAME}/' \
+                            f'batch_{config.VALI_DAYS_FLAG}'
 
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
@@ -226,8 +227,8 @@ if __name__ == '__main__':
 
         args.rollout_num = 2  # the number of rollout workers (larger is not always faster)
 
-        train_and_evaluate(args)
-        # train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.
+        # train_and_evaluate(args)
+        train_and_evaluate_mp(args)  # the training process will terminate once it reaches the target reward.
 
         # 保存训练后的模型
         shutil.copyfile(f'./{config.WEIGHTS_PATH}/StockTradingEnv-v1/actor.pth', f'{model_folder_path}/actor.pth')

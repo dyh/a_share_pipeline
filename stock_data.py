@@ -644,7 +644,7 @@ class StockData(object):
         sqlite = SQLite(dbname=dbname)
 
         index = 0
-        count = len(fe_df)
+        # count = len(fe_df)
 
         # 直接insert
         for _, row in fe_df.iterrows():
@@ -757,7 +757,8 @@ class StockData(object):
     #     pass
 
     @staticmethod
-    def get_fe_fillzero_from_sqlite(list_stock_code, begin_date, end_date, table_name='fe_fillzero', date_column_name='date',
+    def get_fe_fillzero_from_sqlite(list_stock_code, begin_date, end_date, table_name='fe_fillzero',
+                                    date_column_name='date',
                                     code_column_name='tic', dbname=config.STOCK_DB_PATH):
 
         sqlite = SQLite(dbname=dbname)
@@ -847,11 +848,12 @@ class StockData(object):
                                      code_column_name='tic', dbname=config.STOCK_DB_PATH):
         """
         向没有数据的日期填充 0 值
+        :param df: DataFrame数据
+        :param code_list: 股票代码列表
         :param code_column_name: 股票代码列的名称
         :param date_column_name: 日期列的名称
-        :param code_list: 股票代码列表
-        :param df: DataFrame数据
-        :return: df
+        :param table_name: 表名
+        :param dbname: 数据库
         """
 
         # 读取 date 列的数据，去重复，形成 date_list
@@ -955,56 +957,12 @@ class StockData(object):
                 print(index, '/', count)
                 pass
             pass
+
             # 提交修改
             sqlite.commit()
         pass
         sqlite.close()
-        sqlite = SQLite(dbname=dbname)
         pass
-
-        # print('从sqlite取出df')
-        #
-        # # 从数据库中再次提取到 DataFrame 中
-        # columns_list = fields_prep.split(',')
-        #
-        # # df_result = pd.DataFrame(data=None, columns=columns_list)
-        #
-        # query_sql = f'SELECT date, open, high, low, close, volume, tic, ' \
-        #             f'macd, boll_ub, boll_lb, rsi_30, cci_30, dx_30, ' \
-        #             f'close_30_sma, close_60_sma FROM "{table_name_fillzero}" ' \
-        #             f'ORDER BY date, tic ASC'
-        #
-        # list_all = sqlite.fetchall(query_sql)
-        # df_result = pd.DataFrame(data=list_all, columns=columns_list)
-        # # df_result = df_result.append(df_temp, ignore_index=True)
-        # pass
-        #
-        # # 关闭数据库连接
-        # sqlite.close()
-        #
-        # # 用0填充空白
-        # # df_result.fillna(0, inplace=True)
-        #
-        # df_result['open'] = df_result['open'].astype(np.float32)
-        # df_result['high'] = df_result['high'].astype(np.float32)
-        # df_result['low'] = df_result['low'].astype(np.float32)
-        # df_result['close'] = df_result['close'].astype(np.float32)
-        # df_result['volume'] = df_result['volume'].astype(np.int)
-        #
-        # df_result['macd'] = df_result['macd'].astype(np.float32)
-        # df_result['boll_ub'] = df_result['boll_ub'].astype(np.float32)
-        # df_result['boll_lb'] = df_result['boll_lb'].astype(np.float32)
-        # df_result['rsi_30'] = df_result['rsi_30'].astype(np.float32)
-        # df_result['cci_30'] = df_result['cci_30'].astype(np.float32)
-        # df_result['dx_30'] = df_result['dx_30'].astype(np.float32)
-        # df_result['close_30_sma'] = df_result['close_30_sma'].astype(np.float32)
-        # df_result['close_60_sma'] = df_result['close_60_sma'].astype(np.float32)
-        #
-        # # print('重新索引和排序')
-        # # 重新索引和排序
-        # df_result = df_result.sort_values(by=[date_column_name, code_column_name]).reset_index(drop=True)
-        #
-        # return df_result
 
     @staticmethod
     def update_batch_stock_sqlite(list_stock_code, dbname=config.STOCK_DB_PATH, adjustflag='2'):
@@ -1252,6 +1210,7 @@ class StockData(object):
         sqlite.commit()
         sqlite.close()
         pass
+
     pass
 
     @staticmethod
@@ -1328,7 +1287,7 @@ class StockData(object):
 
             # 查询raw_df里是否有 date 日期的数据，如果没有，则添加临时真实数据
             if float(open1) > 0:
-                if raw_df.loc[raw_df["date"] == date1].empty is True:
+                if raw_df.loc[(raw_df["date"] == date1) & (raw_df["tic"] == item_stock_code)].empty is True:
                     # 为 raw 添加今日行情数据
                     list1 = [(date1, open1, high1, low1, close1, volume1, item_stock_code), ]
                     raw_df = StockData.append_rows_to_raw_df(raw_df, list1)
@@ -1353,7 +1312,12 @@ class StockData(object):
         # 将 fe_df 存入数据库
         # 增量fe
         # StockData.save_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name, dbname=config.STOCK_DB_PATH)
-        StockData.clear_and_insert_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name)
+        # StockData.clear_and_insert_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name)
+
+        # TODO 补零
+        StockData.fill_zero_value_to_null_date(df=fe_df, code_list=list_stock_code, table_name='fe_fillzero',
+                                               date_column_name='date', code_column_name='tic',
+                                               dbname=config.STOCK_DB_PATH)
 
         pass
 

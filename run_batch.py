@@ -149,8 +149,8 @@ def train_and_evaluate(args):
     # model_folder_path = f'./{config.AGENT_NAME}/batch/{config.BATCH_A_STOCK_CODE[0]}' \
     #                     f'/batch_{config.VALI_DAYS_FLAG}'
 
-    model_folder_path = f'./{config.WEIGHTS_PATH}/batch/{config.AGENT_NAME}/{config.BATCH_A_STOCK_CODE[0]}' \
-                        f'/batch_{config.VALI_DAYS_FLAG}'
+    model_folder_path = f'./{config.WEIGHTS_PATH}/batch/{config.AGENT_NAME}/' \
+                        f'batch_{config.VALI_DAYS_FLAG}'
 
     # 文件 path
     model_file_path = f'{model_folder_path}/actor.pth'
@@ -254,8 +254,8 @@ def mp_train(args, pipe1_eva, pipe1_exp_list):
 
     # ----
     # 目录 path
-    model_folder_path = f'./{config.WEIGHTS_PATH}/batch/{config.AGENT_NAME}/{config.BATCH_A_STOCK_CODE[0]}' \
-                        f'/batch_{config.VALI_DAYS_FLAG}'
+    model_folder_path = f'./{config.WEIGHTS_PATH}/batch/{config.AGENT_NAME}/' \
+                        f'batch_{config.VALI_DAYS_FLAG}'
 
     # f'./{config.WEIGHTS_PATH}/single/{config.AGENT_NAME}/{config.BATCH_A_STOCK_CODE[0]}/StockTradingEnv-v1'
 
@@ -381,8 +381,8 @@ def mp_explore(args, pipe2_exp, worker_id):
     # model_folder_path = f'./{config.AGENT_NAME}/single/{config.BATCH_A_STOCK_CODE[0]}' \
     #                     f'/single_{config.VALI_DAYS_FLAG}'
 
-    model_folder_path = f'./{config.WEIGHTS_PATH}/batch/{config.AGENT_NAME}/{config.BATCH_A_STOCK_CODE[0]}' \
-                        f'/batch_{config.VALI_DAYS_FLAG}'
+    model_folder_path = f'./{config.WEIGHTS_PATH}/batch/{config.AGENT_NAME}/' \
+                        f'batch_{config.VALI_DAYS_FLAG}'
 
     # 文件 path
     model_file_path = f'{model_folder_path}/actor.pth'
