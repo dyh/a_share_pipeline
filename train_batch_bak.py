@@ -15,7 +15,8 @@ from train_helper import init_model_hyper_parameters_table_sqlite, query_model_h
     update_model_hyper_parameters_by_train_history, clear_train_history_table_sqlite
 from utils import date_time
 
-from utils.date_time import get_datetime_from_date_str, get_next_work_day, get_today_date
+from utils.date_time import get_datetime_from_date_str, get_next_work_day, \
+    get_today_date
 from env_batch import StockTradingEnvBatch
 
 if __name__ == '__main__':
@@ -48,9 +49,17 @@ if __name__ == '__main__':
     initial_stocks_train = max_stock * initial_stocks_train
     initial_stocks_vali = max_stock * initial_stocks_vali
 
+    # if_on_policy = False
+
     config.IF_ACTUAL_PREDICT = False
 
     config.START_EVAL_DATE = ""
+
+    # 整体结束日期，今天的日期，减去60工作日
+    predict_work_days = 60
+
+    config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), -predict_work_days))
+    # config.END_DATE = '2021-07-21'
 
     # TODO 因为数据量大，在 stock_data.py 中更新
     # # 更新股票数据，不复权
@@ -72,8 +81,7 @@ if __name__ == '__main__':
         # 从 model_hyper_parameters 表中，找到 training_times 最小的记录
         # 获取超参
         hyper_parameters_id, hyper_parameters_model_name, if_on_policy, break_step, train_reward_scale, \
-        eval_reward_scale, training_times, time_point, state_amount_scale, state_price_scale, state_stocks_scale, \
-        state_tech_scale = query_model_hyper_parameters_sqlite()
+        eval_reward_scale, training_times, time_point = query_model_hyper_parameters_sqlite()
 
         if if_on_policy == 'True':
             if_on_policy = True
@@ -85,11 +93,11 @@ if __name__ == '__main__':
 
         # 获得Agent参数
         agent_class = None
+        train_reward_scaling = 2 ** train_reward_scale
+        eval_reward_scaling = 2 ** eval_reward_scale
 
         # 模型名称
         config.AGENT_NAME = str(hyper_parameters_model_name).split('_')[0]
-        # 模型预测周期
-        config.AGENT_WORK_DAY = int(str(hyper_parameters_model_name).split('_')[1])
 
         if config.AGENT_NAME == 'AgentPPO':
             agent_class = AgentPPO()
@@ -109,15 +117,17 @@ if __name__ == '__main__':
             agent_class = AgentDoubleDQN()
         pass
 
+        # 预测周期
+        work_days = int(str(hyper_parameters_model_name).split('_')[1])
+
+        # 预测的截止日期
+        end_vali_date = get_datetime_from_date_str(config.END_DATE)
+
+        # 开始预测日期
+        begin_date = date_time.get_next_work_day(end_vali_date, next_flag=-work_days)
+
         # 更新工作日标记，用于 run_single.py 加载训练过的 weights 文件
-        config.VALI_DAYS_FLAG = str(config.AGENT_WORK_DAY)
-
-        # TODO 整体结束日期，今天的日期，预留60个工作日，用于验证predict
-
-        # config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()),
-        #                                         -1 * config.AGENT_WORK_DAY))
-
-        config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), -60))
+        config.VALI_DAYS_FLAG = str(work_days)
 
         model_folder_path = f'./{config.WEIGHTS_PATH}/batch/{config.AGENT_NAME}/' \
                             f'batch_{config.VALI_DAYS_FLAG}'
@@ -127,14 +137,13 @@ if __name__ == '__main__':
             pass
 
         # 开始预测的日期
-        config.START_EVAL_DATE = str(
-            get_next_work_day(get_datetime_from_date_str(get_today_date()), -2 * config.AGENT_WORK_DAY))
+        config.START_EVAL_DATE = str(begin_date)
 
         print('\r\n')
         print('-' * 40)
         print('config.AGENT_NAME', config.AGENT_NAME)
         print('# 训练-预测周期', config.START_DATE, '-', config.START_EVAL_DATE, '-', config.END_DATE)
-        print('# work_days', config.AGENT_WORK_DAY)
+        print('# work_days', work_days)
         print('# model_folder_path', model_folder_path)
         print('# initial_capital', initial_capital)
         print('# max_stock', max_stock)
@@ -150,6 +159,9 @@ if __name__ == '__main__':
             'close_30_sma', 'close_60_sma']  # finrl.config.TECHNICAL_INDICATORS_LIST
 
         gamma = 0.99
+
+        # print('# initial_stocks_train', initial_stocks_train)
+        # print('# initial_stocks_vali', initial_stocks_vali)
 
         buy_cost_pct = 0.003
         sell_cost_pct = 0.003
@@ -177,38 +189,22 @@ if __name__ == '__main__':
                                              initial_stocks=initial_stocks_vali,
                                              if_eval=True, fe_table_name=fe_table_name)
 
-        args.env.target_return = 100
-        args.env_eval.target_return = 100
+        args.env.target_return = 10
+        args.env_eval.target_return = 10
 
         # 奖励 比例
-        args.env.reward_scale = train_reward_scale
-        args.env_eval.reward_scale = eval_reward_scale
+        args.env.reward_scale = train_reward_scaling
+        args.env_eval.reward_scale = eval_reward_scaling
 
-        args.env.state_amount_scale = state_amount_scale
-        args.env.state_price_scale = state_price_scale
-        args.env.state_stocks_scale = state_stocks_scale
-        args.env.state_tech_scale = state_tech_scale
-
-        args.env_eval.state_amount_scale = state_amount_scale
-        args.env_eval.state_price_scale = state_price_scale
-        args.env_eval.state_stocks_scale = state_stocks_scale
-        args.env_eval.state_tech_scale = state_tech_scale
-
-        print('train reward_scale', args.env.reward_scale)
-        print('eval reward_scale', args.env_eval.reward_scale)
-
-        print('state_amount_scale', state_amount_scale)
-        print('state_price_scale', state_price_scale)
-        print('state_stocks_scale', state_stocks_scale)
-        print('state_tech_scale', state_tech_scale)
+        print('train reward_scaling', args.env.reward_scale)
+        print('eval reward_scaling', args.env_eval.reward_scale)
 
         # Hyperparameters
         args.gamma = gamma
         # args.gamma = 0.99
 
         # reward_scaling 在 args.env里调整了，这里不动
-        # args.reward_scale = 2 ** 0
-        args.reward_scale = 1
+        args.reward_scale = 2 ** 0
 
         # args.break_step = int(break_step / 30)
         args.break_step = break_step
@@ -261,11 +257,7 @@ if __name__ == '__main__':
         update_model_hyper_parameters_by_train_history(model_hyper_parameters_id=hyper_parameters_id,
                                                        origin_train_reward_scale=train_reward_scale,
                                                        origin_eval_reward_scale=eval_reward_scale,
-                                                       origin_training_times=training_times,
-                                                       origin_state_amount_scale=state_amount_scale,
-                                                       origin_state_price_scale=state_price_scale,
-                                                       origin_state_stocks_scale=state_stocks_scale,
-                                                       origin_state_tech_scale=state_tech_scale)
+                                                       origin_training_times=training_times)
 
         print('>', config.AGENT_NAME, break_step, 'steps')
 

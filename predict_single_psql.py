@@ -82,7 +82,7 @@ if __name__ == '__main__':
             # 日期列表
             # 4月16日向前，20,30,40,50,60,72,90周期
             # end_vali_date = get_datetime_from_date_str('2021-04-16')
-            config.IF_SHOW_PREDICT_INFO = True
+            config.IF_ACTUAL_PREDICT = True
 
             config.START_DATE = "2003-05-01"
 
@@ -100,7 +100,7 @@ if __name__ == '__main__':
             StockData.create_predict_result_table_psql(list_tic=config.SINGLE_A_STOCK_CODE)
 
             # 更新股票数据
-            StockData.update_stock_data(list_stock_code=config.SINGLE_A_STOCK_CODE)
+            StockData.update_stock_data_to_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE)
 
             # 预测的截止日期
             end_vali_date = get_datetime_from_date_str(config.END_DATE)

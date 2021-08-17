@@ -1,3 +1,6 @@
+import datetime
+import sys
+
 import baostock as bs
 import pandas as pd
 import os
@@ -7,11 +10,14 @@ import numpy as np
 
 import requests
 
-from env_single import FeatureEngineer
+from env_batch import FeatureEngineer
 from utils.psqldb import Psqldb
 from utils.sqlite import SQLite
 from utils.date_time import get_today_date, is_greater, get_datetime_from_date_str, get_next_work_day, \
     get_next_day, time_point
+
+from datetime import datetime
+
 
 # 5分钟K线的时间点
 list_time_point_5minutes = ['09:35:00',
@@ -286,6 +292,25 @@ class StockData(object):
         pass
 
     @staticmethod
+    def copy_table_and_data(origin_table_name, target_table_name, dbname=config.STOCK_DB_PATH):
+        # 复制表结构和数据
+        sqlite = SQLite(dbname=dbname)
+
+        # 如果已经存在目标表，先删除
+        if_exists = sqlite.table_exists(target_table_name)
+        if if_exists is not None:
+            sqlite.execute_non_query(sql=f'DROP TABLE "{target_table_name}"')
+            sqlite.commit()
+            pass
+
+        # 复制表
+        sqlite.execute_non_query(sql=f'CREATE TABLE {target_table_name} as SELECT * FROM {origin_table_name};')
+        # 提交
+        sqlite.commit()
+        sqlite.close()
+        pass
+
+    @staticmethod
     def create_fe_table(db_path, table_name):
         # 连接数据库
         sqlite = SQLite(db_path)
@@ -309,216 +334,6 @@ class StockData(object):
             sqlite.close()
             pass
         pass
-
-    @staticmethod
-    def load_hs300_from_sqlite(db_path, list_hs_300, date_begin='', date_end=''):
-        """
-        从sqlite数据库获取沪深300股信息
-        :param db_path: 数据库地址
-        :param list_hs_300: 300个代码
-        :param date_begin: 开始日期
-        :param date_end: 结束日期
-        :return: DataFrame
-        """
-        df = pd.DataFrame(data=None, columns=fields_day.split(','))
-
-        # 连接数据库
-        sqlite = SQLite(db_path)
-
-        index = 0
-        count = 300
-        # 遍历沪深300
-        for stock_code in list_hs_300:
-            query_sql = f'SELECT date,open,high,low,close,volume,"{stock_code}" FROM "{stock_code}" ' \
-                        f'WHERE date >= "{date_begin}" AND date <= "{date_end}" ORDER BY date ASC'
-            list_all = sqlite.fetchall(query_sql)
-
-            df_temp = pd.DataFrame(data=list_all, columns=fields_day.split(','))
-
-            df = df.append(df_temp, ignore_index=True)
-
-            index += 1
-            print('load hs300 from sqlite', index, '/', count, stock_code)
-
-            pass
-        pass
-
-        # 关闭数据库连接
-        sqlite.close()
-
-        # 更改列名
-        if 'code' in df.columns:
-            df = df.rename(columns={'code': 'tic'})
-
-        # 替换空格和回车为nan
-        # df.replace(to_replace=' ', value=np.nan, inplace=True)
-        df.replace(to_replace=r'^\s*$', value=np.nan, regex=True, inplace=True)
-
-        # 將nan填充为0
-        df.fillna(0, inplace=True)
-
-        df = df.sort_values(by=['date', 'tic'])
-
-        df['open'] = df['open'].astype(np.float32)
-        df['high'] = df['high'].astype(np.float32)
-        df['low'] = df['low'].astype(np.float32)
-        df['close'] = df['close'].astype(np.float32)
-        df['volume'] = df['volume'].astype(np.int)
-
-        return df
-
-    # @staticmethod
-    # def update_hs300_sqlite():
-    #     # 获取沪深300股信息
-    #     list_hs_300 = config.HS300_CODE_LIST
-    #
-    #     # 连接数据库
-    #     sqlite = SQLite(dbname=config.HS300_DB_PATH)
-    #
-    #     stock_data = StockData()
-    #
-    #     # 今日日期
-    #     update_end_date = get_today_date()
-    #
-    #     # update index
-    #     index = 0
-    #     count = len(list_hs_300)
-    #
-    #     for stock_code in list_hs_300:
-    #         # 查询是否有同名的表
-    #         if_exists = sqlite.table_exists(stock_code)
-    #
-    #         # 开始更新数据的日期
-    #         update_begin_date = ''
-    #
-    #         # 如果没有同名的表，则新建
-    #         if if_exists is None:
-    #             sqlite.execute_non_query(sql=f'CREATE TABLE "{stock_code}" (id INTEGER PRIMARY KEY AUTOINCREMENT, '
-    #                                          f'date TEXT NOT NULL, open TEXT NOT NULL, '
-    #                                          f'high TEXT NOT NULL, low TEXT NOT NULL, '
-    #                                          f'close TEXT NOT NULL, volume TEXT NOT NULL);')
-    #             # 提交
-    #             sqlite.commit()
-    #
-    #             # 开始更新数据的日期
-    #             update_begin_date = '1990-01-01'
-    #         else:
-    #             # 如果有同名的表，获取日期最大的一条记录
-    #             query_sql = f'SELECT date FROM "{stock_code}" ORDER BY date DESC LIMIT 1'
-    #             max_date = sqlite.fetchone(query_sql)
-    #             if len(max_date) > 0:
-    #                 # 开始更新数据的日期
-    #                 update_begin_date = max_date[0]
-    #             pass
-    #         pass
-    #
-    #         # 由字符串获得日期
-    #         date_temp = get_datetime_from_date_str(update_begin_date)
-    #         # 获取下一个日期（不区分工作日、休息日）
-    #         date_temp = get_next_day(datetime_date=date_temp, next_flag=+1)
-    #         # 转成字符串格式
-    #         update_begin_date = str(date_temp)
-    #
-    #         # 比较日期大小，决定是否更新
-    #         if is_greater(update_end_date, update_begin_date):
-    #             # 下载股票数据，存入到sqlite
-    #             raw_df = stock_data.download_raw_data(code_list=[stock_code, ],
-    #                                                   fields=fields_day, date_start=update_begin_date,
-    #                                                   date_end=update_end_date, frequency='d', adjustflag='3')
-    #
-    #             # 循环 df ，写入sqlite
-    #             for idx, row in raw_df.iterrows():
-    #                 insert_sql = f'INSERT INTO "{stock_code}" (date, open, high, low, close, volume) ' \
-    #                              f'VALUES (?,?,?,?,?,?)'
-    #                 insert_value = (row['date'], row['open'], row['high'], row['low'], row['close'], row['volume'])
-    #                 sqlite.execute_non_query(sql=insert_sql, values=insert_value)
-    #             pass
-    #         pass
-    #
-    #         index += 1
-    #         print('update hs300 stock date', index, '/', count, stock_code)
-    #
-    #     # 提交
-    #     sqlite.commit()
-    #
-    #     # 关闭数据库连接
-    #     sqlite.close()
-    #
-    #     # 退出baostock
-    #     stock_data.exit()
-    #     pass
-    #
-    # @staticmethod
-    # def insert_hs300_sqlite(list_hs_300):
-    #     # 获取沪深300股信息
-    #
-    #     # 连接数据库
-    #     sqlite = SQLite(dbname=config.STOCK_DB_PATH)
-    #
-    #     stock_data = StockData()
-    #
-    #     # 今日日期
-    #     update_end_date = get_today_date()
-    #
-    #     # update index
-    #     index = 0
-    #     count = len(list_hs_300)
-    #
-    #     for stock_code in list_hs_300:
-    #         # 查询是否有同名的表
-    #         if_exists = sqlite.table_exists(stock_code)
-    #
-    #         # 如果没有同名的表，则新建
-    #         if if_exists is None:
-    #             sqlite.execute_non_query(sql=f'CREATE TABLE "{stock_code}" (id INTEGER PRIMARY KEY AUTOINCREMENT, '
-    #                                          f'date TEXT NOT NULL, open TEXT NOT NULL, '
-    #                                          f'high TEXT NOT NULL, low TEXT NOT NULL, '
-    #                                          f'close TEXT NOT NULL, volume TEXT NOT NULL);')
-    #             # 提交
-    #             sqlite.commit()
-    #
-    #             # 开始更新数据的日期
-    #             update_begin_date = '1990-01-01'
-    #
-    #             # 由字符串获得日期
-    #             date_temp = get_datetime_from_date_str(update_begin_date)
-    #             # 获取下一个日期（不区分工作日、休息日）
-    #             date_temp = get_next_day(datetime_date=date_temp, next_flag=+1)
-    #             # 转成字符串格式
-    #             update_begin_date = str(date_temp)
-    #
-    #             # 比较日期大小，决定是否更新
-    #             if is_greater(update_end_date, update_begin_date):
-    #                 # 下载股票数据，存入到sqlite
-    #                 raw_df = stock_data.download_raw_data(code_list=[stock_code, ],
-    #                                                       fields=fields_day, date_start=update_begin_date,
-    #                                                       date_end=update_end_date, frequency='d', adjustflag='3')
-    #
-    #                 # 循环 df ，写入sqlite
-    #                 for idx, row in raw_df.iterrows():
-    #                     insert_sql = f'INSERT INTO "{stock_code}" (date, open, high, low, close, volume) ' \
-    #                                  f'VALUES (?,?,?,?,?,?)'
-    #                     insert_value = (row['date'], row['open'], row['high'], row['low'], row['close'], row['volume'])
-    #                     sqlite.execute_non_query(sql=insert_sql, values=insert_value)
-    #                 pass
-    #             pass
-    #         else:
-    #             # 如果有同名表，则不更新
-    #             pass
-    #         pass
-    #
-    #         index += 1
-    #         print('insert hs300 stock data', index, '/', count, stock_code)
-    #
-    #     # 提交
-    #     sqlite.commit()
-    #
-    #     # 关闭数据库连接
-    #     sqlite.close()
-    #
-    #     # 退出baostock
-    #     stock_data.exit()
-    #     pass
 
     @staticmethod
     def save_fe_to_db(fe_df, fe_origin_table_name, if_create_or_update=False, dbname=config.STOCK_DB_PATH):
@@ -670,94 +485,9 @@ class StockData(object):
         sqlite.close()
         pass
 
-    # @staticmethod
-    # def download_hs300_code_list():
-    #     """
-    #     获取沪深300股的代码列表
-    #     :return: list[]
-    #     """
-    #     bs.login()
-    #     rs = bs.query_hs300_stocks()
-    #     hs300_stocks = []
-    #     while (rs.error_code == '0') & rs.next():
-    #         # 获取一条记录，将记录合并在一起
-    #         row_temp = rs.get_row_data()
-    #         hs300_stocks.append(row_temp[1])
-    #     pass
-    #     # result = pd.DataFrame(hs300_stocks, columns=rs.fields)
-    #     bs.logout()
-    #     return hs300_stocks
-
-    # @staticmethod
-    # def get_hs300_code_from_sqlite(table_name='hs300_list', dbname=''):
-    #     """
-    #     从数据库读取沪深300代码的 list
-    #     :param table_name: 表名 hs300_list
-    #     :return: list()
-    #     """
-    #     sqlite = SQLite(dbname=dbname)
-    #
-    #     query_sql = f'SELECT hs300_list_text FROM "{table_name}" LIMIT 1'
-    #     text_hs300 = sqlite.fetchone(query_sql)
-    #     sqlite.close()
-    #     list_hs300_code = text_hs300[0].split(',')
-    #
-    #     return list_hs300_code
-    #
-    # @staticmethod
-    # def save_hs300_code_to_sqlite(list_hs300_code, table_name='hs300_list', dbname=''):
-    #     """
-    #     保存沪深300代码到数据库
-    #     :param dbname:
-    #     :param table_name: 表名称
-    #     :param list_hs300_code: 沪深300代码 list()
-    #     :return:
-    #     """
-    #
-    #     assert len(list_hs300_code) == 300
-    #
-    #     text_hs300 = ''
-    #
-    #     for item in list_hs300_code:
-    #         text_hs300 += item
-    #         text_hs300 += ','
-    #
-    #     # 去掉最后一个逗号
-    #     if text_hs300[-1] == ',':
-    #         text_hs300 = text_hs300[0:-1]
-    #
-    #     sqlite = SQLite(dbname=dbname)
-    #
-    #     # 查询是否有同名的表
-    #     if_exists = sqlite.table_exists(table_name)
-    #
-    #     # 如果没有同名的表，则新建
-    #     if if_exists is None:
-    #         sqlite.execute_non_query(sql=f'CREATE TABLE "{table_name}" (id INTEGER PRIMARY KEY AUTOINCREMENT, '
-    #                                      f'hs300_list_text TEXT NOT NULL);')
-    #         pass
-    #     else:
-    #         pass
-    #         sqlite.execute_non_query(sql=f'DELETE FROM "{table_name}"')
-    #     pass
-    #     # 提交
-    #     sqlite.commit()
-    #     sqlite.close()
-    #
-    #     sqlite = SQLite(dbname=dbname)
-    #
-    #     insert_sql = f'INSERT INTO "{table_name}" (hs300_list_text) ' \
-    #                  f'VALUES (?)'
-    #
-    #     insert_value = (str(text_hs300),)
-    #     sqlite.execute_non_query(sql=insert_sql, values=insert_value)
-    #
-    #     sqlite.commit()
-    #     sqlite.close()
-    #     pass
-
     @staticmethod
-    def get_fe_fillzero_from_sqlite(list_stock_code, begin_date, end_date, table_name='fe_fillzero',
+    def get_fe_fillzero_from_sqlite(list_stock_code, begin_date, end_date, table_name='',
+                                    if_actual_predict=config.IF_ACTUAL_PREDICT,
                                     date_column_name='date',
                                     code_column_name='tic', dbname=config.STOCK_DB_PATH):
 
@@ -780,44 +510,54 @@ class StockData(object):
 
             list_single = sqlite.fetchall(query_sql)
 
-            # 如果最后一行的 date 与 end_date 是否相同，如果不相同，则添加一条全是10的假数据
-            # 注意价格，不能等于0，如果等于0，则不买/卖
-            last_record_date = list_single[-1][0]
-            # 假设close、volume与最后一天的close相同
-            last_close_price = list_single[-1][4]
-            last_volume = list_single[-1][5]
+            # 若是正式真实预测，不是训练，允许添加假数据
+            if if_actual_predict is True:
 
-            # if last_record_date != end_date:
-            while is_greater(end_date, last_record_date):
+                # 如果最后一行的 date 与 end_date 是否相同，如果不相同，则添加一条全是10的假数据
+                # 注意价格，不能等于0，如果等于0，则不买/卖
+                last_record_date = list_single[-1][0]
+                # 假设close、volume与最后一天的close相同
+                last_close_price = list_single[-1][4]
+                last_volume = list_single[-1][5]
+
                 date_temp = get_datetime_from_date_str(last_record_date)
-                date_temp = get_next_work_day(datetime_date=date_temp, next_flag=+1)
+                loop_begin_date = str(get_next_work_day(datetime_date=date_temp, next_flag=+1))
 
-                last_record_date = str(date_temp)
+                while is_greater(end_date, loop_begin_date):
 
-                # print('# 添加假数据，日期', last_record_date)
+                    # 先尝试去sinajs取最新数据
+                    # 若是正式真实预测，不是训练，允许添加临时数据
+                    if config.IF_ACTUAL_PREDICT is True:
+                        # 用假数据
+                        list_single.append((loop_begin_date,
+                                            '10.0',
+                                            '10.0',
+                                            '10.0',
+                                            str(last_close_price),
+                                            str(last_volume),
+                                            str(item_stock_code),
+                                            '10.0',
+                                            '10.0',
+                                            '10.0',
+                                            '10.0',
+                                            '10.0',
+                                            '10.0',
+                                            '10.0',
+                                            '10.0'))
 
-                # for item in list_stock_code:
-                list_single.append((last_record_date,
-                                    '10.000',
-                                    '10.000',
-                                    '10.000',
-                                    str(last_close_price),
-                                    str(last_volume),
-                                    str(item_stock_code),
-                                    '10.000',
-                                    '10.000',
-                                    '10.000',
-                                    '10.000',
-                                    '10.000',
-                                    '10.000',
-                                    '10.000',
-                                    '10.000'))
+                        date_temp = get_datetime_from_date_str(loop_begin_date)
+                        date_temp = get_next_work_day(datetime_date=date_temp, next_flag=+1)
+                        # 更新日期 while 循环
+                        loop_begin_date = str(date_temp)
+                        pass
+                    pass
                 pass
             pass
 
             list_all += list_single
             pass
         pass
+
         df_result = pd.DataFrame(data=list_all, columns=columns_list)
 
         # 关闭数据库连接
@@ -844,8 +584,8 @@ class StockData(object):
         return df_result
 
     @staticmethod
-    def fill_zero_value_to_null_date(df, code_list, table_name='fe_fillzero', date_column_name='date',
-                                     code_column_name='tic', dbname=config.STOCK_DB_PATH):
+    def fill_zero_value_save_fe_to_sqlite(df, code_list, table_name='', date_column_name='date',
+                                          code_column_name='tic', dbname=config.STOCK_DB_PATH):
         """
         向没有数据的日期填充 0 值
         :param df: DataFrame数据
@@ -870,6 +610,8 @@ class StockData(object):
 
         if_exists_table = sqlite.table_exists(table_name_fillzero)
 
+        print('CREATE TABLE fe ...')
+
         # 如果没有同名的表，则新建
         # date|open|high|low|close|volume|tic|macd|boll_ub|boll_lb|rsi_30|cci_30|dx_30|close_30_sma|close_60_sma
         if if_exists_table is None:
@@ -882,9 +624,22 @@ class StockData(object):
                                          f'close_30_sma TEXT NOT NULL, close_60_sma TEXT NOT NULL'
                                          f');')
         else:
-            sqlite.execute_non_query(sql=f'DELETE FROM "{table_name_fillzero}"')
-            pass
+
+            # drop table
+            sqlite.execute_non_query(sql=f'DROP TABLE "{table_name_fillzero}"')
+            sqlite.commit()
+
+            sqlite.execute_non_query(sql=f'CREATE TABLE "{table_name_fillzero}" (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+                                         f'date TEXT NOT NULL, open TEXT NOT NULL, '
+                                         f'high TEXT NOT NULL, low TEXT NOT NULL, '
+                                         f'close TEXT NOT NULL, volume TEXT NOT NULL, tic TEXT NOT NULL, '
+                                         f'macd TEXT NOT NULL, boll_ub TEXT NOT NULL, boll_lb TEXT NOT NULL, '
+                                         f'rsi_30 TEXT NOT NULL, cci_30 TEXT NOT NULL, dx_30 TEXT NOT NULL, '
+                                         f'close_30_sma TEXT NOT NULL, close_60_sma TEXT NOT NULL'
+                                         f');')
         pass
+
+        print('CREATE TABLE fe, done')
 
         # 提交
         sqlite.commit()
@@ -895,15 +650,13 @@ class StockData(object):
         # df的全部数据，存入 dict{'code_date': 'date|open|high|low|close|volume|tic|macd|boll_ub|boll_lb|rsi_30|
         # cci_30|dx_30|close_30_sma|close_60_sma'}
 
+        # 建立dict，加快检索速度
         index = 0
         count = len(df)
 
         dict_code_with_date = {}
 
         for _, row in df.iterrows():
-            # date_temp = str(row['date'])
-            # tic_temp = str(row['tic'])
-
             date_temp = str(row[date_column_name])
             tic_temp = str(row[code_column_name])
 
@@ -911,7 +664,7 @@ class StockData(object):
             dict_code_with_date[key] = row
 
             index += 1
-            print(index, '/', count)
+            print('dict_code_with_date', index, '/', count)
             pass
         pass
 
@@ -921,7 +674,7 @@ class StockData(object):
         count = len(list_date) * len(code_list)
 
         for item_date in list_date:
-            # 循环 300 支股票
+            # 循环 1k 支股票
             for item_tic in code_list:
                 # 使用此字符串，到 dict 中寻找，是否有匹配项
                 key = f'{item_tic}_{item_date}'
@@ -954,7 +707,7 @@ class StockData(object):
                 sqlite.execute_non_query(sql=insert_sql, values=insert_value)
 
                 index += 1
-                print(index, '/', count)
+                print('fill zero', index, '/', count)
                 pass
             pass
 
@@ -965,7 +718,7 @@ class StockData(object):
         pass
 
     @staticmethod
-    def update_batch_stock_sqlite(list_stock_code, dbname=config.STOCK_DB_PATH, adjustflag='2'):
+    def download_stock_from_baostock(list_stock_code, dbname=config.STOCK_DB_PATH, adjustflag='3'):
         """
         更新 批量 股票数据，直到今天
         :param list_stock_code: 股票代码List
@@ -1086,7 +839,7 @@ class StockData(object):
             df = df.append(df_temp, ignore_index=True)
 
             index += 1
-            # print('load batch stock from sqlite', index, '/', count, stock_code)
+            print('load_stock_raw_data_from_sqlite', index, '/', count, stock_code)
             pass
         pass
 
@@ -1114,11 +867,15 @@ class StockData(object):
         return df
 
     @staticmethod
-    def append_rows_to_raw_df(raw_df, rows, columns=None):
+    def append_rows_to_raw_df(raw_df=None, columns=None, rows=None):
         # 添加rows到df
         if columns is None:
             columns = ['date', 'open', 'high', 'low', 'close', 'volume', 'tic']
         pass
+
+        # if raw_df is None:
+        #     raw_df = pd.DataFrame(data=None, columns=columns)
+        # pass
 
         df_rows = pd.DataFrame(data=rows, columns=columns)
         df_rows['open'] = df_rows['open'].astype(np.float32)
@@ -1263,7 +1020,7 @@ class StockData(object):
     pass
 
     @staticmethod
-    def update_stock_data(list_stock_code, adjustflag='3'):
+    def update_stock_data_to_sqlite(list_stock_code, adjustflag='3', table_name=''):
         # adjustflag 复权类型: 1 后复权, 2 前复权, 3 不复权
         # 已支持分钟线、日线、周线、月线前后复权
 
@@ -1273,54 +1030,189 @@ class StockData(object):
         pass
 
         # 下载、更新 股票数据
-        StockData.update_batch_stock_sqlite(list_stock_code=list_stock_code,
-                                            dbname=config.STOCK_DB_PATH, adjustflag=adjustflag)
+        StockData.download_stock_from_baostock(list_stock_code=list_stock_code,
+                                               dbname=config.STOCK_DB_PATH, adjustflag=adjustflag)
 
-        # 缓存 raw 数据 为 df
-        raw_df = StockData.load_stock_raw_data_from_sqlite(list_batch_code=list_stock_code,
-                                                           date_begin=config.START_DATE, date_end=config.END_DATE,
-                                                           db_path=config.STOCK_DB_PATH)
+        print('load_stock_raw_data_from_sqlite ...')
 
-        for item_stock_code in list_stock_code:
-            date1, open1, high1, low1, close1, volume1 = StockData.get_today_stock_data_from_sina_api(
-                tic_code=item_stock_code.replace('.', ''))
+        update_end_date = config.END_DATE
 
-            # 查询raw_df里是否有 date 日期的数据，如果没有，则添加临时真实数据
-            if float(open1) > 0:
-                if raw_df.loc[(raw_df["date"] == date1) & (raw_df["tic"] == item_stock_code)].empty is True:
-                    # 为 raw 添加今日行情数据
-                    list1 = [(date1, open1, high1, low1, close1, volume1, item_stock_code), ]
-                    raw_df = StockData.append_rows_to_raw_df(raw_df, list1)
+        update_begin_date = config.START_DATE
+
+        # 比较日期大小，决定是否更新
+        if is_greater(update_end_date, update_begin_date):
+            # 缓存 raw 数据 为 df
+            raw_df = StockData.load_stock_raw_data_from_sqlite(list_batch_code=list_stock_code,
+                                                               date_begin=update_begin_date,
+                                                               date_end=update_end_date,
+                                                               db_path=config.STOCK_DB_PATH)
+
+            print('load_stock_raw_data_from_sqlite, done!')
+
+            if config.IF_ACTUAL_PREDICT is True:
+                print('get_today_stock_data_from_sina_api ...')
+
+                # 系统时间大于 09:00
+                now = datetime.now().strftime("%H:%M")
+                t1 = '09:00'
+
+                if now > t1:
+
+                    index1 = 0
+                    count1 = len(list_stock_code)
+
+                    # 判断raw_df里，是否有今天的日期及数据
+                    date1 = get_today_date()
+
+                    # 没有找到今天的日期，
+                    if raw_df.loc[(raw_df["date"] == date1)].empty is True:
+
+                        for item_stock_code in list_stock_code:
+                            date1, open1, high1, low1, close1, volume1 = StockData.get_today_stock_data_from_sina_api(
+                                tic_code=item_stock_code.replace('.', ''))
+
+                            # 查询raw_df里是否有 date 日期的数据，如果没有，则添加临时真实数据
+                            if float(open1) > 0:
+                                if raw_df.loc[(raw_df["date"] == date1) &
+                                              (raw_df["tic"] == item_stock_code)].empty is True:
+                                    # 为 raw 添加今日行情数据
+                                    list1 = [(date1, open1, high1, low1, close1, volume1, item_stock_code), ]
+                                    raw_df = StockData.append_rows_to_raw_df(raw_df=raw_df, rows=list1)
+                                    pass
+                                pass
+                            pass
+
+                            print('get_today_stock_data_from_sina_api', index1 + 1, '/', count1)
+                            index1 += 1
+                        pass
                     pass
+                else:
+                    print(now, '<', t1)
                 pass
+            pass
+
+            print('raw -> fe ...')
+            fe = FeatureEngineer(use_turbulence=False,
+                                 user_defined_feature=False,
+                                 use_technical_indicator=True,
+                                 tech_indicator_list=config.TECHNICAL_INDICATORS_LIST)
+
+            fe_df = fe.preprocess_data(raw_df)
+
+            # 增量更新用，删除 fe_df 第一条记录
+            # fe_df = fe_df.drop(index=[0])
+
+            print('raw -> fe, done!')
+
+            print('fill_zero_value_save_fe_to_sqlite ...')
+
+            # 增量，补零，存入数据库
+            StockData.fill_zero_value_save_fe_to_sqlite(df=fe_df, code_list=list_stock_code, table_name=table_name,
+                                                        date_column_name='date', code_column_name='tic',
+                                                        dbname=config.STOCK_DB_PATH)
+
+            print('fill_zero_value_save_fe_to_sqlite, done!')
+
             pass
         pass
 
-        # raw_df -> fe
-        fe_origin_table_name = "fe_origin"
+    @staticmethod
+    def get_batch_a_share_code_list_string(table_name):
 
-        # 创建fe表
-        StockData.create_fe_table(db_path=config.STOCK_DB_PATH, table_name=fe_origin_table_name)
+        sqlite = SQLite(dbname=config.STOCK_DB_PATH)
 
-        fe = FeatureEngineer(use_turbulence=False,
-                             user_defined_feature=False,
-                             use_technical_indicator=True,
-                             tech_indicator_list=config.TECHNICAL_INDICATORS_LIST, )
+        # 从sqlite的tic_list表，获取股票代码
+        query_sql = f"SELECT tic FROM {table_name} ORDER BY tic ASC"
+        list_batch = sqlite.fetchall(query_sql)
 
-        fe_df = fe.preprocess_data(raw_df)
+        # 关闭数据库连接
+        sqlite.close()
 
-        # 将 fe_df 存入数据库
-        # 增量fe
-        # StockData.save_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name, dbname=config.STOCK_DB_PATH)
-        # StockData.clear_and_insert_fe_to_db(fe_df, fe_origin_table_name=fe_origin_table_name)
+        ret_list = []
 
-        # TODO 补零
-        StockData.fill_zero_value_to_null_date(df=fe_df, code_list=list_stock_code, table_name='fe_fillzero',
-                                               date_column_name='date', code_column_name='tic',
-                                               dbname=config.STOCK_DB_PATH)
+        for item in list_batch:
+            ret_list.append(item[0])
+            pass
 
-        pass
+        return ret_list
 
 
 if __name__ == '__main__':
+
+    # 开始预测的时间
+    time_begin = datetime.now()
+
+    print(sys.argv)
+
+    if_train = sys.argv[1]
+
+    # 从sqlite的tic_list表，获取股票代码
+    # select count(*) from tic_list where [date] < '2004-05-01'
+    config.BATCH_A_STOCK_CODE = StockData.get_batch_a_share_code_list_string(table_name='tic_list_275')
+
+    # 更新训练数据到 fe_fillzero
+    config.START_DATE = "2004-05-01"
+    config.START_EVAL_DATE = ""
+
+    if if_train == 'train':
+        config.IF_ACTUAL_PREDICT = False
+
+        table_name = 'fe_fillzero_train'
+
+        # 整体结束日期，今天的日期，减去 1工作日，避免加载不完整的数据
+        predict_work_days = 1
+        config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), -predict_work_days))
+
+        # 更新股票数据，不复权，表名 fe_fillzero
+        # 写入 fe_fillzero 表
+        StockData.update_stock_data_to_sqlite(list_stock_code=config.BATCH_A_STOCK_CODE, adjustflag='3',
+                                              table_name=table_name)
+
+        # print('copy table fe_fillzero_predict -> fe_fillzero_train...')
+        # 将 fe_fillzero_train 复制到 fe_fillzero_predict
+        # StockData.copy_table_and_data(origin_table_name='fe_fillzero_predict', target_table_name='fe_fillzero_train')
+        # print('table copied, done!')
+
+        pass
+    elif if_train == 'predict':
+        config.IF_ACTUAL_PREDICT = True
+
+        table_name = 'fe_fillzero_predict'
+
+        # 获取今天日期，判断是否为工作日
+        weekday = get_datetime_from_date_str(get_today_date()).weekday()
+        if 0 < weekday < 6:
+            # 工作日
+            now = datetime.now().strftime("%H:%M")
+            t1 = '09:00'
+
+            if now >= t1:
+                # 如果是工作日，大于等于 09:00，则预测明天
+                config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), +1))
+                pass
+            else:
+                # 如果是工作日，小于 09:00，则预测今天
+                config.END_DATE = get_today_date()
+                pass
+            pass
+        else:
+            # 假期
+            # 下一个工作日
+            config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), +1))
+            pass
+        pass
+
+        # 更新股票数据，不复权，表名 fe_fillzero
+        # 写入 fe_fillzero 表
+        StockData.update_stock_data_to_sqlite(list_stock_code=config.BATCH_A_STOCK_CODE, adjustflag='3',
+                                              table_name=table_name)
+        pass
+    else:
+        pass
+    pass
+
+    # 结束预测的时间
+    time_end = datetime.now()
+    duration = (time_end - time_begin).total_seconds()
+    print('更新数据耗时', duration, '秒')
     pass

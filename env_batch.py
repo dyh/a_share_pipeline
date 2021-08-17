@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 
 import config
+import train_helper
 from train_helper import insert_train_history_record_sqlite
 
 
@@ -11,12 +12,13 @@ class StockTradingEnvBatch:
     def __init__(self, cwd='./envs/FinRL', gamma=0.99,
                  max_stock=1e2, initial_capital=1e6, buy_cost_pct=1e-3, sell_cost_pct=1e-3,
                  start_date='2008-03-19', end_date='2016-01-01', env_eval_date='2021-01-01',
-                 ticker_list=None, tech_indicator_list=None, initial_stocks=None, if_eval=False):
+                 ticker_list=None, tech_indicator_list=None, initial_stocks=None, if_eval=False,
+                 fe_table_name=''):
 
-        self.price_ary, self.tech_ary, self.tic_ary, self.date_ary = self.load_data(cwd, if_eval, ticker_list,
+        self.price_ary, self.tech_ary, self.tic_ary, self.date_ary = self.load_data(fe_table_name, if_eval, ticker_list,
                                                                                     tech_indicator_list,
                                                                                     start_date, end_date,
-                                                                                    env_eval_date, )
+                                                                                    env_eval_date)
         stock_dim = self.price_ary.shape[1]
 
         self.gamma = gamma
@@ -43,11 +45,13 @@ class StockTradingEnvBatch:
         self.target_return = 10.0
         self.episode_return = 0.0
 
-        # 输出的缓存
-        self.output_text_trade_detail = ''
-
         # 奖励 比例
-        self.reward_scaling = 0.0
+        self.reward_scale = 0.0
+
+        self.state_amount_scale = 0.0
+        self.state_price_scale = 0.0
+        self.state_stocks_scale = 0.0
+        self.state_tech_scale = 0.0
 
         # 是 eval 还是 train
         self.if_eval = if_eval
@@ -64,18 +68,44 @@ class StockTradingEnvBatch:
             pass
         pass
 
-    def reset(self):
-        self.day = 0
-        price = self.price_ary[self.day]
+    def get_trade_detail(self, yesterday_price, index, price, date_temp, tic_temp, actions, sell_num_shares,
+                         buy_num_shares):
+        if yesterday_price[index] != 0:
+            price_diff_percent = str(
+                round((price[index] - yesterday_price[index]) / yesterday_price[index], 4))
+        else:
+            price_diff_percent = '0.0'
+        pass
 
-        # ----
-        # 清空 平均分 的现金
+        price_diff = str(round(price[index] - yesterday_price[index], 6))
+
+        asset_temp = self.amount_ary[index] + (self.stocks[index] * price[index])
+
+        trade_detail_temp = f'第 {self.day + 1} 天，{date_temp}\r\n'
+        trade_detail_temp += f'        > {tic_temp}，预测涨跌：{round(-1 * actions[index], 4)}，' \
+                             f'实际涨跌：{price_diff_percent} ￥{price_diff} 元，' \
+                             f'买{buy_num_shares} 卖{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
+                             f'现金：{self.amount_ary[index]}，资产：{asset_temp}\r\n'
+
+        return trade_detail_temp
+
+    def reset(self):
 
         # 如果是正式预测，输出到网页，固定 持股数和现金
-        if config.IF_SHOW_PREDICT_INFO is True:
+        if config.IF_ACTUAL_PREDICT is True:
+            # 日期 固定
+            self.day = 0
+            price = self.price_ary[self.day]
+
             self.stocks = self.initial_stocks.copy()
             self.amount = self.initial_capital - (self.stocks * price).sum()
         else:
+            # 随机 日期 起点
+            np.random.seed(round(time.time()))
+            self.day = np.random.randint(0, self.max_step * 0.5)
+
+            price = self.price_ary[self.day]
+
             # 如果是train过程中的eval
             np.random.seed(round(time.time()))
             random_float = np.random.uniform(0.0, 1.01, size=self.initial_stocks.shape)
@@ -96,17 +126,34 @@ class StockTradingEnvBatch:
         self.initial_total_asset = self.total_asset
         self.gamma_reward = 0.0
 
-        state = np.hstack((self.amount * 2 ** -12,
-                           price,
-                           self.stocks * 2 ** -4,
-                           self.tech_ary[self.day],)).astype(np.float32) * 2 ** -8
+        state = np.hstack((self.amount * 2 ** self.state_amount_scale,
+                           price * 2 ** self.state_price_scale,
+                           self.stocks * 2 ** self.state_stocks_scale,
+                           self.tech_ary[self.day] * 2 ** self.state_tech_scale,)).astype(np.float32)
+
+        if config.IF_DEBUG_STATE_SCALE is True:
+            max_state_value = np.max(state)
+
+            if max_state_value >= 1.0:
+                # if max_state_value is not None:
+                amount_temp = float(np.max(self.amount * 2 ** self.state_amount_scale))
+                price_temp = float(np.max(price * 2 ** self.state_price_scale))
+                stocks_temp = float(np.max(self.stocks * 2 ** self.state_stocks_scale))
+                tech_temp = float(np.max(self.tech_ary[self.day] * 2 ** self.state_tech_scale))
+
+                insert_train_history_record_sqlite(model_id=config.MODEL_HYPER_PARAMETERS,
+                                                   state_amount_value=amount_temp, state_price_value=price_temp,
+                                                   state_stocks_value=stocks_temp, state_tech_value=tech_temp)
+
+                print('>>>> reset() -> if_eval:', self.if_eval, 'max_state_value >= 1 | amount:', amount_temp,
+                      '| stocks', stocks_temp, '| tech', tech_temp, '| price', price_temp)
+
+                pass
+            pass
+        pass
 
         # 清空输出的缓存
-        self.output_text_trade_detail = ''
-
-        # 输出的list
-        # self.list_buy_or_sell_output.clear()
-        # self.list_buy_or_sell_output = []
+        # self.output_text_trade_detail = ''
 
         return state
 
@@ -126,7 +173,9 @@ class StockTradingEnvBatch:
         date_ary_temp = self.date_ary[self.day]
         date_temp = date_ary_temp[0]
 
-        self.output_text_trade_detail += f'第 {self.day + 1} 天，{date_temp}\r\n'
+        # if config.IF_ACTUAL_PREDICT is True:
+        #     self.output_text_trade_detail += f'第 {self.day + 1} 天，{date_temp}\r\n'
+        # pass
 
         for index in np.where(int_type_actions < 0)[0]:  # sell_index:
             if price[index] > 0:  # Sell only if current asset is > 0
@@ -144,12 +193,22 @@ class StockTradingEnvBatch:
                     # 平均现金
                     self.amount_ary[index] += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
 
-                    if config.IF_SHOW_PREDICT_INFO is True:
+                    if config.IF_ACTUAL_PREDICT is True:
                         # tic, date, sell/buy, hold, 第x天
-                        episode_return_temp = (self.amount_ary[index] + (self.stocks * price).sum()) / self.initial_total_asset
+                        # episode_return_temp = (self.amount_ary[index] + (
+                        #         self.stocks * price).sum()) / self.initial_total_asset
+
+                        episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
+                                              (self.initial_capital / self.action_dim)
+
+                        # 获取交易详情
+                        trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp, tic_temp,
+                                                                  actions, sell_num_shares=sell_num_shares,
+                                                                  buy_num_shares=0)
 
                         list_item = (tic_temp, date_temp, -1 * sell_num_shares, self.stocks[index], self.day + 1,
-                                     episode_return_temp)
+                                     episode_return_temp, trade_detail_temp)
+
                         # 添加到输出list
                         self.list_buy_or_sell_output[index].append(list_item)
                     pass
@@ -162,12 +221,21 @@ class StockTradingEnvBatch:
 
                         self.amount_ary[index] += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
 
-                        if config.IF_SHOW_PREDICT_INFO is True:
+                        if config.IF_ACTUAL_PREDICT is True:
                             # tic, date, sell/buy, hold, 第x天
-                            episode_return_temp = (self.amount_ary[index] + (self.stocks * price).sum()) / self.initial_total_asset
+                            # episode_return_temp = (self.amount_ary[index] + (
+                            #         self.stocks * price).sum()) / self.initial_total_asset
+
+                            episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
+                                                  (self.initial_capital / self.action_dim)
+
+                            # 获取交易详情
+                            trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp,
+                                                                      tic_temp, actions,
+                                                                      sell_num_shares=sell_num_shares, buy_num_shares=0)
 
                             list_item = (tic_temp, date_temp, -1 * sell_num_shares, self.stocks[index], self.day + 1,
-                                         episode_return_temp)
+                                         episode_return_temp, trade_detail_temp)
                             # 添加到输出list
                             self.list_buy_or_sell_output[index].append(list_item)
                         pass
@@ -175,28 +243,47 @@ class StockTradingEnvBatch:
                         # self.stocks[index] 不足1手时，不动
                         sell_num_shares = 0
 
-                        if config.IF_SHOW_PREDICT_INFO is True:
+                        if config.IF_ACTUAL_PREDICT is True:
                             # tic, date, sell/buy, hold, 第x天
-                            episode_return_temp = (self.amount_ary[index] + (self.stocks * price).sum()) / self.initial_total_asset
+                            # episode_return_temp = (self.amount_ary[index] + (
+                            #         self.stocks * price).sum()) / self.initial_total_asset
 
-                            list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
+                            episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
+                                                  (self.initial_capital / self.action_dim)
+
+                            # 获取交易详情
+                            trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp,
+                                                                      tic_temp, actions,
+                                                                      sell_num_shares=sell_num_shares,
+                                                                      buy_num_shares=0)
+
+                            list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1,
+                                         episode_return_temp, trade_detail_temp)
                             # 添加到输出list
                             self.list_buy_or_sell_output[index].append(list_item)
                         pass
                     pass
                 pass
 
-                if yesterday_price[index] != 0:
-                    price_diff_percent = str(round((price[index] - yesterday_price[index]) / yesterday_price[index], 4))
-                else:
-                    price_diff_percent = '0.0'
-                pass
+            #     if config.IF_ACTUAL_PREDICT is True:
+            #         if self.day == self.max_step:
+            #             if yesterday_price[index] != 0:
+            #                 price_diff_percent = str(
+            #                     round((price[index] - yesterday_price[index]) / yesterday_price[index], 4))
+            #             else:
+            #                 price_diff_percent = '0.0'
+            #             pass
+            #
+            #             price_diff = str(round(price[index] - yesterday_price[index], 6))
+            #
+            #             asset_temp = self.amount_ary[index] + (self.stocks[index] * price[index])
+            #
+            #             self.output_text_trade_detail += f'第 {self.day + 1} 天，{date_temp}\r\n'
+            #             self.output_text_trade_detail += f'        > {tic_temp}，预测涨跌：{round(-1 * actions[index], 4)}，' \
+            #                                              f'实际涨跌：{price_diff_percent} ￥{price_diff} 元，' \
+            #                                              f'卖出：{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
+            #                                              f'现金：{self.amount_ary[index]}，资产：{asset_temp}\r\n'
 
-                price_diff = str(round(price[index] - yesterday_price[index], 6))
-                self.output_text_trade_detail += f'        > {tic_temp}，预测涨跌：{round(-1 * actions[index], 4)}，' \
-                                                 f'实际涨跌：{price_diff_percent} ￥{price_diff} 元，' \
-                                                 f'卖出：{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
-                                                 f'现金：{self.amount_ary[index]}\r\n'
             pass
         pass
 
@@ -215,12 +302,22 @@ class StockTradingEnvBatch:
 
                     self.amount_ary[index] -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
 
-                    if config.IF_SHOW_PREDICT_INFO is True:
+                    if config.IF_ACTUAL_PREDICT is True:
                         # tic, date, sell/buy, hold, 第x天
-                        episode_return_temp = (self.amount_ary[index] + (self.stocks * price).sum()) / self.initial_total_asset
+                        # episode_return_temp = (self.amount_ary[index] + (
+                        #         self.stocks * price).sum()) / self.initial_total_asset
+
+                        episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
+                                              (self.initial_capital / self.action_dim)
+
+                        # 获取交易详情
+                        trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp,
+                                                                  tic_temp,
+                                                                  actions, sell_num_shares=0,
+                                                                  buy_num_shares=buy_num_shares)
 
                         list_item = (tic_temp, date_temp, buy_num_shares, self.stocks[index], self.day + 1,
-                                     episode_return_temp)
+                                     episode_return_temp, trade_detail_temp)
 
                         # 添加到输出list
                         self.list_buy_or_sell_output[index].append(list_item)
@@ -234,12 +331,22 @@ class StockTradingEnvBatch:
 
                         self.amount_ary[index] -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
 
-                        if config.IF_SHOW_PREDICT_INFO is True:
+                        if config.IF_ACTUAL_PREDICT is True:
                             # tic, date, sell/buy, hold, 第x天
-                            episode_return_temp = (self.amount_ary[index] + (self.stocks * price).sum()) / self.initial_total_asset
+                            # episode_return_temp = (self.amount_ary[index] + (
+                            #         self.stocks * price).sum()) / self.initial_total_asset
+
+                            episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
+                                                  (self.initial_capital / self.action_dim)
+
+                            # 获取交易详情
+                            trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp,
+                                                                      tic_temp,
+                                                                      actions, sell_num_shares=0,
+                                                                      buy_num_shares=buy_num_shares)
 
                             list_item = (tic_temp, date_temp, buy_num_shares, self.stocks[index], self.day + 1,
-                                         episode_return_temp)
+                                         episode_return_temp, trade_detail_temp)
 
                             # 添加到输出list
                             self.list_buy_or_sell_output[index].append(list_item)
@@ -248,40 +355,68 @@ class StockTradingEnvBatch:
                         # 未达到1手，不买
                         buy_num_shares = 0
 
-                        if config.IF_SHOW_PREDICT_INFO is True:
+                        if config.IF_ACTUAL_PREDICT is True:
                             # tic, date, sell/buy, hold, 第x天
-                            episode_return_temp = (self.amount_ary[index] + (self.stocks * price).sum()) / self.initial_total_asset
+                            # episode_return_temp = (self.amount_ary[index] + (
+                            #         self.stocks * price).sum()) / self.initial_total_asset
 
-                            list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
+                            episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
+                                                  (self.initial_capital / self.action_dim)
+
+                            # 获取交易详情
+                            trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp,
+                                                                      tic_temp,
+                                                                      actions, sell_num_shares=0,
+                                                                      buy_num_shares=buy_num_shares)
+
+                            list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp,
+                                         trade_detail_temp)
+
                             # 添加到输出list
                             self.list_buy_or_sell_output[index].append(list_item)
                         pass
                     pass
                 pass
 
-                if yesterday_price[index] != 0:
-                    price_diff_percent = str(round((price[index] - yesterday_price[index]) / yesterday_price[index], 4))
-                else:
-                    price_diff_percent = '0.0'
-                pass
-
-                price_diff = str(round(price[index] - yesterday_price[index], 6))
-                self.output_text_trade_detail += f'        > {tic_temp}，预测涨跌：{round(-1 * actions[index], 4)}，' \
-                                                 f'实际涨跌：{price_diff_percent} ￥{price_diff} 元，' \
-                                                 f'买入：{buy_num_shares} 股, 持股数量：{self.stocks[index]}，' \
-                                                 f'现金：{self.amount_ary[index]}\r\n'
+                # if config.IF_ACTUAL_PREDICT is True:
+                #     if self.day == self.max_step:
+                #         if yesterday_price[index] != 0:
+                #             price_diff_percent = str(
+                #                 round((price[index] - yesterday_price[index]) / yesterday_price[index], 4))
+                #         else:
+                #             price_diff_percent = '0.0'
+                #         pass
+                #
+                #         price_diff = str(round(price[index] - yesterday_price[index], 6))
+                #
+                #         asset_temp = self.amount_ary[index] + (self.stocks[index] * price[index])
+                #
+                #         self.output_text_trade_detail += f'第 {self.day + 1} 天，{date_temp}\r\n'
+                #         self.output_text_trade_detail += f'        > {tic_temp}，预测涨跌：{round(-1 * actions[index], 4)}，' \
+                #                                          f'实际涨跌：{price_diff_percent} ￥{price_diff} 元，' \
+                #                                          f'买入：{buy_num_shares} 股, 持股数量：{self.stocks[index]}，' \
+                #                                          f'现金：{self.amount_ary[index]}，资产：{asset_temp}\r\n'
 
             pass
         pass
 
-        if config.IF_SHOW_PREDICT_INFO is True:
+        if config.IF_ACTUAL_PREDICT is True:
             for index in np.where(int_type_actions == 0)[0]:  # action=0
                 if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
                     # tic, date, sell/buy, hold, 第x天
                     tic_temp = tic_ary_temp[index]
-                    episode_return_temp = (self.amount_ary[index] + (self.stocks * price).sum()) / self.initial_total_asset
+                    # episode_return_temp = (self.amount_ary[index] + (
+                    #         self.stocks * price).sum()) / self.initial_total_asset
 
-                    list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp)
+                    episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
+                                          (self.initial_capital / self.action_dim)
+
+                    # 获取交易详情
+                    trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp, tic_temp,
+                                                              actions, 0, 0)
+
+                    list_item = (tic_temp, date_temp, 0, self.stocks[index], self.day + 1, episode_return_temp,
+                                 trade_detail_temp)
                     # 添加到输出list
                     self.list_buy_or_sell_output[index].append(list_item)
                     pass
@@ -289,13 +424,31 @@ class StockTradingEnvBatch:
             pass
         pass
 
-        state = np.hstack((self.amount * 2 ** -12,
-                           price,
-                           self.stocks * 2 ** -4,
-                           self.tech_ary[self.day],)).astype(np.float32) * 2 ** -8
+        state = np.hstack((self.amount * 2 ** self.state_amount_scale,
+                           price * 2 ** self.state_price_scale,
+                           self.stocks * 2 ** self.state_stocks_scale,
+                           self.tech_ary[self.day] * 2 ** self.state_tech_scale,)).astype(np.float32)
+
+        if config.IF_DEBUG_STATE_SCALE is True:
+            max_state_value = np.max(state)
+
+            if max_state_value >= 1.0:
+                amount_temp = float(np.max(self.amount * 2 ** self.state_amount_scale))
+                price_temp = float(np.max(price * 2 ** self.state_price_scale))
+                stocks_temp = float(np.max(self.stocks * 2 ** self.state_stocks_scale))
+                tech_temp = float(np.max(self.tech_ary[self.day] * 2 ** self.state_tech_scale))
+
+                insert_train_history_record_sqlite(model_id=config.MODEL_HYPER_PARAMETERS,
+                                                   state_amount_value=amount_temp, state_price_value=price_temp,
+                                                   state_stocks_value=stocks_temp, state_tech_value=tech_temp)
+
+                print('>>>> step() -> if_eval:', self.if_eval, 'max_state_value >= 1: | amount:', amount_temp,
+                      '| stocks', stocks_temp, '| tech', tech_temp, '| price', price_temp)
+            pass
+        pass
 
         total_asset = self.amount + (self.stocks * price).sum()
-        reward = (total_asset - self.total_asset) * self.reward_scaling
+        reward = (total_asset - self.total_asset) * 2 ** self.reward_scale
 
         self.total_asset = total_asset
 
@@ -306,40 +459,47 @@ class StockTradingEnvBatch:
             reward = self.gamma_reward
             self.episode_return = total_asset / self.initial_total_asset
 
-            if config.IF_SHOW_PREDICT_INFO:
-                print(self.output_text_trade_detail)
-                print(f'第 {self.day + 1} 天，{date_temp}，现金：{self.amount}，'
-                      f'股票：{str((self.stocks * price).sum())}，总资产：{self.total_asset}')
+            # if config.IF_ACTUAL_PREDICT:
+            # self.output_text_trade_detail += f'第 {self.day + 1} 天，{date_temp}，现金：{self.amount}，' \
+            #                                  f'股票：{str((self.stocks * price).sum())}，总资产：{self.total_asset}'
+
+            # print(self.output_text_trade_detail)
+
+            # print(f'第 {self.day + 1} 天，{date_temp}，现金：{self.amount}，'
+            #       f'股票：{str((self.stocks * price).sum())}，总资产：{self.total_asset}')
         else:
 
-            if reward > config.REWARD_THRESHOLD:
-                # 如果是 预测
-                if self.if_eval is True:
-                    insert_train_history_record_sqlite(model_id=config.MODEL_HYPER_PARAMETERS, train_reward_value=0.0,
-                                                       eval_reward_value=reward)
+            if config.IF_DEBUG_REWARD_SCALE is True:
+                if reward > config.REWARD_THRESHOLD:
+                    # 如果是 预测
+                    if self.if_eval is True:
+                        insert_train_history_record_sqlite(model_id=config.MODEL_HYPER_PARAMETERS,
+                                                           eval_reward_value=reward)
 
-                    print('>>>>', config.AGENT_NAME, 'eval reward', str(reward))
-                else:
-                    # 如果是 train
-                    insert_train_history_record_sqlite(model_id=config.MODEL_HYPER_PARAMETERS,
-                                                       train_reward_value=reward, eval_reward_value=0.0)
+                        print('>>>>', config.AGENT_NAME, 'eval reward', str(reward))
+                    else:
+                        # 如果是 train
+                        insert_train_history_record_sqlite(model_id=config.MODEL_HYPER_PARAMETERS,
+                                                           train_reward_value=reward)
 
-                    print('>>>>', config.AGENT_NAME, 'train reward', str(reward))
+                        print('>>>>', config.AGENT_NAME, 'train reward', str(reward))
+                    pass
                 pass
-
             pass
         pass
 
         return state, reward, done, dict()
 
-    def load_data(self, cwd='./envs/FinRL', if_eval=None,
+    def load_data(self, table_name='', if_eval=None,
                   ticker_list=None, tech_indicator_list=None,
                   start_date='2008-03-19', end_date='2016-01-01', env_eval_date='2021-01-01'):
 
         # 从数据库中读取fe fillzero的数据
         from stock_data import StockData
         processed_df = StockData.get_fe_fillzero_from_sqlite(begin_date=start_date, end_date=env_eval_date,
-                                                             list_stock_code=ticker_list, table_name='fe_fillzero')
+                                                             list_stock_code=ticker_list,
+                                                             table_name=table_name,
+                                                             if_actual_predict=config.IF_ACTUAL_PREDICT)
 
         def data_split_train(df, start, end):
             data = df[(df.date >= start) & (df.date < end)]
@@ -499,7 +659,6 @@ class FeatureEngineer:
         @:param config: source dataframe
         @:return: a DataMatrices object
         """
-
         if self.use_technical_indicator:
             # add technical indicators using stockstats
             df = self.add_technical_indicator(df)
@@ -516,6 +675,7 @@ class FeatureEngineer:
             print("Successfully added user defined features")
 
         # fill the missing values at the beginning and the end
+        print('df.fillna ...')
         df = df.fillna(method="bfill").fillna(method="ffill")
         return df
 
@@ -533,6 +693,11 @@ class FeatureEngineer:
         stock = Sdf.retype(df.copy())
         unique_ticker = stock.tic.unique()
 
+        count_tech_indicator = len(self.tech_indicator_list)
+        count_ticker = len(unique_ticker)
+
+        tech_indicator_index = 0
+
         for indicator in self.tech_indicator_list:
             indicator_df = pd.DataFrame()
             for i in range(len(unique_ticker)):
@@ -544,9 +709,16 @@ class FeatureEngineer:
                     indicator_df = indicator_df.append(
                         temp_indicator, ignore_index=True
                     )
+
+                    print('indicator', tech_indicator_index + 1, '/', count_tech_indicator,
+                          indicator, i + 1, '/', count_ticker)
+
                 except Exception as e:
                     print(e)
+
+            tech_indicator_index += 1
             df = df.merge(indicator_df[['tic', 'date', indicator]], on=['tic', 'date'], how='left')
+
         df = df.sort_values(by=['date', 'tic'])
         return df
 

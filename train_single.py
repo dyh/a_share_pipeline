@@ -12,7 +12,7 @@ from agent import AgentPPO, AgentSAC, AgentTD3, AgentDDPG, AgentModSAC, AgentDue
 
 from run_single import Arguments, train_and_evaluate_mp, train_and_evaluate
 from train_helper import init_model_hyper_parameters_table_sqlite, query_model_hyper_parameters_sqlite, \
-    update_model_hyper_parameters_by_reward_history, clear_train_history_table_sqlite
+    update_model_hyper_parameters_by_train_history, clear_train_history_table_sqlite
 from utils import date_time
 
 from utils.date_time import get_datetime_from_date_str, get_next_work_day, \
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     if_on_policy = False
     # if_use_gae = True
 
-    config.IF_SHOW_PREDICT_INFO = False
+    config.IF_ACTUAL_PREDICT = False
 
     config.START_DATE = "2003-05-01"
     config.START_EVAL_DATE = ""
@@ -55,8 +55,8 @@ if __name__ == '__main__':
     config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), -predict_work_days))
     # config.END_DATE = '2021-07-21'
 
-    # 更新股票数据
-    StockData.update_stock_data(list_stock_code=config.SINGLE_A_STOCK_CODE)
+    # 更新股票数据，不复权，表名 fe_fillzero
+    StockData.update_stock_data_to_sqlite(list_stock_code=config.SINGLE_A_STOCK_CODE, adjustflag='3', table_name='fe_fillzero')
 
     # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
     # AgentDoubleDQN 单进程好用?
@@ -247,10 +247,10 @@ if __name__ == '__main__':
 
         # 判断 train_history 表，是否有记录，如果有，则整除 256 + 128。将此值更新到 model_hyper_parameters 表的 超参，减去相应的值。
 
-        update_model_hyper_parameters_by_reward_history(model_hyper_parameters_id=hyper_parameters_id,
-                                                        origin_train_reward_scale=train_reward_scale,
-                                                        origin_eval_reward_scale=eval_reward_scale,
-                                                        origin_training_times=training_times)
+        update_model_hyper_parameters_by_train_history(model_hyper_parameters_id=hyper_parameters_id,
+                                                       origin_train_reward_scale=train_reward_scale,
+                                                       origin_eval_reward_scale=eval_reward_scale,
+                                                       origin_training_times=training_times)
 
         print('>', config.AGENT_NAME, break_step, 'steps')
 

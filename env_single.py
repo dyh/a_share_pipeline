@@ -66,7 +66,7 @@ class StockTradingEnvSingle:
         random_float = np.random.uniform(0.0, 1.01, size=self.initial_stocks.shape)
 
         # 如果是正式预测，输出到网页，固定 持股数和现金
-        if config.IF_SHOW_PREDICT_INFO is True:
+        if config.IF_ACTUAL_PREDICT is True:
             self.stocks = self.initial_stocks.copy()
             self.amount = self.initial_capital - (self.stocks * price).sum()
             pass
@@ -288,7 +288,7 @@ class StockTradingEnvSingle:
             #     pass
             # pass
 
-            if config.IF_SHOW_PREDICT_INFO:
+            if config.IF_ACTUAL_PREDICT:
                 print(self.output_text_trade_detail)
                 print(f'第 {self.day + 1} 天，{date_temp}，现金：{self.amount}，'
                       f'股票：{str((self.stocks * price).sum())}，总资产：{self.total_asset}')
@@ -327,7 +327,8 @@ class StockTradingEnvSingle:
         from stock_data import StockData
         processed_df = StockData.get_fe_fillzero_from_sqlite(begin_date=start_date, end_date=env_eval_date,
                                                              list_stock_code=config.SINGLE_A_STOCK_CODE,
-                                                             table_name='fe_origin')
+                                                             if_actual_predict=config.IF_ACTUAL_PREDICT,
+                                                             table_name='fe_fillzero')
 
         def data_split_train(df, start, end):
             data = df[(df.date >= start) & (df.date < end)]

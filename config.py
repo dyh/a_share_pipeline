@@ -1,7 +1,11 @@
+# 调试 state 比例
+IF_DEBUG_STATE_SCALE = False
+
+# 调试 reward 比例
+IF_DEBUG_REWARD_SCALE = True
 
 # 多只股票代码List
-BATCH_A_STOCK_CODE = ['sz.000028', 'sh.600585', 'sz.000538', 'sh.600036', 'sh.601336', 'sh.601318',
-                      'sh.603661', 'sz.300695', 'sh.603899']
+BATCH_A_STOCK_CODE = []
 
 # update reward 阈值
 REWARD_THRESHOLD = 256 * 1.5
@@ -12,14 +16,17 @@ MODEL_HYPER_PARAMETERS = -1
 # 代理名称
 AGENT_NAME = ''
 
+# 代理预测周期
+AGENT_WORK_DAY = 0
+
 # 预测周期
 PREDICT_PERIOD = ''
 
 # 单支股票代码List
 SINGLE_A_STOCK_CODE = []
 
-# 显示预测信息
-IF_SHOW_PREDICT_INFO = False
+# 真实的预测
+IF_ACTUAL_PREDICT = False
 
 # 工作日标记，用于加载对应的weights
 # weights的vali周期

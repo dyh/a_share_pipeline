@@ -3,7 +3,7 @@ from train_helper import query_model_hyper_parameters_sqlite, query_begin_vali_d
 from utils.psqldb import Psqldb
 from agent import *
 from utils.date_time import *
-from env_batch import StockTradingEnvBatch, FeatureEngineer
+from env_batch import StockTradingEnvBatch
 from run_batch import *
 from datetime import datetime
 
@@ -46,27 +46,60 @@ if __name__ == '__main__':
     # 开始预测的时间
     time_begin = datetime.now()
 
-    # 2003年组，用 sz.000028 作为代号
-    # 股票的顺序，不要改变
-    # config.BATCH_A_STOCK_CODE = ['sz.000028', 'sh.600585', 'sz.000538', 'sh.600036']
+    # TODO
+    # 获取今天日期，判断是否为工作日
+    weekday = get_datetime_from_date_str(get_today_date()).weekday()
+    if 0 < weekday < 6:
+        # 工作日
+        now = datetime.now().strftime("%H:%M")
+        t1 = '09:00'
 
-    # 如果是工作日，小于 09:00，则预测今天
-    # 如果是工作日，大于等于 09:00，则预测明天
-    config.OUTPUT_DATE = '2021-08-04'
+        if now >= t1:
+            # 如果是工作日，大于等于 09:00，则预测明天
+            config.OUTPUT_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), +1))
+            pass
+        else:
+            # 如果是工作日，小于 09:00，则预测今天
+            config.OUTPUT_DATE = get_today_date()
+            pass
+        pass
+    else:
+        # 假期
+        # 下一个工作日
+        config.OUTPUT_DATE = str(get_next_work_day(get_datetime_from_date_str(get_today_date()), +1))
+        pass
+    pass
+
+    # 如果不是工作日，则预测下一个工作日
+    # config.OUTPUT_DATE = '2021-08-06'
+
+    config.START_DATE = "2004-05-01"
+
+    # 股票的顺序，不要改变
+    config.BATCH_A_STOCK_CODE = StockData.get_batch_a_share_code_list_string(table_name='tic_list_275')
+
+    fe_table_name = 'fe_fillzero_predict'
 
     initial_capital = 150000 * len(config.BATCH_A_STOCK_CODE)
 
-    max_stock = 2000
+    max_stock = 3000
+
+    config.IF_ACTUAL_PREDICT = True
+
+    #
+    config.PREDICT_PERIOD = '300'
 
     # psql对象
     psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
                          password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
 
+    # if_first_time = True
+
     # 好用 AgentPPO(), # AgentSAC(), AgentTD3(), AgentDDPG(), AgentModSAC(),
     # AgentDoubleDQN 单进程好用?
     # 不好用 AgentDuelingDQN(), AgentDoubleDQN(), AgentSharedSAC()
-    # for agent_item in ['AgentTD3', 'AgentSAC', 'AgentPPO', 'AgentDDPG', 'AgentModSAC', ]:
 
+    # for agent_item in ['AgentTD3', 'AgentSAC', 'AgentPPO', 'AgentDDPG', 'AgentModSAC', ]:
     for agent_item in ['AgentTD3', ]:
 
         config.AGENT_NAME = agent_item
@@ -76,32 +109,23 @@ if __name__ == '__main__':
         if_on_policy = False
         # if_use_gae = False
 
-        # 预测的开始日期和结束日期，都固定
-
-        # 日期列表
-        # 4月16日向前，20,30,40,50,60,72,90周期
-        # end_vali_date = get_datetime_from_date_str('2021-04-16')
-        config.IF_SHOW_PREDICT_INFO = True
-
-        config.START_DATE = "2003-05-01"
-
-        # 前29后1
-        config.PREDICT_PERIOD = '60'
-
         # 固定日期
-        config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -10))
+        config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -60))
         # config.START_EVAL_DATE = "2021-05-22"
 
-        # OUTPUT_DATE 向右3工作日
+        # OUTPUT_DATE 向右1工作日
         config.END_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), +1))
 
-        # 创建预测结果表
-        StockData.create_predict_result_table_psql(list_tic=config.BATCH_A_STOCK_CODE)
-
-        # 更新股票数据
-        # 只更新一次
-        if config.AGENT_NAME == 'AgentTD3':
-            StockData.update_stock_data(list_stock_code=config.BATCH_A_STOCK_CODE, adjustflag='3')
+        # # 更新股票数据
+        # # 只更新一次啊
+        # if if_first_time is True:
+        #     # 创建预测结果表
+        #     StockData.create_predict_result_table_psql(list_tic=config.BATCH_A_STOCK_CODE)
+        #
+        #     StockData.update_stock_data_to_sqlite(list_stock_code=config.BATCH_A_STOCK_CODE, adjustflag='3',
+        #                                           table_name=fe_table_name, if_incremental_update=False)
+        #     if_first_time = False
+        # pass
 
         # 预测的截止日期
         end_vali_date = get_datetime_from_date_str(config.END_DATE)
@@ -112,12 +136,8 @@ if __name__ == '__main__':
         # 循环 vali_date_list 训练7次
         for vali_days_count, begin_vali_date in list_begin_vali_date:
 
-            # config.START_EVAL_DATE = str(begin_vali_date)
-
             # 更新工作日标记，用于 run_batch.py 加载训练过的 weights 文件
             config.VALI_DAYS_FLAG = str(vali_days_count)
-
-            # config.PREDICT_PERIOD = str(vali_days_count)
 
             model_folder_path = f'./{config.WEIGHTS_PATH}/batch/{config.AGENT_NAME}/' \
                                 f'batch_{config.VALI_DAYS_FLAG}'
@@ -134,9 +154,6 @@ if __name__ == '__main__':
                 print('# initial_capital', initial_capital)
                 print('# max_stock', max_stock)
 
-                # initial_stocks = np.zeros(len(config.BATCH_A_STOCK_CODE), dtype=np.float32)
-                # initial_stocks[0] = 100.0
-
                 initial_stocks = np.ones(len(config.BATCH_A_STOCK_CODE), dtype=np.float32)
                 # 默认持有一手
                 initial_stocks = initial_stocks * 100.0
@@ -144,9 +161,13 @@ if __name__ == '__main__':
                 # 获取超参
                 model_name = agent_item + '_' + str(vali_days_count)
 
+                # hyper_parameters_id, hyper_parameters_model_name, if_on_policy, break_step, train_reward_scale, \
+                # eval_reward_scale, training_times, time_point \
+                #     = query_model_hyper_parameters_sqlite(model_name=model_name)
+
                 hyper_parameters_id, hyper_parameters_model_name, if_on_policy, break_step, train_reward_scale, \
-                eval_reward_scale, training_times, time_point \
-                    = query_model_hyper_parameters_sqlite(model_name=model_name)
+                eval_reward_scale, training_times, time_point, state_amount_scale, state_price_scale, state_stocks_scale, \
+                state_tech_scale = query_model_hyper_parameters_sqlite(model_name=model_name)
 
                 if if_on_policy == 1:
                     if_on_policy = True
@@ -158,8 +179,6 @@ if __name__ == '__main__':
 
                 # 获得Agent参数
                 agent_class = None
-                train_reward_scaling = 2 ** train_reward_scale
-                eval_reward_scaling = 2 ** eval_reward_scale
 
                 # 模型名称
                 config.AGENT_NAME = str(hyper_parameters_model_name).split('_')[0]
@@ -181,9 +200,6 @@ if __name__ == '__main__':
                 elif config.AGENT_NAME == 'AgentDoubleDQN':
                     agent_class = AgentDoubleDQN()
                 pass
-
-                # 预测周期
-                work_days = int(str(hyper_parameters_model_name).split('_')[1])
 
                 args = Arguments(if_on_policy=if_on_policy)
                 args.agent = agent_class
@@ -212,7 +228,7 @@ if __name__ == '__main__':
                                                 ticker_list=config.BATCH_A_STOCK_CODE,
                                                 tech_indicator_list=tech_indicator_list,
                                                 initial_stocks=initial_stocks,
-                                                if_eval=True)
+                                                if_eval=True, fe_table_name=fe_table_name)
 
                 args.env_eval = StockTradingEnvBatch(cwd='', gamma=gamma, max_stock=max_stock,
                                                      initial_capital=initial_capital,
@@ -222,16 +238,32 @@ if __name__ == '__main__':
                                                      ticker_list=config.BATCH_A_STOCK_CODE,
                                                      tech_indicator_list=tech_indicator_list,
                                                      initial_stocks=initial_stocks,
-                                                     if_eval=True)
+                                                     if_eval=True, fe_table_name=fe_table_name)
 
                 args.env.target_return = 100
                 args.env_eval.target_return = 100
 
                 # 奖励 比例
-                args.env.reward_scaling = train_reward_scaling
-                args.env_eval.reward_scaling = eval_reward_scaling
+                args.env.reward_scale = train_reward_scale
+                args.env_eval.reward_scale = eval_reward_scale
 
-                print('train/eval reward scaling:', args.env.reward_scaling, args.env_eval.reward_scaling)
+                args.env.state_amount_scale = state_amount_scale
+                args.env.state_price_scale = state_price_scale
+                args.env.state_stocks_scale = state_stocks_scale
+                args.env.state_tech_scale = state_tech_scale
+
+                args.env_eval.state_amount_scale = state_amount_scale
+                args.env_eval.state_price_scale = state_price_scale
+                args.env_eval.state_stocks_scale = state_stocks_scale
+                args.env_eval.state_tech_scale = state_tech_scale
+
+                print('train reward_scale', args.env.reward_scale)
+                print('eval reward_scale', args.env_eval.reward_scale)
+
+                print('state_amount_scale', state_amount_scale)
+                print('state_price_scale', state_price_scale)
+                print('state_stocks_scale', state_stocks_scale)
+                print('state_tech_scale', state_tech_scale)
 
                 # Hyperparameters
                 args.gamma = gamma
@@ -347,8 +379,14 @@ if __name__ == '__main__':
                         # 获取要预测的日期，保存到数据库中
                         for stock_index in range(len(env.list_buy_or_sell_output)):
                             list_one_stock = env.list_buy_or_sell_output[stock_index]
+
+                            trade_detail_all = ''
+
                             for item in list_one_stock:
-                                tic, date, action, hold, day, episode_return = item
+                                tic, date, action, hold, day, episode_return, trade_detail = item
+
+                                trade_detail_all += trade_detail
+
                                 if str(date) == config.OUTPUT_DATE:
                                     # 简单计算一次，低买高卖的最大回报
                                     max_return = calc_max_return(stock_index_temp=stock_index, price_ary=env.price_ary,
@@ -362,7 +400,7 @@ if __name__ == '__main__':
                                                                             hold=hold,
                                                                             day=day, episode_return=episode_return,
                                                                             max_return=max_return,
-                                                                            trade_detail=env.output_text_trade_detail)
+                                                                            trade_detail=trade_detail_all)
 
                                     break
 
@@ -384,6 +422,6 @@ if __name__ == '__main__':
 
     # 结束预测的时间
     time_end = datetime.now()
-    duration = (time_end - time_begin).seconds
+    duration = (time_end - time_begin).total_seconds()
     print('检测耗时', duration, '秒')
     pass
