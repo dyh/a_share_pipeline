@@ -18,7 +18,6 @@ from utils.date_time import get_today_date, is_greater, get_datetime_from_date_s
 
 from datetime import datetime
 
-
 # 5分钟K线的时间点
 list_time_point_5minutes = ['09:35:00',
                             '09:40:00',
@@ -890,6 +889,34 @@ class StockData(object):
         pass
 
     @staticmethod
+    def update_predict_summary_result_to_psql(psql, agent, vali_period_value, pred_period_name, tic, name, date,
+                                              action, hold, day, episode_return, max_return, trade_detail,
+                                              table_name='predict_summary'):
+
+        # 为避免重复数据，删除date相同、agent相同、pred_period_name相同的历史数据
+        sql_cmd = f'DELETE FROM "public"."{table_name}" WHERE "tic"=%s AND "date"=%s AND ' \
+                  f'"agent"=%s AND "vali_period_value"=%s AND "pred_period_name"=%s'
+
+        sql_values = (tic, str(date), agent, vali_period_value, pred_period_name)
+        psql.execute_non_query(sql=sql_cmd, values=sql_values)
+        psql.commit()
+
+        # list_buy_or_sell_output
+        # tic, date, agent, vali_period_value, pred_period_name, sell_buy, hold
+        # tic, date, sell/buy, hold, 第x天
+
+        sql_cmd = f'INSERT INTO "public"."{table_name}" ("tic", "name", "date", "agent", "vali_period_value", ' \
+                  f'"pred_period_name", "action", "hold", "day", "episode_return", "max_return", "trade_detail")' \
+                  f' VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+
+        sql_values = (tic, name, str(date), agent, vali_period_value, pred_period_name,
+                      str(action), str(hold), str(day), str(episode_return), str(max_return), str(trade_detail))
+
+        psql.execute_non_query(sql=sql_cmd, values=sql_values)
+        psql.commit()
+        pass
+
+    @staticmethod
     def update_predict_result_to_psql(psql, agent, vali_period_value, pred_period_name, tic, date,
                                       action, hold, day, episode_return, max_return, trade_detail):
 
@@ -914,6 +941,45 @@ class StockData(object):
         pass
 
     pass
+
+    @staticmethod
+    def create_predict_summary_table_psql(table_name='predict_summary'):
+
+        psql = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
+                      password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
+
+        # 如果不存在此表
+        if psql.table_exists(table_name=table_name) is None:
+            sql_cmd = f'CREATE TABLE "public"."{table_name}" ' \
+                      f'("id" serial8, "date" date NOT NULL, "tic" text NOT NULL, "name" text NOT NULL, ' \
+                      f'"agent" text NOT NULL, "vali_period_value" int4 NOT NULL, "pred_period_name" text NOT NULL, ' \
+                      f'"action" decimal NOT NULL, "hold" decimal NOT NULL, "day" int4 NOT NULL, ' \
+                      f'"episode_return" decimal NOT NULL, "max_return" decimal NOT NULL, ' \
+                      f'"trade_detail" text NOT NULL, "create_time" timestamp(6) DEFAULT CURRENT_TIMESTAMP , ' \
+                      f'PRIMARY KEY ("id"));'
+
+            psql.execute_non_query(sql=sql_cmd)
+        pass
+
+        psql.commit()
+        psql.close()
+        pass
+
+    @staticmethod
+    def clear_predict_summary_table_psql(table_name='predict_summary'):
+
+        psql = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
+                      password=config.PSQL_PASSWORD, host=config.PSQL_HOST, port=config.PSQL_PORT)
+
+        # 如果存在此表
+        if psql.table_exists(table_name=table_name) is not None:
+            sql_cmd = f'DELETE FROM "public"."{table_name}";'
+            psql.execute_non_query(sql=sql_cmd)
+        pass
+
+        psql.commit()
+        psql.close()
+        pass
 
     @staticmethod
     def create_predict_result_table_psql(list_tic):
@@ -1106,7 +1172,7 @@ class StockData(object):
 
             print('fill_zero_value_save_fe_to_sqlite ...')
 
-            # 增量，补零，存入数据库
+            # 补零，存入数据库
             StockData.fill_zero_value_save_fe_to_sqlite(df=fe_df, code_list=list_stock_code, table_name=table_name,
                                                         date_column_name='date', code_column_name='tic',
                                                         dbname=config.STOCK_DB_PATH)
@@ -1136,9 +1202,27 @@ class StockData(object):
 
         return ret_list
 
+    @staticmethod
+    def get_stock_name_by_tic(sqlite, tic, table_name='tic_list_275'):
+
+        # 从sqlite的tic_list表，获取股票代码
+        query_sql = f"SELECT name FROM {table_name} WHERE tic='{tic}'"
+
+        result = None
+
+        stock_name = sqlite.fetchone(query_sql)
+        if stock_name is not None:
+            if len(stock_name) > 0:
+                result = stock_name[0]
+        pass
+
+        return result
+        pass
+
 
 if __name__ == '__main__':
 
+    # 传递参数 train / predict
     # 开始预测的时间
     time_begin = datetime.now()
 
@@ -1157,7 +1241,7 @@ if __name__ == '__main__':
     if if_train == 'train':
         config.IF_ACTUAL_PREDICT = False
 
-        table_name = 'fe_fillzero_train'
+        table_name_temp = 'fe_fillzero_train'
 
         # 整体结束日期，今天的日期，减去 1工作日，避免加载不完整的数据
         predict_work_days = 1
@@ -1166,7 +1250,7 @@ if __name__ == '__main__':
         # 更新股票数据，不复权，表名 fe_fillzero
         # 写入 fe_fillzero 表
         StockData.update_stock_data_to_sqlite(list_stock_code=config.BATCH_A_STOCK_CODE, adjustflag='3',
-                                              table_name=table_name)
+                                              table_name=table_name_temp)
 
         # print('copy table fe_fillzero_predict -> fe_fillzero_train...')
         # 将 fe_fillzero_train 复制到 fe_fillzero_predict
@@ -1177,7 +1261,7 @@ if __name__ == '__main__':
     elif if_train == 'predict':
         config.IF_ACTUAL_PREDICT = True
 
-        table_name = 'fe_fillzero_predict'
+        table_name_temp = 'fe_fillzero_predict'
 
         # 获取今天日期，判断是否为工作日
         weekday = get_datetime_from_date_str(get_today_date()).weekday()
@@ -1205,7 +1289,7 @@ if __name__ == '__main__':
         # 更新股票数据，不复权，表名 fe_fillzero
         # 写入 fe_fillzero 表
         StockData.update_stock_data_to_sqlite(list_stock_code=config.BATCH_A_STOCK_CODE, adjustflag='3',
-                                              table_name=table_name)
+                                              table_name=table_name_temp)
         pass
     else:
         pass

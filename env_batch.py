@@ -152,9 +152,6 @@ class StockTradingEnvBatch:
             pass
         pass
 
-        # 清空输出的缓存
-        # self.output_text_trade_detail = ''
-
         return state
 
     def step(self, actions):
@@ -172,10 +169,6 @@ class StockTradingEnvBatch:
         # 日期
         date_ary_temp = self.date_ary[self.day]
         date_temp = date_ary_temp[0]
-
-        # if config.IF_ACTUAL_PREDICT is True:
-        #     self.output_text_trade_detail += f'第 {self.day + 1} 天，{date_temp}\r\n'
-        # pass
 
         for index in np.where(int_type_actions < 0)[0]:  # sell_index:
             if price[index] > 0:  # Sell only if current asset is > 0
@@ -199,7 +192,7 @@ class StockTradingEnvBatch:
                         #         self.stocks * price).sum()) / self.initial_total_asset
 
                         episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
-                                              (self.initial_capital / self.action_dim)
+                                              (self.initial_total_asset / self.action_dim)
 
                         # 获取交易详情
                         trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp, tic_temp,
@@ -227,7 +220,7 @@ class StockTradingEnvBatch:
                             #         self.stocks * price).sum()) / self.initial_total_asset
 
                             episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
-                                                  (self.initial_capital / self.action_dim)
+                                                  (self.initial_total_asset / self.action_dim)
 
                             # 获取交易详情
                             trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp,
@@ -249,7 +242,7 @@ class StockTradingEnvBatch:
                             #         self.stocks * price).sum()) / self.initial_total_asset
 
                             episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
-                                                  (self.initial_capital / self.action_dim)
+                                                  (self.initial_total_asset / self.action_dim)
 
                             # 获取交易详情
                             trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp,
@@ -264,25 +257,6 @@ class StockTradingEnvBatch:
                         pass
                     pass
                 pass
-
-            #     if config.IF_ACTUAL_PREDICT is True:
-            #         if self.day == self.max_step:
-            #             if yesterday_price[index] != 0:
-            #                 price_diff_percent = str(
-            #                     round((price[index] - yesterday_price[index]) / yesterday_price[index], 4))
-            #             else:
-            #                 price_diff_percent = '0.0'
-            #             pass
-            #
-            #             price_diff = str(round(price[index] - yesterday_price[index], 6))
-            #
-            #             asset_temp = self.amount_ary[index] + (self.stocks[index] * price[index])
-            #
-            #             self.output_text_trade_detail += f'第 {self.day + 1} 天，{date_temp}\r\n'
-            #             self.output_text_trade_detail += f'        > {tic_temp}，预测涨跌：{round(-1 * actions[index], 4)}，' \
-            #                                              f'实际涨跌：{price_diff_percent} ￥{price_diff} 元，' \
-            #                                              f'卖出：{sell_num_shares} 股, 持股数量 {self.stocks[index]}，' \
-            #                                              f'现金：{self.amount_ary[index]}，资产：{asset_temp}\r\n'
 
             pass
         pass
@@ -308,7 +282,7 @@ class StockTradingEnvBatch:
                         #         self.stocks * price).sum()) / self.initial_total_asset
 
                         episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
-                                              (self.initial_capital / self.action_dim)
+                                              (self.initial_total_asset / self.action_dim)
 
                         # 获取交易详情
                         trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp,
@@ -337,7 +311,7 @@ class StockTradingEnvBatch:
                             #         self.stocks * price).sum()) / self.initial_total_asset
 
                             episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
-                                                  (self.initial_capital / self.action_dim)
+                                                  (self.initial_total_asset / self.action_dim)
 
                             # 获取交易详情
                             trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp,
@@ -361,7 +335,7 @@ class StockTradingEnvBatch:
                             #         self.stocks * price).sum()) / self.initial_total_asset
 
                             episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
-                                                  (self.initial_capital / self.action_dim)
+                                                  (self.initial_total_asset / self.action_dim)
 
                             # 获取交易详情
                             trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp,
@@ -378,25 +352,6 @@ class StockTradingEnvBatch:
                     pass
                 pass
 
-                # if config.IF_ACTUAL_PREDICT is True:
-                #     if self.day == self.max_step:
-                #         if yesterday_price[index] != 0:
-                #             price_diff_percent = str(
-                #                 round((price[index] - yesterday_price[index]) / yesterday_price[index], 4))
-                #         else:
-                #             price_diff_percent = '0.0'
-                #         pass
-                #
-                #         price_diff = str(round(price[index] - yesterday_price[index], 6))
-                #
-                #         asset_temp = self.amount_ary[index] + (self.stocks[index] * price[index])
-                #
-                #         self.output_text_trade_detail += f'第 {self.day + 1} 天，{date_temp}\r\n'
-                #         self.output_text_trade_detail += f'        > {tic_temp}，预测涨跌：{round(-1 * actions[index], 4)}，' \
-                #                                          f'实际涨跌：{price_diff_percent} ￥{price_diff} 元，' \
-                #                                          f'买入：{buy_num_shares} 股, 持股数量：{self.stocks[index]}，' \
-                #                                          f'现金：{self.amount_ary[index]}，资产：{asset_temp}\r\n'
-
             pass
         pass
 
@@ -409,7 +364,7 @@ class StockTradingEnvBatch:
                     #         self.stocks * price).sum()) / self.initial_total_asset
 
                     episode_return_temp = (self.amount_ary[index] + self.stocks[index] * price[index]) / \
-                                          (self.initial_capital / self.action_dim)
+                                          (self.initial_total_asset / self.action_dim)
 
                     # 获取交易详情
                     trade_detail_temp = self.get_trade_detail(yesterday_price, index, price, date_temp, tic_temp,
@@ -459,14 +414,6 @@ class StockTradingEnvBatch:
             reward = self.gamma_reward
             self.episode_return = total_asset / self.initial_total_asset
 
-            # if config.IF_ACTUAL_PREDICT:
-            # self.output_text_trade_detail += f'第 {self.day + 1} 天，{date_temp}，现金：{self.amount}，' \
-            #                                  f'股票：{str((self.stocks * price).sum())}，总资产：{self.total_asset}'
-
-            # print(self.output_text_trade_detail)
-
-            # print(f'第 {self.day + 1} 天，{date_temp}，现金：{self.amount}，'
-            #       f'股票：{str((self.stocks * price).sum())}，总资产：{self.total_asset}')
         else:
 
             if config.IF_DEBUG_REWARD_SCALE is True:

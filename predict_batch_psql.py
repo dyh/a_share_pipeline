@@ -7,6 +7,8 @@ from env_batch import StockTradingEnvBatch
 from run_batch import *
 from datetime import datetime
 
+from utils.sqlite import SQLite
+
 
 def calc_max_return(stock_index_temp, price_ary, initial_capital_temp):
     max_return_temp = 0
@@ -45,6 +47,12 @@ if __name__ == '__main__':
     # 预测，并保存结果到 postgresql 数据库
     # 开始预测的时间
     time_begin = datetime.now()
+
+    # 创建 预测汇总表
+    StockData.create_predict_summary_table_psql(table_name='predict_summary')
+
+    # 清空 预测汇总表
+    StockData.clear_predict_summary_table_psql(table_name='predict_summary')
 
     # TODO
     # 获取今天日期，判断是否为工作日
@@ -87,7 +95,7 @@ if __name__ == '__main__':
     config.IF_ACTUAL_PREDICT = True
 
     #
-    config.PREDICT_PERIOD = '300'
+    config.PREDICT_PERIOD = '60'
 
     # psql对象
     psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
@@ -352,7 +360,7 @@ if __name__ == '__main__':
                     '''prepare for training'''
                     agent.state = env.reset()
 
-                    episode_return = 0.0  # sum of rewards in an episode
+                    episode_return_total = 0.0  # sum of rewards in an episode
                     episode_step = 1
                     max_step = env.max_step
                     if_discrete = env.if_discrete
@@ -370,11 +378,15 @@ if __name__ == '__main__':
                             action = a_tensor.detach().cpu().numpy()[
                                 0]  # not need detach(), because with torch.no_grad() outside
                             state, reward, done, _ = env.step(action)
-                            episode_return += reward
+                            episode_return_total += reward
+
                             if done:
                                 break
                             pass
                         pass
+
+                        # 根据tic查询名称
+                        sqlite_query_name_by_tic = SQLite(dbname=config.STOCK_DB_PATH)
 
                         # 获取要预测的日期，保存到数据库中
                         for stock_index in range(len(env.list_buy_or_sell_output)):
@@ -392,15 +404,32 @@ if __name__ == '__main__':
                                     max_return = calc_max_return(stock_index_temp=stock_index, price_ary=env.price_ary,
                                                                  initial_capital_temp=env.initial_capital)
 
+                                    stock_name = StockData.get_stock_name_by_tic(sqlite=sqlite_query_name_by_tic,
+                                                                                 tic=tic,
+                                                                                 table_name='tic_list_275')
+
                                     # 找到要预测的那一天，存储到psql
-                                    StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
-                                                                            vali_period_value=config.VALI_DAYS_FLAG,
-                                                                            pred_period_name=config.PREDICT_PERIOD,
-                                                                            tic=tic, date=date, action=action,
-                                                                            hold=hold,
-                                                                            day=day, episode_return=episode_return,
-                                                                            max_return=max_return,
-                                                                            trade_detail=trade_detail_all)
+                                    StockData.update_predict_summary_result_to_psql(psql=psql_object,
+                                                                                    agent=config.AGENT_NAME,
+                                                                                    vali_period_value=config.VALI_DAYS_FLAG,
+                                                                                    pred_period_name=config.PREDICT_PERIOD,
+                                                                                    tic=tic, name=stock_name, date=date,
+                                                                                    action=action,
+                                                                                    hold=hold,
+                                                                                    day=day,
+                                                                                    episode_return=episode_return,
+                                                                                    max_return=max_return,
+                                                                                    trade_detail=trade_detail_all,
+                                                                                    table_name='predict_summary')
+
+                                    # StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
+                                    #                                         vali_period_value=config.VALI_DAYS_FLAG,
+                                    #                                         pred_period_name=config.PREDICT_PERIOD,
+                                    #                                         tic=tic, date=date, action=action,
+                                    #                                         hold=hold,
+                                    #                                         day=day, episode_return=episode_return,
+                                    #                                         max_return=max_return,
+                                    #                                         trade_detail=trade_detail_all)
 
                                     break
 
@@ -408,6 +437,10 @@ if __name__ == '__main__':
                                 pass
                             pass
                         pass
+
+                        # 关闭数据库连接
+                        sqlite_query_name_by_tic.close()
+
                         # episode_return = getattr(env, 'episode_return', episode_return)
                     pass
                 else:
