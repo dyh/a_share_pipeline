@@ -262,6 +262,7 @@ def update_model_hyper_parameters_by_train_history(model_hyper_parameters_id, or
 
     if max_train_reward_value is None:
         new_train_reward_scale = origin_train_reward_scale
+        print('> keep origin train_reward_scale', new_train_reward_scale)
         pass
     else:
         if max_train_reward_value >= reward_threshold:
@@ -275,6 +276,7 @@ def update_model_hyper_parameters_by_train_history(model_hyper_parameters_id, or
 
     if max_eval_reward_value is None:
         new_eval_reward_scale = origin_eval_reward_scale
+        print('> keep origin eval_reward_scale', new_eval_reward_scale)
         pass
     else:
         if max_eval_reward_value >= reward_threshold:

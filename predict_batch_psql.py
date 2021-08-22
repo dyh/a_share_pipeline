@@ -90,12 +90,12 @@ if __name__ == '__main__':
 
     initial_capital = 150000 * len(config.BATCH_A_STOCK_CODE)
 
-    max_stock = 3000
+    max_stock = 50000
 
     config.IF_ACTUAL_PREDICT = True
 
-    #
-    config.PREDICT_PERIOD = '60'
+    # 预测周期
+    config.PREDICT_PERIOD = '10'
 
     # psql对象
     psql_object = Psqldb(database=config.PSQL_DATABASE, user=config.PSQL_USER,
@@ -118,7 +118,8 @@ if __name__ == '__main__':
         # if_use_gae = False
 
         # 固定日期
-        config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE), -60))
+        config.START_EVAL_DATE = str(get_next_work_day(get_datetime_from_date_str(config.OUTPUT_DATE),
+                                                       -1 * int(config.PREDICT_PERIOD)))
         # config.START_EVAL_DATE = "2021-05-22"
 
         # OUTPUT_DATE 向右1工作日
@@ -162,9 +163,11 @@ if __name__ == '__main__':
                 print('# initial_capital', initial_capital)
                 print('# max_stock', max_stock)
 
-                initial_stocks = np.ones(len(config.BATCH_A_STOCK_CODE), dtype=np.float32)
+                # initial_stocks = np.ones(len(config.BATCH_A_STOCK_CODE), dtype=np.float32)
+                initial_stocks = np.zeros(len(config.BATCH_A_STOCK_CODE), dtype=np.float32)
+
                 # 默认持有一手
-                initial_stocks = initial_stocks * 100.0
+                # initial_stocks = initial_stocks * 100.0
 
                 # 获取超参
                 model_name = agent_item + '_' + str(vali_days_count)
@@ -421,15 +424,6 @@ if __name__ == '__main__':
                                                                                     max_return=max_return,
                                                                                     trade_detail=trade_detail_all,
                                                                                     table_name='predict_summary')
-
-                                    # StockData.update_predict_result_to_psql(psql=psql_object, agent=config.AGENT_NAME,
-                                    #                                         vali_period_value=config.VALI_DAYS_FLAG,
-                                    #                                         pred_period_name=config.PREDICT_PERIOD,
-                                    #                                         tic=tic, date=date, action=action,
-                                    #                                         hold=hold,
-                                    #                                         day=day, episode_return=episode_return,
-                                    #                                         max_return=max_return,
-                                    #                                         trade_detail=trade_detail_all)
 
                                     break
 

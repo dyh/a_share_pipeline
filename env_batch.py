@@ -110,8 +110,30 @@ class StockTradingEnvBatch:
             np.random.seed(round(time.time()))
             random_float = np.random.uniform(0.0, 1.01, size=self.initial_stocks.shape)
 
-            self.stocks = random_float * self.initial_stocks.copy() // 100 * 100
-            self.amount = self.initial_capital * np.random.uniform(0.95, 1.05) - (self.stocks * price).sum()
+            self.stocks = random_float * self.initial_stocks.copy() // config.\
+                MINIMUM_TRADE_SHARES * config.MINIMUM_TRADE_SHARES
+
+            # 现金 金额
+            cash_temp = self.initial_capital * np.random.uniform(0.95, 1.05)
+            # 股票 金额
+            share_temp = (self.stocks * price).sum()
+
+            # 如果股票金额比现金多，则再次random，直到现金比股票多
+            while share_temp > cash_temp:
+                np.random.seed(round(time.time()))
+                random_float = np.random.uniform(0.0, 1.01, size=self.initial_stocks.shape)
+
+                self.stocks = random_float * self.initial_stocks.copy() // config. \
+                    MINIMUM_TRADE_SHARES * config.MINIMUM_TRADE_SHARES
+
+                # np.random.seed(round(time.time()))
+                cash_temp = self.initial_capital * np.random.uniform(0.95, 1.05)
+                share_temp = (self.stocks * price).sum()
+                pass
+            pass
+
+            self.amount = cash_temp - share_temp
+
         pass
 
         for index in range(self.action_dim):
@@ -177,9 +199,9 @@ class StockTradingEnvBatch:
 
                 tic_temp = tic_ary_temp[index]
 
-                if sell_num_shares >= 100:
+                if sell_num_shares >= config.MINIMUM_TRADE_SHARES:
                     # 若 action <= -100 地板除，卖1手整
-                    sell_num_shares = sell_num_shares // 100 * 100
+                    sell_num_shares = sell_num_shares // config.MINIMUM_TRADE_SHARES * config.MINIMUM_TRADE_SHARES
                     self.stocks[index] -= sell_num_shares
                     self.amount += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
 
@@ -207,8 +229,8 @@ class StockTradingEnvBatch:
                     pass
                 else:
                     # 当sell_num_shares < 100时，判断若 self.stocks[index] >= 100 则放大效果，卖1手
-                    if self.stocks[index] >= 100:
-                        sell_num_shares = 100
+                    if self.stocks[index] >= config.MINIMUM_TRADE_SHARES:
+                        sell_num_shares = config.MINIMUM_TRADE_SHARES
                         self.stocks[index] -= sell_num_shares
                         self.amount += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
 
@@ -264,14 +286,15 @@ class StockTradingEnvBatch:
         for index in np.where(int_type_actions > 0)[0]:  # buy_index:
             if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
                 # 为每只股票单独分配现金， self.amount 除以 股票只数, stock_dim
-                buy_num_shares = min(self.amount_ary[index] // price[index], int_type_actions[index])
+                buy_num_shares = min(self.amount_ary[index] / (1 + self.buy_cost_pct) // price[index], int_type_actions[index])
 
                 tic_temp = tic_ary_temp[index]
 
-                if buy_num_shares >= 100:
+                if buy_num_shares >= config.MINIMUM_TRADE_SHARES:
                     # 若 actions >= +100，地板除，买1手整
-                    buy_num_shares = buy_num_shares // 100 * 100
+                    buy_num_shares = buy_num_shares // config.MINIMUM_TRADE_SHARES * config.MINIMUM_TRADE_SHARES
                     self.stocks[index] += buy_num_shares
+                    # 手续费
                     self.amount -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
 
                     self.amount_ary[index] -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
@@ -298,8 +321,9 @@ class StockTradingEnvBatch:
                     pass
                 else:
                     # 当buy_num_shares < 100时，判断若 self.amount // price[index] >= 100，则放大效果，买1手
-                    if (self.amount_ary[index] // price[index]) >= 100:
-                        buy_num_shares = 100
+                    if (self.amount_ary[index] / (1 + self.buy_cost_pct) // price[index]) >= config.MINIMUM_TRADE_SHARES:
+
+                        buy_num_shares = config.MINIMUM_TRADE_SHARES
                         self.stocks[index] += buy_num_shares
                         self.amount -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
 

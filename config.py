@@ -1,3 +1,7 @@
+
+# 交易的最小股数，可设置最低100股，即1手
+MINIMUM_TRADE_SHARES = 1
+
 # 调试 state 比例
 IF_DEBUG_STATE_SCALE = False
 

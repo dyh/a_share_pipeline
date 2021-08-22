@@ -27,7 +27,6 @@ if __name__ == '__main__':
 
     fe_table_name = 'fe_fillzero_train'
 
-    # 2003年组，用 sz.000028 作为代号
     # 股票的顺序，不要改变
     # config.BATCH_A_STOCK_CODE = ['sz.000028', 'sh.600585', 'sz.000538', 'sh.600036']
     config.START_DATE = "2004-05-01"
@@ -38,8 +37,7 @@ if __name__ == '__main__':
     initial_capital = 150000 * len(config.BATCH_A_STOCK_CODE)
 
     # 单次 购买/卖出 最大股数
-    # TODO 根据每只最近收盘价，得到多只股票平均价，计算 单次购买/卖出 最大股数
-    max_stock = 3000
+    max_stock = 50000
 
     initial_stocks_train = np.ones(len(config.BATCH_A_STOCK_CODE), dtype=np.float32)
     initial_stocks_vali = np.ones(len(config.BATCH_A_STOCK_CODE), dtype=np.float32)
@@ -282,6 +280,6 @@ if __name__ == '__main__':
         time.sleep(10)
 
         # TODO 训练一次退出
-        # break
+        break
 
     pass
